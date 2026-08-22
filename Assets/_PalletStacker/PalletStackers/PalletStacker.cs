@@ -11,6 +11,11 @@ namespace ElectricPalletStackers.PalletStackers
             if (isNormalized) _mast.SetTargetHeightNormalized(height);
             else _mast.SetTargetHeight(height);
         }
+
+        public void SetLiftDirection(float direction)
+        {
+            _mast.SetLiftDirection(direction);
+        }
     }
 
 }

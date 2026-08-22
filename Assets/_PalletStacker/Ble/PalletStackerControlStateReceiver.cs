@@ -1,5 +1,6 @@
 using System;
-using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Spaxtek.Ble.Core;
 using Spaxtek.Ble.Unity;
 using UnityEngine;
@@ -9,206 +10,282 @@ namespace ElectricPalletStackers.Ble
     [DisallowMultipleComponent]
     public sealed class PalletStackerControlStateReceiver : MonoBehaviour
     {
-        private static readonly UTF8Encoding StrictUtf8 = new UTF8Encoding(false, true);
-
         [Header("BLE source")]
         [SerializeField] private BleManager _bleManager;
-        [SerializeField] private string _controlStateServiceUuid = string.Empty;
-        [SerializeField] private string _controlStateCharacteristicUuid = string.Empty;
 
-        [Header("Protocol")]
-        [SerializeField, Min(1)] private int _maximumPayloadBytes = 512;
-        [SerializeField] private bool _logReceivedJson;
+        [Header("Protocol UUIDs")]
+        [SerializeField] private string _serviceUuid = PalletStackerBleProtocol.ServiceUuidText;
+        [SerializeField] private string _controlStateCharacteristicUuid = PalletStackerBleProtocol.ControlStateUuidText;
+        [SerializeField] private string _ackCharacteristicUuid = PalletStackerBleProtocol.AckUuidText;
+        [SerializeField] private BleWriteMode _ackWriteMode = BleWriteMode.WithResponse;
+
+        [Header("Diagnostics")]
+        [SerializeField] private bool _logPackets;
 
         [Header("Current state")]
         [SerializeField] private PalletStackerControlState _currentState = new PalletStackerControlState();
 
-        private Guid? _serviceUuid;
-        private Guid? _characteristicUuid;
+        private Guid? _serviceId;
+        private Guid? _controlStateId;
+        private BleCharacteristicId? _ackId;
+        private CancellationTokenSource _lifetimeCancellation;
+        private ushort? _lastAppliedSequence;
 
         public PalletStackerControlState CurrentState => _currentState;
+        public ushort? LastAppliedSequence => _lastAppliedSequence;
 
         public event Action<PalletStackerControlState, PalletStackerControlFields> StateChanged;
+        public event Action<PalletStackerControlState, ushort, PalletStackerControlFields> StateApplied;
+        public event Action<ushort> DuplicateReceived;
+        public event Action<ushort, ushort> SequenceGapDetected;
+        public event Action<ushort> ControlAcknowledged;
+        public event Action<ushort, string> ControlAckFailed;
         public event Action<string> PayloadRejected;
 
         private void Awake()
         {
             if (_currentState == null) _currentState = new PalletStackerControlState();
-            RefreshCharacteristicFilter();
+            RefreshCharacteristicIds();
         }
 
         private void OnEnable()
         {
-            if (_bleManager != null) _bleManager.OnNotificationReceived += HandleNotificationReceived;
+            _lifetimeCancellation = new CancellationTokenSource();
+            if (_bleManager == null) return;
+
+            _bleManager.OnNotificationReceived += HandleNotificationReceived;
+            _bleManager.OnConnectionStateChanged += HandleConnectionStateChanged;
         }
 
         private void OnDisable()
         {
-            if (_bleManager != null) _bleManager.OnNotificationReceived -= HandleNotificationReceived;
+            if (_bleManager != null)
+            {
+                _bleManager.OnNotificationReceived -= HandleNotificationReceived;
+                _bleManager.OnConnectionStateChanged -= HandleConnectionStateChanged;
+            }
+
+            _lifetimeCancellation?.Cancel();
+            _lifetimeCancellation?.Dispose();
+            _lifetimeCancellation = null;
         }
 
         private void OnValidate()
         {
-            _maximumPayloadBytes = Mathf.Max(1, _maximumPayloadBytes);
+            RefreshCharacteristicIds();
         }
 
-        public void ConfigureCharacteristic(string serviceUuid, string characteristicUuid)
+        public void Configure(BleManager bleManager)
         {
-            _controlStateServiceUuid = serviceUuid ?? string.Empty;
-            _controlStateCharacteristicUuid = characteristicUuid ?? string.Empty;
-            RefreshCharacteristicFilter();
+            if (ReferenceEquals(_bleManager, bleManager)) return;
+
+            bool wasEnabled = isActiveAndEnabled;
+            if (wasEnabled && _bleManager != null)
+            {
+                _bleManager.OnNotificationReceived -= HandleNotificationReceived;
+                _bleManager.OnConnectionStateChanged -= HandleConnectionStateChanged;
+            }
+
+            _bleManager = bleManager;
+
+            if (wasEnabled && _bleManager != null)
+            {
+                _bleManager.OnNotificationReceived += HandleNotificationReceived;
+                _bleManager.OnConnectionStateChanged += HandleConnectionStateChanged;
+            }
+        }
+
+        public void ConfigureCharacteristics(string serviceUuid, string controlStateUuid, string ackUuid)
+        {
+            _serviceUuid = serviceUuid ?? string.Empty;
+            _controlStateCharacteristicUuid = controlStateUuid ?? string.Empty;
+            _ackCharacteristicUuid = ackUuid ?? string.Empty;
+            RefreshCharacteristicIds();
+        }
+
+        public void ConfigureAckWriteMode(BleWriteMode writeMode)
+        {
+            _ackWriteMode = writeMode;
+        }
+
+        public void ResetSequence()
+        {
+            _lastAppliedSequence = null;
         }
 
         public void ReceiveBytes(byte[] payload)
         {
             if (payload == null)
             {
-                RejectPayload("Control State payload is null.");
+                RejectPayload("CONTROL_STATE payload is null.");
                 return;
             }
 
-            if (!TryApplyPayload(payload, out string error)) RejectPayload(error);
+            ProcessControlPayload(payload);
         }
 
-        public void ReceiveJson(string json)
+        public bool TryApplyPayload(
+            ReadOnlyMemory<byte> payload,
+            out ushort sequence,
+            out bool duplicate,
+            out string error)
         {
-            if (!TryApplyJson(json, out string error)) RejectPayload(error);
-        }
-
-        public bool TryApplyPayload(ReadOnlyMemory<byte> payload, out string error)
-        {
-            if (payload.Length == 0)
+            if (!PalletStackerBleProtocol.TryDecodeControlState(
+                    payload.Span,
+                    out sequence,
+                    out PalletStackerControlState candidate,
+                    out error))
             {
-                error = "Control State payload is empty.";
+                duplicate = false;
                 return false;
             }
 
-            if (payload.Length > _maximumPayloadBytes)
-            {
-                error = $"Control State payload is {payload.Length} bytes; maximum is {_maximumPayloadBytes}.";
-                return false;
-            }
-
-            string json;
-            try
-            {
-                json = StrictUtf8.GetString(payload.ToArray());
-            }
-            catch (DecoderFallbackException exception)
-            {
-                error = $"Control State payload is not valid UTF-8: {exception.Message}";
-                return false;
-            }
-
-            return TryApplyJson(json, out error);
-        }
-
-        public bool TryApplyJson(string json, out string error)
-        {
-            if (string.IsNullOrWhiteSpace(json))
-            {
-                error = "Control State JSON is empty.";
-                return false;
-            }
-
-            if (StrictUtf8.GetByteCount(json) > _maximumPayloadBytes)
-            {
-                error = $"Control State JSON exceeds the {_maximumPayloadBytes}-byte limit.";
-                return false;
-            }
-
-            string trimmedJson = json.Trim();
-            if (trimmedJson.Length < 2 || trimmedJson[0] != '{' || trimmedJson[trimmedJson.Length - 1] != '}')
-            {
-                error = "Control State JSON root must be an object.";
-                return false;
-            }
-
-            PalletStackerControlState candidate = _currentState.Clone();
-            try
-            {
-                JsonUtility.FromJsonOverwrite(trimmedJson, candidate);
-            }
-            catch (ArgumentException exception)
-            {
-                error = $"Invalid Control State JSON: {exception.Message}";
-                return false;
-            }
-
-            if (!TryValidate(candidate, out error)) return false;
-
-            PalletStackerControlFields changedFields = _currentState.GetChangedFields(candidate);
-            if (changedFields == PalletStackerControlFields.None)
+            duplicate = _lastAppliedSequence.HasValue && _lastAppliedSequence.Value == sequence;
+            if (duplicate)
             {
                 error = string.Empty;
                 return true;
             }
 
+            if (_lastAppliedSequence.HasValue)
+            {
+                ushort expected = unchecked((ushort)(_lastAppliedSequence.Value + 1));
+                if (sequence != expected) SequenceGapDetected?.Invoke(expected, sequence);
+            }
+
+            PalletStackerControlFields changedFields = _currentState.GetChangedFields(candidate);
             _currentState = candidate;
-            if (_logReceivedJson) Debug.Log($"[BLE] Control State changed ({changedFields}): {trimmedJson}", this);
-            StateChanged?.Invoke(_currentState, changedFields);
+            _lastAppliedSequence = sequence;
+
+            if (changedFields != PalletStackerControlFields.None)
+                StateChanged?.Invoke(_currentState, changedFields);
+            StateApplied?.Invoke(_currentState, sequence, changedFields);
+
             error = string.Empty;
             return true;
         }
 
         private void HandleNotificationReceived(BleNotification notification)
         {
-            if (!_characteristicUuid.HasValue) return;
-            if (notification.CharacteristicId.CharacteristicUuid != _characteristicUuid.Value) return;
-            if (_serviceUuid.HasValue && notification.CharacteristicId.ServiceUuid != _serviceUuid.Value) return;
+            if (!_controlStateId.HasValue || !_serviceId.HasValue) return;
+            if (notification.CharacteristicId.ServiceUuid != _serviceId.Value) return;
+            if (notification.CharacteristicId.CharacteristicUuid != _controlStateId.Value) return;
 
-            if (!TryApplyPayload(notification.Data, out string error)) RejectPayload(error);
+            ProcessControlPayload(notification.Data);
         }
 
-        private void RefreshCharacteristicFilter()
+        private void HandleConnectionStateChanged(BleConnectionState state)
         {
-            _serviceUuid = ParseOptionalUuid(_controlStateServiceUuid, "Control State service");
-            _characteristicUuid = ParseOptionalUuid(_controlStateCharacteristicUuid, "Control State characteristic");
+            if (state != BleConnectionState.Connected) ResetSequence();
         }
 
-        private Guid? ParseOptionalUuid(string value, string label)
+        private void ProcessControlPayload(ReadOnlyMemory<byte> payload)
         {
-            if (string.IsNullOrWhiteSpace(value)) return null;
-            if (Guid.TryParse(value, out Guid uuid)) return uuid;
+            if (!TryApplyPayload(payload, out ushort sequence, out bool duplicate, out string error))
+            {
+                RejectPayload(error);
+                return;
+            }
 
-            Debug.LogError($"{label} UUID is invalid: '{value}'.", this);
+            if (_logPackets)
+            {
+                string kind = duplicate ? "DUPLICATE" : "NEW";
+                Debug.Log($"[BLE] CONTROL_STATE {kind} seq={sequence}: {ToHex(payload.Span)}", this);
+            }
+
+            if (duplicate) DuplicateReceived?.Invoke(sequence);
+
+            // Every valid CONTROL_STATE is acknowledged, including retransmitted duplicates.
+            _ = SendControlAckAsync(sequence);
+        }
+
+        private async Task SendControlAckAsync(ushort sequence)
+        {
+            if (_bleManager == null || !_bleManager.HasConnection)
+            {
+                ReportAckFailure(sequence, "There is no active BLE connection.");
+                return;
+            }
+
+            if (!_ackId.HasValue)
+            {
+                ReportAckFailure(sequence, "ACK characteristic UUID is not configured.");
+                return;
+            }
+
+            try
+            {
+                CancellationToken cancellationToken = _lifetimeCancellation?.Token ?? CancellationToken.None;
+                byte[] packet = PalletStackerBleProtocol.EncodeSequencePacket(sequence);
+                BleWriteResult result = await _bleManager.WriteAsync(
+                    _ackId.Value,
+                    packet,
+                    _ackWriteMode,
+                    cancellationToken);
+
+                if (!result.Succeeded)
+                {
+                    ReportAckFailure(sequence, $"{result.ErrorCode}: {result.Detail}");
+                    return;
+                }
+
+                if (_logPackets)
+                    Debug.Log($"[BLE] CONTROL ACK TX seq={sequence}: {ToHex(packet)}", this);
+                ControlAcknowledged?.Invoke(sequence);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception exception)
+            {
+                ReportAckFailure(sequence, exception.Message);
+            }
+        }
+
+        private void RefreshCharacteristicIds()
+        {
+            _serviceId = ParseUuid(_serviceUuid, "Service");
+            _controlStateId = ParseUuid(_controlStateCharacteristicUuid, "CONTROL_STATE characteristic");
+            Guid? ackUuid = ParseUuid(_ackCharacteristicUuid, "ACK characteristic");
+            _ackId = _serviceId.HasValue && ackUuid.HasValue
+                ? new BleCharacteristicId(_serviceId.Value, ackUuid.Value)
+                : null;
+        }
+
+        private Guid? ParseUuid(string value, string label)
+        {
+            if (Guid.TryParse(value, out Guid uuid) && uuid != Guid.Empty) return uuid;
+            if (Application.isPlaying) Debug.LogError($"{label} UUID is invalid: '{value}'.", this);
             return null;
-        }
-
-        private static bool TryValidate(PalletStackerControlState state, out string error)
-        {
-            if (state.SteerDeg < -90 || state.SteerDeg > 90)
-            {
-                error = $"steerDeg must be between -90 and 90; received {state.SteerDeg}.";
-                return false;
-            }
-
-            if (state.TillerDeg < 0 || state.TillerDeg > 100)
-            {
-                error = $"tillerDeg must be between 0 and 100; received {state.TillerDeg}.";
-                return false;
-            }
-
-            if (state.TravelRaw < 0 || state.TravelRaw > 255)
-            {
-                error = $"travelRaw must be between 0 and 255; received {state.TravelRaw}.";
-                return false;
-            }
-
-            if (state.LiftState < 0 || state.LiftState > 2)
-            {
-                error = $"liftState must be 0, 1 or 2; received {state.LiftState}.";
-                return false;
-            }
-
-            error = string.Empty;
-            return true;
         }
 
         private void RejectPayload(string error)
         {
-            Debug.LogWarning($"[BLE] Rejected Control State payload: {error}", this);
+            Debug.LogWarning($"[BLE] Rejected CONTROL_STATE: {error}", this);
             PayloadRejected?.Invoke(error);
+        }
+
+        private void ReportAckFailure(ushort sequence, string error)
+        {
+            Debug.LogWarning($"[BLE] Failed to ACK CONTROL_STATE seq={sequence}: {error}", this);
+            ControlAckFailed?.Invoke(sequence, error);
+        }
+
+        private static string ToHex(ReadOnlySpan<byte> data)
+        {
+            if (data.Length == 0) return string.Empty;
+
+            char[] characters = new char[data.Length * 3 - 1];
+            const string hex = "0123456789ABCDEF";
+            for (int index = 0; index < data.Length; index++)
+            {
+                int outputIndex = index * 3;
+                characters[outputIndex] = hex[data[index] >> 4];
+                characters[outputIndex + 1] = hex[data[index] & 0x0F];
+                if (index < data.Length - 1) characters[outputIndex + 2] = ' ';
+            }
+
+            return new string(characters);
         }
     }
 }

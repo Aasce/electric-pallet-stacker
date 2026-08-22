@@ -3,6 +3,13 @@ using UnityEngine;
 
 namespace ElectricPalletStackers.Ble
 {
+    public enum PalletStackerLiftState : byte
+    {
+        Neutral = 0,
+        Up = 1,
+        Down = 2
+    }
+
     [Flags]
     public enum PalletStackerControlFields
     {
@@ -29,7 +36,7 @@ namespace ElectricPalletStackers.Ble
         [SerializeField] private int steerDeg;
         [SerializeField] private int tillerDeg = 55;
         [SerializeField] private int travelRaw = 127;
-        [SerializeField] private int liftState;
+        [SerializeField] private PalletStackerLiftState liftState;
 
         public bool Enabled => enabled;
         public bool Stop => stop;
@@ -39,7 +46,36 @@ namespace ElectricPalletStackers.Ble
         public int SteerDeg => steerDeg;
         public int TillerDeg => tillerDeg;
         public int TravelRaw => travelRaw;
-        public int LiftState => liftState;
+        public int LiftState => (int)liftState;
+        public PalletStackerLiftState Lift => liftState;
+        public float TravelNormalized => PalletStackerBleProtocol.NormalizeTravelRaw(travelRaw);
+        public bool TravelAllowed => enabled && !stop && !emergencyStop;
+        public float SafeTravelNormalized => TravelAllowed ? TravelNormalized : 0f;
+
+        internal static PalletStackerControlState FromProtocol(
+            bool enabled,
+            bool stop,
+            bool emergencyStop,
+            bool horn,
+            bool slowMode,
+            int steerDeg,
+            int tillerDeg,
+            int travelRaw,
+            PalletStackerLiftState liftState)
+        {
+            return new PalletStackerControlState
+            {
+                enabled = enabled,
+                stop = stop,
+                emergencyStop = emergencyStop,
+                horn = horn,
+                slowMode = slowMode,
+                steerDeg = steerDeg,
+                tillerDeg = tillerDeg,
+                travelRaw = travelRaw,
+                liftState = liftState
+            };
+        }
 
         internal PalletStackerControlState Clone()
         {

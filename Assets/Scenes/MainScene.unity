@@ -381,6 +381,151 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &963828112
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 963828118}
+  - component: {fileID: 963828117}
+  - component: {fileID: 963828116}
+  - component: {fileID: 963828115}
+  - component: {fileID: 963828114}
+  - component: {fileID: 963828113}
+  m_Layer: 0
+  m_Name: BLE Test Harness
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &963828113
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963828112}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75891168f44d4e55bdb86cb06f0cf61a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Ble.PalletStackerBleDebugPanel
+  _bleManager: {fileID: 963828117}
+  _client: {fileID: 963828114}
+  _stateReceiver: {fileID: 963828116}
+  _collisionSender: {fileID: 963828115}
+  _showOverlay: 1
+  _mirrorEventsToConsole: 1
+  _maximumLogEntries: 16
+  _windowRect:
+    serializedVersion: 2
+    x: 12
+    y: 12
+    width: 560
+    height: 650
+--- !u!114 &963828114
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963828112}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d23872ef5b24afc97fd3496bd19dcae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Ble.PalletStackerBleClient
+  _bleManager: {fileID: 963828117}
+  _stateReceiver: {fileID: 963828116}
+  _collisionSender: {fileID: 963828115}
+  _connectOnEnable: 1
+  _disconnectOnDisable: 1
+  _scanTimeoutSeconds: 10
+  _deviceName: FORKLIFT_CTRL_ESP32
+  _serviceUuid: 7b7e0001-7c6f-4f8b-9a5b-2f7c2a4d1000
+  _logLifecycle: 1
+--- !u!114 &963828115
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963828112}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccc1d49426da4e2ca705e993158f4e97, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Ble.PalletStackerCollisionSender
+  _bleManager: {fileID: 963828117}
+  _serviceUuid: 7b7e0001-7c6f-4f8b-9a5b-2f7c2a4d1000
+  _collisionCharacteristicUuid: 7b7e0003-7c6f-4f8b-9a5b-2f7c2a4d1000
+  _ackCharacteristicUuid: 7b7e0004-7c6f-4f8b-9a5b-2f7c2a4d1000
+  _writeMode: 0
+  _maximumAttempts: 3
+  _ackTimeoutMilliseconds: 150
+  _logPackets: 0
+--- !u!114 &963828116
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963828112}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6fa963b866f9b8e428c63d0d200f519b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Ble.PalletStackerControlStateReceiver
+  _bleManager: {fileID: 963828117}
+  _serviceUuid: 7b7e0001-7c6f-4f8b-9a5b-2f7c2a4d1000
+  _controlStateCharacteristicUuid: 7b7e0002-7c6f-4f8b-9a5b-2f7c2a4d1000
+  _ackCharacteristicUuid: 7b7e0004-7c6f-4f8b-9a5b-2f7c2a4d1000
+  _ackWriteMode: 0
+  _logPackets: 0
+  _currentState:
+    enabled: 0
+    stop: 1
+    emergencyStop: 0
+    horn: 0
+    slowMode: 0
+    steerDeg: 0
+    tillerDeg: 55
+    travelRaw: 127
+    liftState: 0
+--- !u!114 &963828117
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963828112}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad3d21deb4180c145a44715734d49cc8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Spaxtek.Ble.Runtime::Spaxtek.Ble.Unity.BleManager
+  _initializeOnAwake: 1
+  _dontDestroyOnLoad: 1
+  _maximumCallbacksPerFrame: 128
+--- !u!4 &963828118
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963828112}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1208426732
 GameObject:
   m_ObjectHideFlags: 0
@@ -1059,3 +1204,4 @@ SceneRoots:
   - {fileID: 1648042926957515073}
   - {fileID: 1208426737}
   - {fileID: 1777064798}
+  - {fileID: 963828118}
