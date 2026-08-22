@@ -1,5 +1,12 @@
 {
   "dependencies": {
+    "com.spaxtek.ble": {
+      "version": "https://github.com/Spaxtek2026/com.spaxtek.ble.git#v0.1.0",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "5eabd36e80ffbf646b998815b68feb6df051546f"
+    },
     "com.unity.burst": {
       "version": "1.8.27",
       "depth": 2,
