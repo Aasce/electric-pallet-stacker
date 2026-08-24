@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ElectricPalletStackers.PalletStackers;
 using Spaxtek.Ble.Core;
 using Spaxtek.Ble.Unity;
 using UnityEngine;
@@ -15,6 +16,9 @@ namespace ElectricPalletStackers.Ble
         [SerializeField] private PalletStackerBleClient _client;
         [SerializeField] private PalletStackerControlStateReceiver _stateReceiver;
         [SerializeField] private PalletStackerCollisionSender _collisionSender;
+        [SerializeField] private PalletStackerControlDriver _controlDriver;
+        [SerializeField] private PalletStackerCollisionReporter _collisionReporter;
+        [SerializeField] private PalletStackerKeyboardSimulator _keyboardSimulator;
 
         [Header("Display")]
         [SerializeField] private bool _showOverlay = true;
@@ -151,6 +155,20 @@ namespace ElectricPalletStackers.Ble
             string adapterState = _bleManager?.Adapter?.State.ToString() ?? "-";
             GUILayout.Label($"Adapter: {adapterState}    Connection: {(connected ? "CONNECTED" : "DISCONNECTED")}    Protocol ready: {(_client != null && _client.IsReady)}");
             GUILayout.Label($"Last CONTROL seq: {FormatSequence(_stateReceiver?.LastAppliedSequence)}    Pending collision seq: {FormatSequence(_collisionSender?.PendingSequence)}");
+            if (_controlDriver != null)
+            {
+                GUILayout.Label($"Drive={_controlDriver.TravelCommand:0.000}    Steering={_controlDriver.SteeringDegrees:0.#}°    Collision interlock={_controlDriver.CollisionInterlock}");
+            }
+
+            if (_keyboardSimulator != null)
+            {
+                string owner = _keyboardSimulator.BleOwnsControl
+                    ? "BLE"
+                    : _keyboardSimulator.IsSimulationActive ? "KEYBOARD" : "FAIL-SAFE";
+                GUILayout.Label($"Control owner: {owner}    Keyboard simulation: {(_keyboardSimulator.SimulationEnabled ? "ON" : "OFF")}    Last sim seq: {FormatSequence(_keyboardSimulator.LastInjectedSequence)}");
+                GUILayout.Label("Keys: W/S travel, A/D steer, Up/Down tiller, R/F forks, H horn, Shift slow");
+                GUILayout.Label("      Space stop, E E-stop, X enable, Tab keyboard on/off, C collision, V clear stop");
+            }
 
             PalletStackerControlState state = _stateReceiver?.CurrentState;
             if (state != null)
@@ -167,6 +185,7 @@ namespace ElectricPalletStackers.Ble
             GUI.enabled = connected;
             if (GUILayout.Button("Send Collision")) _collisionSender?.SendCollision();
             GUI.enabled = true;
+            if (GUILayout.Button("Simulate Vehicle Collision")) _collisionReporter?.ReportCollision();
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
@@ -175,6 +194,7 @@ namespace ElectricPalletStackers.Ble
             if (GUILayout.Button("Inject Duplicate")) InjectDuplicateControlState();
             if (GUILayout.Button("Inject Invalid")) InjectInvalidControlState();
             GUI.enabled = true;
+            if (GUILayout.Button("Clear Collision Stop")) _controlDriver?.ClearCollisionInterlock();
             if (GUILayout.Button("Clear Log")) ClearLog();
             GUILayout.EndHorizontal();
 
@@ -213,6 +233,9 @@ namespace ElectricPalletStackers.Ble
             if (_bleManager == null) _bleManager = GetComponent<BleManager>();
             if (_stateReceiver == null) _stateReceiver = GetComponent<PalletStackerControlStateReceiver>();
             if (_collisionSender == null) _collisionSender = GetComponent<PalletStackerCollisionSender>();
+            if (_controlDriver == null) _controlDriver = FindFirstObjectByType<PalletStackerControlDriver>();
+            if (_collisionReporter == null) _collisionReporter = FindFirstObjectByType<PalletStackerCollisionReporter>();
+            if (_keyboardSimulator == null) _keyboardSimulator = GetComponent<PalletStackerKeyboardSimulator>();
         }
 
         private void Subscribe()
@@ -250,6 +273,9 @@ namespace ElectricPalletStackers.Ble
                 _collisionSender.UnexpectedAckReceived += HandleUnexpectedAck;
                 _collisionSender.AckRejected += HandleAckRejected;
             }
+
+            if (_controlDriver != null)
+                _controlDriver.CollisionInterlockEngaged += HandleCollisionInterlockEngaged;
 
             _subscribed = true;
         }
@@ -290,6 +316,9 @@ namespace ElectricPalletStackers.Ble
                 _collisionSender.AckRejected -= HandleAckRejected;
             }
 
+            if (_controlDriver != null)
+                _controlDriver.CollisionInterlockEngaged -= HandleCollisionInterlockEngaged;
+
             _subscribed = false;
         }
 
@@ -314,6 +343,7 @@ namespace ElectricPalletStackers.Ble
         private void HandleCollisionFailed(ushort sequence, string error) => AddLog($"COLLISION FAILED seq={sequence}: {error}");
         private void HandleUnexpectedAck(ushort sequence) => AddLog($"UNEXPECTED COLLISION ACK seq={sequence}");
         private void HandleAckRejected(string error) => AddLog($"COLLISION ACK REJECTED: {error}");
+        private void HandleCollisionInterlockEngaged() => AddLog("LOCAL COLLISION INTERLOCK ENGAGED; vehicle stopped before BLE ACK.");
 
         private void AddLog(string message)
         {

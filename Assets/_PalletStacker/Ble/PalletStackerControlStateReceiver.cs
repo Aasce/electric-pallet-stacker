@@ -41,6 +41,7 @@ namespace ElectricPalletStackers.Ble
         public event Action<ushort> ControlAcknowledged;
         public event Action<ushort, string> ControlAckFailed;
         public event Action<string> PayloadRejected;
+        public event Action SourceUnavailable;
 
         private void Awake()
         {
@@ -176,7 +177,9 @@ namespace ElectricPalletStackers.Ble
 
         private void HandleConnectionStateChanged(BleConnectionState state)
         {
-            if (state != BleConnectionState.Connected) ResetSequence();
+            if (state == BleConnectionState.Connected) return;
+            ResetSequence();
+            SourceUnavailable?.Invoke();
         }
 
         private void ProcessControlPayload(ReadOnlyMemory<byte> payload)

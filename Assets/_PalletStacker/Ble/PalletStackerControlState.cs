@@ -34,7 +34,7 @@ namespace ElectricPalletStackers.Ble
         [SerializeField] private bool horn;
         [SerializeField] private bool slowMode;
         [SerializeField] private int steerDeg;
-        [SerializeField] private int tillerDeg = 55;
+        [SerializeField] private int tillerDeg;
         [SerializeField] private int travelRaw = 127;
         [SerializeField] private PalletStackerLiftState liftState;
 
