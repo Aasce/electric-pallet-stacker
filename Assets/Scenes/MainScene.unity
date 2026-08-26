@@ -227,7 +227,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: 
   m_UsePipelineSettings: 1
   m_AdditionalLightsShadowResolutionTier: 2
@@ -362,7 +362,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 83e4e6cca11330d4088d729ab4fc9d9f, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: 
   m_StartingHoverFilters: []
   m_StartingSelectFilters: []
@@ -414,7 +414,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 75891168f44d4e55bdb86cb06f0cf61a, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Ble.PalletStackerBleDebugPanel
   _bleManager: {fileID: 963828117}
   _client: {fileID: 963828114}
@@ -442,7 +442,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1d23872ef5b24afc97fd3496bd19dcae, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Ble.PalletStackerBleClient
   _bleManager: {fileID: 963828117}
   _stateReceiver: {fileID: 963828116}
@@ -463,7 +463,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ccc1d49426da4e2ca705e993158f4e97, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Ble.PalletStackerCollisionSender
   _bleManager: {fileID: 963828117}
   _serviceUuid: 7b7e0001-7c6f-4f8b-9a5b-2f7c2a4d1000
@@ -483,7 +483,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6fa963b866f9b8e428c63d0d200f519b, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Ble.PalletStackerControlStateReceiver
   _bleManager: {fileID: 963828117}
   _serviceUuid: 7b7e0001-7c6f-4f8b-9a5b-2f7c2a4d1000
@@ -511,7 +511,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ad3d21deb4180c145a44715734d49cc8, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Spaxtek.Ble.Runtime::Spaxtek.Ble.Unity.BleManager
   _initializeOnAwake: 1
   _dontDestroyOnLoad: 1
@@ -541,8 +541,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 75f66d735f194eb1ae63bbd0edaa176c, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   _stateReceiver: {fileID: 963828116}
   _collisionSender: {fileID: 963828115}
   _controlDriver: {fileID: 0}
@@ -557,8 +557,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f3e3fa27f9634f2b8c048c5dc5715016, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   _stateReceiver: {fileID: 963828116}
   _bleManager: {fileID: 963828117}
   _collisionReporter: {fileID: 0}
@@ -1169,7 +1169,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &1648042926957515073
+--- !u!1001 &3505153867693228158
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -1177,49 +1177,49 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 4558544357513335424, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+    - target: {fileID: 140053820047635898, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+      propertyPath: m_Name
+      value: Pallet Stacker
+      objectReference: {fileID: 0}
+    - target: {fileID: 550797599305683205, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4558544357513335424, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+    - target: {fileID: 550797599305683205, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4558544357513335424, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+    - target: {fileID: 550797599305683205, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4558544357513335424, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+    - target: {fileID: 550797599305683205, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 4558544357513335424, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+    - target: {fileID: 550797599305683205, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
       propertyPath: m_LocalRotation.x
       value: -0
       objectReference: {fileID: 0}
-    - target: {fileID: 4558544357513335424, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+    - target: {fileID: 550797599305683205, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
       propertyPath: m_LocalRotation.y
       value: -0
       objectReference: {fileID: 0}
-    - target: {fileID: 4558544357513335424, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+    - target: {fileID: 550797599305683205, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
       propertyPath: m_LocalRotation.z
       value: -0
       objectReference: {fileID: 0}
-    - target: {fileID: 4558544357513335424, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+    - target: {fileID: 550797599305683205, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4558544357513335424, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+    - target: {fileID: 550797599305683205, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4558544357513335424, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+    - target: {fileID: 550797599305683205, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7760763215969041145, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
-      propertyPath: m_Name
-      value: Pallet Stacker
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1234,6 +1234,7 @@ SceneRoots:
   - {fileID: 756192408}
   - {fileID: 2092139010}
   - {fileID: 1547873321}
-  - {fileID: 1648042926957515073}
+  - {fileID: 3505153867693228158}
   - {fileID: 1208426737}
   - {fileID: 1777064798}
+  - {fileID: 963828118}
