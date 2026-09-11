@@ -12,6 +12,11 @@ namespace ElectricPalletStackers.PalletStackers
         [Header("Vehicle geometry")]
         [Tooltip("Local-space forward axis. The current simple model faces local +X.")]
         [SerializeField] private Vector3 _localForwardAxis = Vector3.right;
+        [Tooltip("Center of the fixed front axle. The current model's wide Wheel mesh represents this axle.")]
+        [SerializeField] private Transform _fixedFrontAxleReference;
+        [Tooltip("Center of the virtual steered and driven rear axle. Place it longitudinally under the Steering Column.")]
+        [SerializeField] private Transform _steeredRearAxleReference;
+        [Tooltip("Fallback wheelbase used when either axle reference is missing.")]
         [SerializeField, Min(0.01f)] private float _wheelBaseMeters = 1.2f;
         [SerializeField, Range(1f, 80f)] private float _maximumSteeringAngleDegrees = 45f;
 
@@ -109,23 +114,38 @@ namespace ElectricPalletStackers.PalletStackers
                 return;
             }
 
+            float deltaTime = Time.fixedDeltaTime;
             Quaternion rotation = GetYawOnlyRotation();
             Vector3 localForward = SafeLocalForward();
             Vector3 worldForward = rotation * localForward;
+            Vector3 frontAxleLocalPosition = GetFrontAxleLocalPosition(localForward);
+            Vector3 frontAxleWorldOffset = rotation * frontAxleLocalPosition;
+            float wheelBase = GetEffectiveWheelBase(localForward);
+
+            // SteeringDegrees expresses the requested turn direction of the fixed front end.
+            // The virtual rear wheels point the opposite way and provide the drive force.
             float steerRadians = _steeringDegrees * Mathf.Deg2Rad;
-            float yawRateRadians = _currentSpeed / _wheelBaseMeters * Mathf.Tan(steerRadians);
-            float yawDegrees = yawRateRadians * Mathf.Rad2Deg * Time.fixedDeltaTime;
+            float frontAxleSpeed = _currentSpeed * Mathf.Cos(steerRadians);
+            float yawRateRadians = _currentSpeed / wheelBase * Mathf.Sin(steerRadians);
+            float yawDegrees = yawRateRadians * Mathf.Rad2Deg * deltaTime;
             Quaternion nextRotation = Quaternion.AngleAxis(yawDegrees, Vector3.up) * rotation;
+            Vector3 frontAxlePosition = _body.position + frontAxleWorldOffset;
+            Vector3 frontAxleDisplacement = GetFrontAxleArcDisplacement(
+                worldForward,
+                frontAxleSpeed,
+                yawRateRadians,
+                deltaTime);
+            Vector3 nextPosition =
+                frontAxlePosition + frontAxleDisplacement - nextRotation * frontAxleLocalPosition;
 
             if (_body.isKinematic)
             {
-                Vector3 nextPosition = _body.position + worldForward * (_currentSpeed * Time.fixedDeltaTime);
                 _body.MovePosition(nextPosition);
                 _body.MoveRotation(nextRotation);
             }
             else
             {
-                _body.linearVelocity = worldForward * _currentSpeed;
+                _body.linearVelocity = (nextPosition - _body.position) / deltaTime;
                 _body.angularVelocity = Vector3.zero;
                 _body.MoveRotation(nextRotation);
             }
@@ -142,6 +162,45 @@ namespace ElectricPalletStackers.PalletStackers
         {
             Vector3 planar = Vector3.ProjectOnPlane(_localForwardAxis, Vector3.up);
             return planar.sqrMagnitude > 0.0001f ? planar.normalized : Vector3.forward;
+        }
+
+        private static Vector3 GetFrontAxleArcDisplacement(
+            Vector3 worldForward,
+            float frontAxleSpeed,
+            float yawRateRadians,
+            float deltaTime)
+        {
+            float halfYaw = yawRateRadians * deltaTime * 0.5f;
+            float sinc = Mathf.Abs(halfYaw) < 0.0001f
+                ? 1f
+                : Mathf.Sin(halfYaw) / halfYaw;
+            Quaternion midpointYaw =
+                Quaternion.AngleAxis(halfYaw * Mathf.Rad2Deg, Vector3.up);
+
+            return midpointYaw * worldForward * (frontAxleSpeed * deltaTime * sinc);
+        }
+
+        private Vector3 GetFrontAxleLocalPosition(Vector3 localForward)
+        {
+            if (_fixedFrontAxleReference != null)
+            {
+                return transform.InverseTransformPoint(_fixedFrontAxleReference.position);
+            }
+
+            return localForward * GetEffectiveWheelBase(localForward);
+        }
+
+        private float GetEffectiveWheelBase(Vector3 localForward)
+        {
+            if (_fixedFrontAxleReference != null && _steeredRearAxleReference != null)
+            {
+                Vector3 axleSeparation = transform.InverseTransformPoint(_fixedFrontAxleReference.position)
+                    - transform.InverseTransformPoint(_steeredRearAxleReference.position);
+                float referencedWheelBase = Mathf.Abs(Vector3.Dot(axleSeparation, localForward));
+                if (referencedWheelBase >= 0.01f) return referencedWheelBase;
+            }
+
+            return Mathf.Max(0.01f, _wheelBaseMeters);
         }
 
         private void StopBodyMotion()

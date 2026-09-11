@@ -140,7 +140,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _body: {fileID: 3273737744600335219}
   _localForwardAxis: {x: 1, y: 0, z: 0}
-  _wheelBaseMeters: 1.2
+  _fixedFrontAxleReference: {fileID: 5832042734575591163}
+  _steeredRearAxleReference: {fileID: 164840407510776842}
+  _wheelBaseMeters: 1.6761278
   _maximumSteeringAngleDegrees: 45
   _maximumForwardSpeed: 2.5
   _maximumReverseSpeed: 1.5

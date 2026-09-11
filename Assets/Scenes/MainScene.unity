@@ -177,6 +177,19 @@ Camera:
   m_CorrespondingSourceObject: {fileID: 1767192439, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
   m_PrefabInstance: {fileID: 441087506}
   m_PrefabAsset: {fileID: 0}
+--- !u!134 &223092654
+PhysicsMaterial:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  serializedVersion: 2
+  m_DynamicFriction: 0.6
+  m_StaticFriction: 0.6
+  m_Bounciness: 0
+  m_FrictionCombine: 0
+  m_BounceCombine: 0
 --- !u!1 &267490325
 GameObject:
   m_ObjectHideFlags: 0
@@ -740,7 +753,7 @@ BoxCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1208426732}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: a395ab17b14ddd745b6a7f7fe293ebf2, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -820,7 +833,7 @@ Transform:
   m_GameObject: {fileID: 1208426732}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.215, y: 2.248, z: 0}
+  m_LocalPosition: {x: 2.356, y: 2.248, z: 0}
   m_LocalScale: {x: 1.5, y: 0.8, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1115,7 +1128,7 @@ BoxCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1777064793}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: a395ab17b14ddd745b6a7f7fe293ebf2, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -1195,7 +1208,7 @@ Transform:
   m_GameObject: {fileID: 1777064793}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.125, y: 1.296, z: 0}
+  m_LocalPosition: {x: 2.266, y: 1.296, z: 0}
   m_LocalScale: {x: 1.5, y: 0.8, z: 1.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1350,6 +1363,34 @@ PrefabInstance:
       propertyPath: m_Camera
       value: 
       objectReference: {fileID: 86528798}
+    - target: {fileID: 4241175440398236226, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5342792113791399360, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+      propertyPath: m_Size.x
+      value: 1.5551832
+      objectReference: {fileID: 0}
+    - target: {fileID: 5342792113791399360, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+      propertyPath: m_Size.y
+      value: 1.2696455
+      objectReference: {fileID: 0}
+    - target: {fileID: 5342792113791399360, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5342792113791399360, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+      propertyPath: m_Center.x
+      value: 0.09759152
+      objectReference: {fileID: 0}
+    - target: {fileID: 5342792113791399360, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+      propertyPath: m_Center.y
+      value: 0.6348227
+      objectReference: {fileID: 0}
+    - target: {fileID: 5342792113791399360, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 223092654}
     - target: {fileID: 5371964138823782936, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
       propertyPath: m_Camera
       value: 
