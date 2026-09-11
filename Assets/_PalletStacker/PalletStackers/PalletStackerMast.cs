@@ -30,13 +30,13 @@ namespace ElectricPalletStackers.PalletStackers
                 Debug.LogError($"{nameof(PalletStackerMast)} on '{name}' requires a forks Transform.", this);
         }
 
-        private void Update()
+        private void FixedUpdate()
         {
             if (forks == null) return;
 
             float previousHeight = CurrentHeight;
             Vector3 position = forks.localPosition;
-            position.y = Mathf.MoveTowards(CurrentHeight, TargetHeight, _speed * Time.deltaTime);
+            position.y = Mathf.MoveTowards(CurrentHeight, TargetHeight, _speed * Time.fixedDeltaTime);
             forks.localPosition = position;
 
             if (!Mathf.Approximately(previousHeight, position.y)) OnHeightChanged?.Invoke(position.y);

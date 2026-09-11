@@ -712,6 +712,7 @@ GameObject:
   - component: {fileID: 1208426735}
   - component: {fileID: 1208426734}
   - component: {fileID: 1208426733}
+  - component: {fileID: 1208426738}
   m_Layer: 0
   m_Name: Cube (1)
   m_TagString: Untagged
@@ -743,9 +744,23 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 2
+--- !u!114 &1208426738
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1208426732}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e377537c8354f6088dd85e396384da1, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.PalletStackers.PalletStackerLoad
+  _body: {fileID: 1208426733}
+  _minimumSupportNormal: 0.55
 --- !u!65 &1208426734
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1087,6 +1102,7 @@ GameObject:
   - component: {fileID: 1777064796}
   - component: {fileID: 1777064795}
   - component: {fileID: 1777064794}
+  - component: {fileID: 1777064799}
   m_Layer: 0
   m_Name: Cube
   m_TagString: Untagged
@@ -1118,9 +1134,23 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 2
+--- !u!114 &1777064799
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1777064793}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e377537c8354f6088dd85e396384da1, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.PalletStackers.PalletStackerLoad
+  _body: {fileID: 1777064794}
+  _minimumSupportNormal: 0.55
 --- !u!65 &1777064795
 BoxCollider:
   m_ObjectHideFlags: 0
