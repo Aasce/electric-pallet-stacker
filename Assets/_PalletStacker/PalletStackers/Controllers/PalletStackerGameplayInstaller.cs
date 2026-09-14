@@ -4,8 +4,7 @@ using UnityEngine;
 namespace ElectricPalletStackers.PalletStackers
 {
     /// <summary>
-    /// Scene composition root. It is the only place that knows both the BLE
-    /// transport objects and the pallet stacker gameplay objects.
+    /// Explicitly connects the scene BLE services to the assigned gameplay targets.
     /// </summary>
     [DefaultExecutionOrder(-1000)]
     [DisallowMultipleComponent]
@@ -21,19 +20,8 @@ namespace ElectricPalletStackers.PalletStackers
 
         private void Awake()
         {
-            ResolveGameplayTarget();
             _controlDriver?.Bind(_stateReceiver);
             _collisionReporter?.Bind(_collisionSender);
-        }
-
-        private void ResolveGameplayTarget()
-        {
-            if (_controlDriver == null)
-                _controlDriver = FindFirstObjectByType<PalletStackerControlDriver>();
-            if (_collisionReporter == null && _controlDriver != null)
-                _collisionReporter = _controlDriver.GetComponent<PalletStackerCollisionReporter>();
-            if (_collisionReporter == null)
-                _collisionReporter = FindFirstObjectByType<PalletStackerCollisionReporter>();
         }
     }
 }

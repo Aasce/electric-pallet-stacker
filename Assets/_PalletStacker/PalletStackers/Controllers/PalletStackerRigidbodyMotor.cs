@@ -36,7 +36,6 @@ namespace ElectricPalletStackers.PalletStackers
 
         private void Awake()
         {
-            if (_body == null) _body = GetComponent<Rigidbody>();
             EnforceYawOnlyRotation();
             SnapRotationToYaw();
         }
@@ -44,17 +43,6 @@ namespace ElectricPalletStackers.PalletStackers
         private void OnDisable()
         {
             StopImmediately();
-        }
-
-        private void OnValidate()
-        {
-            if (_body == null) _body = GetComponent<Rigidbody>();
-            EnforceYawOnlyRotation();
-            _wheelBaseMeters = Mathf.Max(0.01f, _wheelBaseMeters);
-            _maximumForwardSpeed = Mathf.Max(0f, _maximumForwardSpeed);
-            _maximumReverseSpeed = Mathf.Max(0f, _maximumReverseSpeed);
-            _acceleration = Mathf.Max(0.01f, _acceleration);
-            _serviceBrakeDeceleration = Mathf.Max(0.01f, _serviceBrakeDeceleration);
         }
 
         private void EnforceYawOnlyRotation()

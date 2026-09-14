@@ -35,15 +35,8 @@ namespace ElectricPalletStackers.PalletStackers
         public event Action<PalletStackerDriveCommand> CommandApplied;
         public event Action CollisionInterlockEngaged;
 
-        private void Awake()
-        {
-            ResolveDependencies();
-            CacheOutputs();
-        }
-
         private void OnEnable()
         {
-            ResolveDependencies();
             CacheOutputs();
             Subscribe();
 
@@ -64,11 +57,6 @@ namespace ElectricPalletStackers.PalletStackers
         {
             Unsubscribe();
             StopAllOutputs();
-        }
-
-        private void OnValidate()
-        {
-            _slowModeTravelMultiplier = Mathf.Clamp(_slowModeTravelMultiplier, 0.05f, 1f);
         }
 
         public void Bind(PalletStackerControlStateReceiver stateReceiver)
@@ -144,23 +132,14 @@ namespace ElectricPalletStackers.PalletStackers
             for (int index = 0; index < _outputs.Count; index++) _outputs[index].StopImmediately();
         }
 
-        private void ResolveDependencies()
-        {
-            if (_stateReceiver == null)
-                _stateReceiver = FindFirstObjectByType<PalletStackerControlStateReceiver>();
-            if (_collisionReporter == null)
-                _collisionReporter = GetComponent<PalletStackerCollisionReporter>();
-        }
-
         private void CacheOutputs()
         {
             _outputs.Clear();
-            MonoBehaviour[] candidates = _outputComponents;
-            if (candidates == null || candidates.Length == 0) candidates = GetComponents<MonoBehaviour>();
+            if (_outputComponents == null) return;
 
-            for (int index = 0; index < candidates.Length; index++)
+            for (int index = 0; index < _outputComponents.Length; index++)
             {
-                if (candidates[index] is IPalletStackerControlOutput output && !_outputs.Contains(output))
+                if (_outputComponents[index] is IPalletStackerControlOutput output && !_outputs.Contains(output))
                     _outputs.Add(output);
             }
         }

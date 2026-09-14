@@ -49,14 +49,8 @@ namespace ElectricPalletStackers.PalletStackers
         public bool IsSimulationActive => _simulationEnabled && !_bleOwnsControl;
         public ushort? LastInjectedSequence { get; private set; }
 
-        private void Awake()
-        {
-            ResolveDependencies();
-        }
-
         private void OnEnable()
         {
-            ResolveDependencies();
             if (_bleManager != null)
             {
                 _bleManager.OnConnectionStateChanged += HandleConnectionStateChanged;
@@ -74,15 +68,6 @@ namespace ElectricPalletStackers.PalletStackers
                 _bleManager.OnConnectionStateChanged -= HandleConnectionStateChanged;
 
             if (!_bleOwnsControl) InjectFailSafeState();
-        }
-
-        private void OnValidate()
-        {
-            _maximumSteeringDegrees = Mathf.Clamp(_maximumSteeringDegrees, 1, 90);
-            _steeringSpeedDegreesPerSecond = Mathf.Max(1f, _steeringSpeedDegreesPerSecond);
-            _steeringReturnSpeedDegreesPerSecond = Mathf.Max(1f, _steeringReturnSpeedDegreesPerSecond);
-            _tillerDegrees = Mathf.Clamp(_tillerDegrees, 0, 100);
-            _tillerSpeedDegreesPerSecond = Mathf.Max(1f, _tillerSpeedDegreesPerSecond);
         }
 
         private void Update()
@@ -259,14 +244,6 @@ namespace ElectricPalletStackers.PalletStackers
 
             _bleOwnsControl = false;
             _hasLastSnapshot = false;
-        }
-
-        private void ResolveDependencies()
-        {
-            if (_stateReceiver == null) _stateReceiver = GetComponent<PalletStackerControlStateReceiver>();
-            if (_bleManager == null) _bleManager = GetComponent<BleManager>();
-            if (_controlDriver == null) _controlDriver = FindFirstObjectByType<PalletStackerControlDriver>();
-            if (_collisionReporter == null) _collisionReporter = FindFirstObjectByType<PalletStackerCollisionReporter>();
         }
 
         private static int ResolveAxis(bool positive, bool negative, int positiveValue, int negativeValue, int neutralValue)

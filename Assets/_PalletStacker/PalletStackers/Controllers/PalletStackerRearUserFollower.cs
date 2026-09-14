@@ -1,4 +1,3 @@
-using Unity.XR.CoreUtils;
 using UnityEngine;
 
 namespace ElectricPalletStackers.PalletStackers
@@ -23,14 +22,8 @@ namespace ElectricPalletStackers.PalletStackers
         public Transform UserRig => _userRig;
         public Vector3 LocalOperatorOffset => _localOperatorOffset;
 
-        private void Awake()
-        {
-            ResolveUserRig();
-        }
-
         private void OnEnable()
         {
-            ResolveUserRig();
             FollowVehicle();
         }
 
@@ -42,11 +35,7 @@ namespace ElectricPalletStackers.PalletStackers
         [ContextMenu("Snap User Behind Vehicle")]
         public void FollowVehicle()
         {
-            if (_userRig == null)
-            {
-                ResolveUserRig();
-                if (_userRig == null) return;
-            }
+            if (_userRig == null) return;
 
             if (_followPosition) _userRig.position = transform.TransformPoint(_localOperatorOffset);
             if (_followRotation)
@@ -56,11 +45,5 @@ namespace ElectricPalletStackers.PalletStackers
             }
         }
 
-        private void ResolveUserRig()
-        {
-            if (_userRig != null) return;
-            XROrigin xrOrigin = FindFirstObjectByType<XROrigin>();
-            if (xrOrigin != null) _userRig = xrOrigin.transform;
-        }
     }
 }

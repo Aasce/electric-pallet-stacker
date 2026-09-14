@@ -19,12 +19,6 @@ namespace ElectricPalletStackers.Ble
 
         public event Action CollisionDetected;
 
-        private void Awake()
-        {
-            if (_collisionSender == null) _collisionSender = GetComponentInParent<PalletStackerCollisionSender>();
-            if (_collisionSender == null) _collisionSender = FindFirstObjectByType<PalletStackerCollisionSender>();
-        }
-
         public void Bind(PalletStackerCollisionSender collisionSender)
         {
             _collisionSender = collisionSender;
@@ -58,12 +52,6 @@ namespace ElectricPalletStackers.Ble
             }
 
             return foundObstacleContact ? maximumImpactSpeed : 0f;
-        }
-
-        private void OnValidate()
-        {
-            _minimumRelativeSpeed = Mathf.Max(0f, _minimumRelativeSpeed);
-            _groundNormalDotThreshold = Mathf.Clamp01(_groundNormalDotThreshold);
         }
 
         [ContextMenu("Simulate Vehicle Collision")]

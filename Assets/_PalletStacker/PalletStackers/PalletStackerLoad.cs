@@ -19,17 +19,6 @@ namespace ElectricPalletStackers.PalletStackers
 
         public Rigidbody Body => _body;
 
-        private void Awake()
-        {
-            if (_body == null) _body = GetComponent<Rigidbody>();
-        }
-
-        private void OnValidate()
-        {
-            if (_body == null) _body = GetComponent<Rigidbody>();
-            _minimumSupportNormal = Mathf.Clamp01(_minimumSupportNormal);
-        }
-
         private void OnDisable()
         {
             _supportingColliders.Clear();

@@ -10,11 +10,6 @@ namespace ElectricPalletStackers.PalletStackers
 
         private PalletStackerLiftState _lastLiftState = PalletStackerLiftState.Neutral;
 
-        private void Awake()
-        {
-            if (_palletStacker == null) _palletStacker = GetComponent<PalletStacker>();
-        }
-
         public void Apply(PalletStackerDriveCommand command)
         {
             if (_palletStacker == null || command.Lift == _lastLiftState) return;

@@ -38,14 +38,8 @@ namespace ElectricPalletStackers.Ble
             set => _showOverlay = value;
         }
 
-        private void Awake()
-        {
-            CacheComponents();
-        }
-
         private void OnEnable()
         {
-            CacheComponents();
             Subscribe();
             AddLog("Debug panel enabled.");
         }
@@ -53,13 +47,6 @@ namespace ElectricPalletStackers.Ble
         private void OnDisable()
         {
             Unsubscribe();
-        }
-
-        private void OnValidate()
-        {
-            _maximumLogEntries = Mathf.Max(1, _maximumLogEntries);
-            _windowRect.width = Mathf.Max(360f, _windowRect.width);
-            _windowRect.height = Mathf.Max(300f, _windowRect.height);
         }
 
         private void OnGUI()
@@ -225,17 +212,6 @@ namespace ElectricPalletStackers.Ble
             AddLog(accepted
                 ? $"{label} RX seq={sequence}, duplicate={duplicate}, raw={BitConverter.ToString(packet)}"
                 : $"{label} REJECTED: {error}, raw={BitConverter.ToString(packet)}");
-        }
-
-        private void CacheComponents()
-        {
-            if (_client == null) _client = GetComponent<PalletStackerBleClient>();
-            if (_bleManager == null) _bleManager = GetComponent<BleManager>();
-            if (_stateReceiver == null) _stateReceiver = GetComponent<PalletStackerControlStateReceiver>();
-            if (_collisionSender == null) _collisionSender = GetComponent<PalletStackerCollisionSender>();
-            if (_controlDriver == null) _controlDriver = FindFirstObjectByType<PalletStackerControlDriver>();
-            if (_collisionReporter == null) _collisionReporter = FindFirstObjectByType<PalletStackerCollisionReporter>();
-            if (_keyboardSimulator == null) _keyboardSimulator = GetComponent<PalletStackerKeyboardSimulator>();
         }
 
         private void Subscribe()

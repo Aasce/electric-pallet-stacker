@@ -47,12 +47,6 @@ namespace ElectricPalletStackers.PalletStackers
             StopImmediately();
         }
 
-        private void OnValidate()
-        {
-            _travelDeadZone = Mathf.Clamp(_travelDeadZone, 0f, 0.25f);
-            _tweenDuration = Mathf.Max(0f, _tweenDuration);
-        }
-
         public void Apply(PalletStackerDriveCommand command)
         {
             if (command.Lift != _lastLiftState)

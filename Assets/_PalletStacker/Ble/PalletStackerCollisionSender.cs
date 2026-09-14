@@ -69,13 +69,6 @@ namespace ElectricPalletStackers.Ble
             _sendInProgress = false;
         }
 
-        private void OnValidate()
-        {
-            _maximumAttempts = Mathf.Max(1, _maximumAttempts);
-            _ackTimeoutMilliseconds = Mathf.Max(1, _ackTimeoutMilliseconds);
-            RefreshCharacteristicIds();
-        }
-
         public void Configure(BleManager bleManager)
         {
             if (ReferenceEquals(_bleManager, bleManager)) return;

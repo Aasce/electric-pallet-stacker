@@ -40,14 +40,8 @@ namespace ElectricPalletStackers.Ble
         public event Action<BleConnectionState> ConnectionStateChanged;
         public event Action<string> ClientFailed;
 
-        private void Awake()
-        {
-            CacheComponents();
-        }
-
         private void OnEnable()
         {
-            CacheComponents();
             _lifetimeCancellation = new CancellationTokenSource();
 
             if (_bleManager != null)
@@ -88,18 +82,6 @@ namespace ElectricPalletStackers.Ble
 
             if (_disconnectOnDisable && _bleManager != null && _bleManager.HasConnection)
                 DisconnectAndLogAsync();
-        }
-
-        private void OnValidate()
-        {
-            _scanTimeoutSeconds = Mathf.Max(1f, _scanTimeoutSeconds);
-        }
-
-        private void CacheComponents()
-        {
-            if (_bleManager == null) _bleManager = GetComponent<BleManager>();
-            if (_stateReceiver == null) _stateReceiver = GetComponent<PalletStackerControlStateReceiver>();
-            if (_collisionSender == null) _collisionSender = GetComponent<PalletStackerCollisionSender>();
         }
 
         [ContextMenu("Start BLE Client")]

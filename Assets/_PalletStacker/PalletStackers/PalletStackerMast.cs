@@ -24,12 +24,6 @@ namespace ElectricPalletStackers.PalletStackers
         public float TargetHeight => Mathf.Lerp(_minHeight, _maxHeight, _targetHeightNormalized);
         public float TargetHeightNormalized => _targetHeightNormalized;
 
-        private void Awake()
-        {
-            if (forks == null)
-                Debug.LogError($"{nameof(PalletStackerMast)} on '{name}' requires a forks Transform.", this);
-        }
-
         private void FixedUpdate()
         {
             if (forks == null) return;
@@ -40,13 +34,6 @@ namespace ElectricPalletStackers.PalletStackers
             forks.localPosition = position;
 
             if (!Mathf.Approximately(previousHeight, position.y)) OnHeightChanged?.Invoke(position.y);
-        }
-
-        private void OnValidate()
-        {
-            _speed = Mathf.Max(0f, _speed);
-            _maxHeight = Mathf.Max(_minHeight, _maxHeight);
-            _targetHeightNormalized = Mathf.Clamp01(_targetHeightNormalized);
         }
 
         public void SetTargetHeightNormalized(float normalizedHeight) =>

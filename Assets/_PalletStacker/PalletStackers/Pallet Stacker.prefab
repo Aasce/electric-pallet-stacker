@@ -15,11 +15,8 @@ GameObject:
   - component: {fileID: 2000879426146713516}
   - component: {fileID: 5210768195172812719}
   - component: {fileID: 8052187625384246911}
-  - component: {fileID: 7618002372905023212}
-  - component: {fileID: 4634689111448651331}
   - component: {fileID: 6482732429717059144}
   - component: {fileID: 8279041802158470694}
-  - component: {fileID: 7364921046813579204}
   - component: {fileID: 8991475523401287712}
   m_Layer: 0
   m_Name: Pallet Stacker
@@ -168,7 +165,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 140053820047635898}
+  m_GameObject: {fileID: 4292662039566759201}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f7b3a4a6beec44e08955e8cf014bdaf3, type: 3}
@@ -188,7 +185,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 140053820047635898}
+  m_GameObject: {fileID: 8094944667214103580}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9d1d9f326b7646909f1ebe70d4c9788d, type: 3}
@@ -244,7 +241,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 140053820047635898}
+  m_GameObject: {fileID: 1111601498581260034}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7cf16b3b94c147b3af6425c6d1ea61ad, type: 3}
@@ -477,6 +474,7 @@ GameObject:
   - component: {fileID: 2956598457584775767}
   - component: {fileID: 132941202339006511}
   - component: {fileID: 2588011611115910329}
+  - component: {fileID: 7364921046813579204}
   m_Layer: 0
   m_Name: Steering Wheel
   m_TagString: Untagged
@@ -1263,6 +1261,7 @@ GameObject:
   - component: {fileID: 164840407510776842}
   - component: {fileID: 88296503959227144}
   - component: {fileID: 1651452374257083092}
+  - component: {fileID: 7618002372905023212}
   m_Layer: 0
   m_Name: Steering Column
   m_TagString: Untagged
@@ -2243,6 +2242,7 @@ GameObject:
   - component: {fileID: 4976935864569595755}
   - component: {fileID: 983948408717150161}
   - component: {fileID: 1925951302014218082}
+  - component: {fileID: 4634689111448651331}
   m_Layer: 0
   m_Name: Horn Button
   m_TagString: Untagged

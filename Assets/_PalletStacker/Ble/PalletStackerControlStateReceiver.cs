@@ -71,11 +71,6 @@ namespace ElectricPalletStackers.Ble
             _lifetimeCancellation = null;
         }
 
-        private void OnValidate()
-        {
-            RefreshCharacteristicIds();
-        }
-
         public void Configure(BleManager bleManager)
         {
             if (ReferenceEquals(_bleManager, bleManager)) return;

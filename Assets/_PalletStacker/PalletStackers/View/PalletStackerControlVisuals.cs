@@ -54,12 +54,6 @@ namespace ElectricPalletStackers.PalletStackers
             }
         }
 
-        private void OnValidate()
-        {
-            if (_tillerLoweredInput <= _tillerRaisedInput)
-                _tillerLoweredInput = _tillerRaisedInput + 1f;
-        }
-
         public void StopImmediately()
         {
             if (_steeringVisual != null) _steeringVisual.localRotation = _steeringRestRotation;

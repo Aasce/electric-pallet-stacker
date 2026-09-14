@@ -41,25 +41,9 @@ namespace ElectricPalletStackers.PalletStackers
 
         private Transform Forks => _mast != null ? _mast.Forks : null;
 
-        private void Awake()
-        {
-            ResolveDependencies();
-        }
-
         private void OnDisable()
         {
             ReleaseLoad();
-        }
-
-        private void OnValidate()
-        {
-            ResolveDependencies();
-            _detectionSize.x = Mathf.Max(0.01f, _detectionSize.x);
-            _detectionSize.y = Mathf.Max(0.01f, _detectionSize.y);
-            _detectionSize.z = Mathf.Max(0.01f, _detectionSize.z);
-            _breakForce = Mathf.Max(0f, _breakForce);
-            _breakTorque = Mathf.Max(0f, _breakTorque);
-            _releaseAtMinimumHeightTolerance = Mathf.Max(0f, _releaseAtMinimumHeightTolerance);
         }
 
         private void FixedUpdate()
@@ -134,12 +118,6 @@ namespace ElectricPalletStackers.PalletStackers
             ClearHeldLoad(false);
 
             if (releasedLoad != null) LoadReleased?.Invoke(releasedLoad);
-        }
-
-        private void ResolveDependencies()
-        {
-            if (_mast == null) _mast = GetComponentInChildren<PalletStackerMast>(true);
-            if (_vehicleBody == null) _vehicleBody = GetComponentInParent<Rigidbody>();
         }
 
         private PalletStackerLoad FindNearestLoad()
