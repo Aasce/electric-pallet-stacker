@@ -54,7 +54,7 @@ namespace ElectricPalletStackers.PalletStackers
 
             bool movementInhibited = localInterlock ||
                                      !state.Enabled ||
-                                     state.Stop ||
+                                     state.TillerStop ||
                                      state.EmergencyStop;
             float travel = movementInhibited ? 0f : state.TravelNormalized;
             if (state.SlowMode) travel *= slowModeTravelMultiplier;
