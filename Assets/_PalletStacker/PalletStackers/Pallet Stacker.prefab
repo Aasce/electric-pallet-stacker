@@ -58,30 +58,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _mast: {fileID: 2871494232518386074}
---- !u!114 &8991475523401287712
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 140053820047635898}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bced5574d3eb4dd7b590d5f653eb5884, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.PalletStackers.PalletStackerLoadHandler
-  _mast: {fileID: 2871494232518386074}
-  _vehicleBody: {fileID: 3273737744600335219}
-  _detectionCenter: {x: 0.55, y: 0.3, z: 0}
-  _detectionSize: {x: 1.15, y: 0.7, z: 0.9}
-  _loadLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  _breakForce: 100000
-  _breakTorque: 100000
-  _releaseAtMinimumHeightTolerance: 0.03
-  _autoAttachWhenRaising: 1
-  _autoReleaseOnExternalSupport: 1
 --- !u!65 &5342792113791399360
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -285,6 +261,30 @@ MonoBehaviour:
   _useTween: 1
   _tweenDuration: 0.18
   _ease: 6
+--- !u!114 &8991475523401287712
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 140053820047635898}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bced5574d3eb4dd7b590d5f653eb5884, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.PalletStackers.PalletStackerLoadHandler
+  _mast: {fileID: 2871494232518386074}
+  _vehicleBody: {fileID: 3273737744600335219}
+  _detectionCenter: {x: 0.55, y: 0.3, z: 0}
+  _detectionSize: {x: 1.15, y: 0.7, z: 0.9}
+  _loadLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  _breakForce: 100000
+  _breakTorque: 100000
+  _releaseAtMinimumHeightTolerance: 0.03
+  _autoAttachWhenRaising: 1
+  _autoReleaseOnExternalSupport: 1
 --- !u!1 &661619483556231956
 GameObject:
   m_ObjectHideFlags: 0
@@ -1091,7 +1091,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.PalletStackers.PalletStackerMast
   forks: {fileID: 9182962428280208365}
-  _minHeight: 0.42
+  _minHeight: 0.3
   _maxHeight: 2
   _speed: 1
   _targetHeightNormalized: 0
@@ -1465,7 +1465,7 @@ Transform:
   m_GameObject: {fileID: 4614102318571954345}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.42, z: 0}
+  m_LocalPosition: {x: 0, y: 0.3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
