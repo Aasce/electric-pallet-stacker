@@ -10,8 +10,8 @@ namespace ElectricPalletStackers.PalletStackers
         [SerializeField] private Rigidbody _body;
 
         [Header("Vehicle geometry")]
-        [Tooltip("Local-space forward axis. The current simple model faces local +X.")]
-        [SerializeField] private Vector3 _localForwardAxis = Vector3.right;
+        [Tooltip("Fallback local-space forward axis used when the axle references cannot define a direction.")]
+        [SerializeField] private Vector3 _localForwardAxis = Vector3.forward;
         [Tooltip("Center of the fixed front axle. The current model's wide Wheel mesh represents this axle.")]
         [SerializeField] private Transform _fixedFrontAxleReference;
         [Tooltip("Center of the virtual steered and driven rear axle. Place it longitudinally under the Steering Column.")]
@@ -148,6 +148,18 @@ namespace ElectricPalletStackers.PalletStackers
 
         private Vector3 SafeLocalForward()
         {
+            if (_fixedFrontAxleReference != null && _steeredRearAxleReference != null)
+            {
+                Vector3 frontAxleLocalPosition = transform.InverseTransformPoint(_fixedFrontAxleReference.position);
+                Vector3 rearAxleLocalPosition = transform.InverseTransformPoint(_steeredRearAxleReference.position);
+                Vector3 referencedForward = Vector3.ProjectOnPlane(
+                    frontAxleLocalPosition - rearAxleLocalPosition,
+                    Vector3.up);
+
+                if (referencedForward.sqrMagnitude > 0.0001f)
+                    return referencedForward.normalized;
+            }
+
             Vector3 planar = Vector3.ProjectOnPlane(_localForwardAxis, Vector3.up);
             return planar.sqrMagnitude > 0.0001f ? planar.normalized : Vector3.forward;
         }

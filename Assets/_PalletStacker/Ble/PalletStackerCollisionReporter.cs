@@ -32,6 +32,11 @@ namespace ElectricPalletStackers.Ble
             float impactSpeed = GetMaximumObstacleImpactSpeed(collision);
             if (impactSpeed < _minimumRelativeSpeed) return;
 
+            Debug.LogWarning(
+                $"[PALLET STACKER] Collision interlock triggered by '{collision.gameObject.name}' " +
+                $"on layer {LayerMask.LayerToName(collision.gameObject.layer)} " +
+                $"at {impactSpeed:0.00} m/s.",
+                this);
             ReportCollision();
         }
 

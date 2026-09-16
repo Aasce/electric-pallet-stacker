@@ -12,10 +12,10 @@ namespace ElectricPalletStackers.PalletStackers
     public sealed class PalletStackerRearUserFollower : MonoBehaviour
     {
         [SerializeField] private Transform _userRig;
-        [Tooltip("Vehicle-local operator position. The vehicle travels along local +X, so -X is behind it.")]
-        [SerializeField] private Vector3 _localOperatorOffset = new Vector3(-2.2f, 0f, 0f);
-        [Tooltip("Rotates the rig's local +Z forward axis toward the vehicle's local +X travel direction.")]
-        [SerializeField] private Vector3 _localFacingEuler = new Vector3(0f, 90f, 0f);
+        [Tooltip("Vehicle-local operator position. The vehicle travels along local +Z, so -Z is behind it.")]
+        [SerializeField] private Vector3 _localOperatorOffset = new Vector3(0f, 0f, -2.2f);
+        [Tooltip("Rotates the rig's local +Z forward axis toward the vehicle's local +Z travel direction.")]
+        [SerializeField] private Vector3 _localFacingEuler = Vector3.zero;
         [SerializeField] private bool _followPosition = true;
         [SerializeField] private bool _followRotation = true;
 
