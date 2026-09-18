@@ -369,6 +369,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc56d8ee0d5d6b44e8e368d3dc48777e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.UI.UICustomButton
+  _button: {fileID: 3310313992196297336}
   _normalLayer: {fileID: 7652061269094257188}
   _focusedLayer: {fileID: 2958721061920801210}
   _label: {fileID: 7293555681797201110}

@@ -6,7 +6,7 @@ using UnityEngine;
 namespace ElectricPalletStackers.Gameplay
 {
     [DisallowMultipleComponent]
-    public sealed class PalletRoundController : MonoBehaviour, IGameRoundParticipant, IGameVictorySource
+    public sealed class PalletRoundController : MonoBehaviour, IGameRoundParticipant, IGameVictorySource, IGameResettable
     {
         [SerializeField] private PalletSpawner _palletSpawner;
         [SerializeField] private PalletStackerLoadHandler _loadHandler;
@@ -51,6 +51,13 @@ namespace ElectricPalletStackers.Gameplay
         public void FinishRound(GameState result)
         {
             DeactivateDestinations();
+        }
+
+        public void ResetState()
+        {
+            DeactivateDestinations();
+            _loadHandler?.ReleaseLoad();
+            _palletSpawner?.ResetPallet();
         }
 
         private void OnDisable()

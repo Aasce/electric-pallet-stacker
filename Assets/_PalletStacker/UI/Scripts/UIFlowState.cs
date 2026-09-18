@@ -6,6 +6,7 @@ namespace ElectricPalletStackers.UI
         Welcome,
         Guide,
         Hidden,
-        Completed
+        Completed,
+        Failed
     }
 }

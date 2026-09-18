@@ -11,8 +11,18 @@ namespace ElectricPalletStackers.Gameplay
         [SerializeField] private PalletStackerLoad _pallet;
         [SerializeField] private Transform[] _spawnPoints;
 
+        private Vector3 _initialPosition;
+        private Quaternion _initialRotation;
+
         public PalletStackerLoad CurrentPallet => _pallet;
         public IReadOnlyList<Transform> SpawnPoints => _spawnPoints;
+
+        private void Awake()
+        {
+            if (_pallet == null) return;
+            _initialPosition = _pallet.transform.position;
+            _initialRotation = _pallet.transform.rotation;
+        }
 
         public PalletStackerLoad SpawnRandom()
         {
@@ -49,6 +59,27 @@ namespace ElectricPalletStackers.Gameplay
 
             _pallet.ResetSupportTracking();
             return _pallet;
+        }
+
+        public void ResetPallet()
+        {
+            if (_pallet == null) return;
+
+            Rigidbody body = _pallet.Body;
+            if (body != null)
+            {
+                body.linearVelocity = Vector3.zero;
+                body.angularVelocity = Vector3.zero;
+                body.position = _initialPosition;
+                body.rotation = _initialRotation;
+                body.Sleep();
+            }
+            else
+            {
+                _pallet.transform.SetPositionAndRotation(_initialPosition, _initialRotation);
+            }
+
+            _pallet.ResetSupportTracking();
         }
 
         private Transform GetRandomValidSpawnPoint()

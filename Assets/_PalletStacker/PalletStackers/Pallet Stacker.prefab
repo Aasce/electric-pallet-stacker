@@ -177,6 +177,7 @@ MonoBehaviour:
   _minimumRelativeSpeed: 0
   _ignoreGroundLikeContacts: 1
   _groundNormalDotThreshold: 0.7
+  _forkCargoSafeColliders: []
   _onLocalCollisionDetected:
     m_PersistentCalls:
       m_Calls: []
@@ -879,10 +880,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.PalletStackers.PalletStackerMast
   forks: {fileID: 9182962428280208365}
+  _forkMeshFilter: {fileID: 6288907893302402753}
+  _loadHandler: {fileID: 8991475523401287712}
+  _vehicleRoot: {fileID: 550797599305683205}
   _minHeight: 0.3
   _maxHeight: 2
   _speed: 1
   _targetHeightNormalized: 0
+  _obstructionLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  _obstructionSkin: 0.01
+  _obstructionHorizontalPadding: 0.01
 --- !u!1 &3335457538247719715
 GameObject:
   m_ObjectHideFlags: 0
@@ -1224,6 +1233,8 @@ GameObject:
   - component: {fileID: 9182962428280208365}
   - component: {fileID: 6288907893302402753}
   - component: {fileID: 5837098102143072530}
+  - component: {fileID: 780000000000000001}
+  - component: {fileID: 780000000000000002}
   m_Layer: 0
   m_Name: Forks
   m_TagString: Untagged
@@ -1305,6 +1316,47 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &780000000000000001
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4614102318571954345}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.1, y: 0.04, z: 0.7}
+  m_Center: {x: 0.55, y: -0.08, z: 0}
+--- !u!114 &780000000000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4614102318571954345}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c95d29e2e70467482a3d4ac84ea270f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Ble.PalletStackerForkCollisionSensor
+  _sensor: {fileID: 780000000000000001}
+  _collisionReporter: {fileID: 6482732429717059144}
+  _vehicleRoot: {fileID: 550797599305683205}
+  _collisionLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  _ignoreGroundLikeContacts: 1
+  _groundClearance: 0.03
 --- !u!1 &4684141124493317398
 GameObject:
   m_ObjectHideFlags: 0

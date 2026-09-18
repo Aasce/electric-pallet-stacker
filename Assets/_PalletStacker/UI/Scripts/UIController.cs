@@ -11,6 +11,7 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private UIWelcomePanel _welcomePanel;
         [SerializeField] private UIGuidePanel _guidePanel;
         [SerializeField] private UICompletedPanel _completedPanel;
+        [SerializeField] private UIFailedPanel _failedPanel;
 
         public UIFlowState CurrentState { get; private set; } = UIFlowState.SelectLanguage;
         public bool IsInputCaptured => CurrentState != UIFlowState.Hidden;
@@ -35,6 +36,7 @@ namespace ElectricPalletStackers.UI
             _welcomePanel?.Hide();
             _guidePanel?.Hide();
             _completedPanel?.Hide();
+            _failedPanel?.Hide();
 
             CurrentState = UIFlowState.SelectLanguage;
             _inputRouter?.ResetForPanel();
@@ -93,6 +95,7 @@ namespace ElectricPalletStackers.UI
                     TransitionTo(UIFlowState.Hidden);
                     break;
                 case UIFlowState.Completed:
+                case UIFlowState.Failed:
                     ResetRequested?.Invoke();
                     TransitionTo(UIFlowState.Welcome);
                     break;
@@ -102,6 +105,11 @@ namespace ElectricPalletStackers.UI
         public void ShowCompleted()
         {
             TransitionTo(UIFlowState.Completed);
+        }
+
+        public void ShowFailed()
+        {
+            TransitionTo(UIFlowState.Failed);
         }
 
         private void HandleLanguageFocusChanged(UILanguageCode language)
@@ -118,6 +126,7 @@ namespace ElectricPalletStackers.UI
             _welcomePanel?.Hide();
             _guidePanel?.Hide();
             _completedPanel?.Hide();
+            _failedPanel?.Hide();
 
             CurrentState = nextState;
             _inputRouter?.ResetForPanel();
@@ -135,6 +144,9 @@ namespace ElectricPalletStackers.UI
                     break;
                 case UIFlowState.Completed:
                     _completedPanel?.Show();
+                    break;
+                case UIFlowState.Failed:
+                    _failedPanel?.Show();
                     break;
             }
 

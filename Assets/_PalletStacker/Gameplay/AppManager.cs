@@ -15,6 +15,8 @@ namespace ElectricPalletStackers.Gameplay
         [SerializeField] private MonoBehaviour[] _victorySourceComponents;
         [Tooltip("Components implementing IGameFailureSource.")]
         [SerializeField] private MonoBehaviour[] _failureSourceComponents;
+        [Tooltip("Components implementing IGameResettable.")]
+        [SerializeField] private MonoBehaviour[] _resettableComponents;
 
         [Header("Startup")]
         [Tooltip("Leave disabled when UIFlowGameStarter starts the round after the guide UI closes.")]
@@ -23,6 +25,7 @@ namespace ElectricPalletStackers.Gameplay
         private readonly List<IGameRoundParticipant> _roundParticipants = new();
         private readonly List<IGameVictorySource> _victorySources = new();
         private readonly List<IGameFailureSource> _failureSources = new();
+        private readonly List<IGameResettable> _resettables = new();
         private bool _sourcesSubscribed;
 
         public GameState CurrentState { get; private set; } = GameState.Initializing;
@@ -67,6 +70,20 @@ namespace ElectricPalletStackers.Gameplay
         public void RestartRound()
         {
             StartRound();
+        }
+
+        public void ResetToWaitingState()
+        {
+            if (CurrentState == GameState.Playing)
+            {
+                for (int index = 0; index < _roundParticipants.Count; index++)
+                    _roundParticipants[index].FinishRound(GameState.Lost);
+            }
+
+            for (int index = 0; index < _resettables.Count; index++)
+                _resettables[index].ResetState();
+
+            TransitionTo(GameState.WaitingToStart);
         }
 
         [ContextMenu("Start Round")]
@@ -125,6 +142,7 @@ namespace ElectricPalletStackers.Gameplay
             CacheInterfaces(_roundParticipantComponents, _roundParticipants, nameof(_roundParticipantComponents));
             CacheInterfaces(_victorySourceComponents, _victorySources, nameof(_victorySourceComponents));
             CacheInterfaces(_failureSourceComponents, _failureSources, nameof(_failureSourceComponents));
+            CacheInterfaces(_resettableComponents, _resettables, nameof(_resettableComponents));
         }
 
         private void CacheInterfaces<T>(MonoBehaviour[] components, List<T> targets, string fieldName)

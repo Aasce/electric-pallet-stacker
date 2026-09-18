@@ -24,7 +24,10 @@ namespace ElectricPalletStackers.UI
             }
 
             if (_appManager != null)
+            {
                 _appManager.GameWon += HandleGameWon;
+                _appManager.GameLost += HandleGameLost;
+            }
 
             TryStartFromCurrentState();
         }
@@ -38,7 +41,10 @@ namespace ElectricPalletStackers.UI
             }
 
             if (_appManager != null)
+            {
                 _appManager.GameWon -= HandleGameWon;
+                _appManager.GameLost -= HandleGameLost;
+            }
         }
 
         private void HandlePanelChanged(UIFlowState state)
@@ -65,12 +71,15 @@ namespace ElectricPalletStackers.UI
             _uiController?.ShowCompleted();
         }
 
+        private void HandleGameLost()
+        {
+            _uiController?.ShowFailed();
+        }
+
         private void HandleResetRequested()
         {
             _hasStarted = false;
-
-            // TODO: Reset any additional gameplay and presentation state here.
-            // The next transition to Hidden will start a freshly prepared round.
+            _appManager?.ResetToWaitingState();
         }
     }
 }

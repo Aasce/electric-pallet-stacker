@@ -95,9 +95,5 @@ namespace ElectricPalletStackers.UI
             _navigationArmed = true;
         }
 
-        private void OnValidate()
-        {
-            _navigationReleaseThreshold = Mathf.Min(_navigationReleaseThreshold, _navigationEnterThreshold);
-        }
     }
 }

@@ -8,14 +8,7 @@ namespace ElectricPalletStackers.UI
     {
         [SerializeField] private CanvasGroup _canvasGroup;
 
-        protected CanvasGroup PanelCanvasGroup
-        {
-            get
-            {
-                if (_canvasGroup == null) _canvasGroup = GetComponent<CanvasGroup>();
-                return _canvasGroup;
-            }
-        }
+        protected CanvasGroup PanelCanvasGroup => _canvasGroup;
 
         public virtual void Show()
         {

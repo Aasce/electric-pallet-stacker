@@ -17,4 +17,9 @@ namespace ElectricPalletStackers.Gameplay
     {
         event Action FailureRequested;
     }
+
+    public interface IGameResettable
+    {
+        void ResetState();
+    }
 }

@@ -35,9 +35,12 @@ namespace ElectricPalletStackers.PalletStackers
 
         public event Action<PalletStackerLoad> LoadAttached;
         public event Action<PalletStackerLoad> LoadReleased;
+        public event Action<PalletStackerLoad> LoadJointBroken;
 
         public PalletStackerLoad HeldLoad => _heldLoad;
         public bool HasLoad => _heldLoad != null && _joint != null;
+        public PalletStackerMast Mast => _mast;
+        public Rigidbody VehicleBody => _vehicleBody;
 
         private Transform Forks => _mast != null ? _mast.Forks : null;
 
@@ -51,7 +54,7 @@ namespace ElectricPalletStackers.PalletStackers
             if (_mast == null || _vehicleBody == null || Forks == null) return;
 
             if (_heldLoad != null && _joint == null)
-                ClearHeldLoad(true);
+                HandleBrokenJoint();
 
             if (HasLoad)
             {
@@ -115,7 +118,19 @@ namespace ElectricPalletStackers.PalletStackers
             if (_heldLoad == null && _joint == null) return;
 
             PalletStackerLoad releasedLoad = _heldLoad;
-            if (_joint != null) Destroy(_joint);
+            if (_joint != null)
+            {
+                // Remove the constraint immediately; Destroy itself is deferred until
+                // the end of the frame and a round reset may reposition the load now.
+                _joint.connectedBody = null;
+                _joint.xMotion = ConfigurableJointMotion.Free;
+                _joint.yMotion = ConfigurableJointMotion.Free;
+                _joint.zMotion = ConfigurableJointMotion.Free;
+                _joint.angularXMotion = ConfigurableJointMotion.Free;
+                _joint.angularYMotion = ConfigurableJointMotion.Free;
+                _joint.angularZMotion = ConfigurableJointMotion.Free;
+                Destroy(_joint);
+            }
             ClearHeldLoad(false);
 
             if (releasedLoad != null) LoadReleased?.Invoke(releasedLoad);
@@ -187,6 +202,16 @@ namespace ElectricPalletStackers.PalletStackers
 
         private bool IsLowering() =>
             _mast.TargetHeight < _mast.CurrentHeight - 0.0001f;
+
+        private void HandleBrokenJoint()
+        {
+            PalletStackerLoad brokenLoad = _heldLoad;
+            ClearHeldLoad(false);
+
+            if (brokenLoad == null) return;
+            LoadJointBroken?.Invoke(brokenLoad);
+            LoadReleased?.Invoke(brokenLoad);
+        }
 
         private void ClearHeldLoad(bool notify)
         {

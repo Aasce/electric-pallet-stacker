@@ -7,16 +7,14 @@ using UnityEngine.UI;
 namespace ElectricPalletStackers.UI
 {
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(Button))]
     public sealed class UICustomButton : MonoBehaviour, ISelectHandler, IDeselectHandler
     {
+        [SerializeField] private Button _button;
         [SerializeField] private GameObject _normalLayer;
         [SerializeField] private GameObject _focusedLayer;
         [SerializeField] private TextMeshProUGUI _label;
 
-        private Button _button;
-
-        public Button Button => _button != null ? _button : (_button = GetComponent<Button>());
+        public Button Button => _button;
         public TextMeshProUGUI Label => _label;
         public bool IsFocused { get; private set; }
 

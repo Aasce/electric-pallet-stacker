@@ -6,14 +6,13 @@ using UnityEngine;
 namespace ElectricPalletStackers.Gameplay
 {
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(BoxCollider))]
     public sealed class PalletDestinationZone : MonoBehaviour
     {
+        [SerializeField] private BoxCollider _trigger;
         [SerializeField, Min(0f)] private float _confirmationDuration = 1f;
         [SerializeField] private GameObject _activeVisual;
 
         private readonly HashSet<Collider> _overlappingTargetColliders = new();
-        private BoxCollider _trigger;
         private PalletStackerLoad _targetPallet;
         private PalletStackerLoadHandler _loadHandler;
         private float _validDuration;
@@ -28,8 +27,7 @@ namespace ElectricPalletStackers.Gameplay
 
         private void Awake()
         {
-            _trigger = GetComponent<BoxCollider>();
-            if (!_trigger.isTrigger)
+            if (_trigger != null && !_trigger.isTrigger)
                 Debug.LogError("PalletDestinationZone requires its BoxCollider to be a trigger.", this);
 
             Disarm();
@@ -71,8 +69,6 @@ namespace ElectricPalletStackers.Gameplay
 
         public void Arm(PalletStackerLoad targetPallet, PalletStackerLoadHandler loadHandler)
         {
-            if (_trigger == null) _trigger = GetComponent<BoxCollider>();
-
             _targetPallet = targetPallet;
             _loadHandler = loadHandler;
             _validDuration = 0f;
@@ -85,7 +81,6 @@ namespace ElectricPalletStackers.Gameplay
 
         public void Disarm()
         {
-            if (_trigger == null) _trigger = GetComponent<BoxCollider>();
             if (_trigger != null) _trigger.enabled = false;
             if (_activeVisual != null) _activeVisual.SetActive(false);
 
@@ -113,10 +108,5 @@ namespace ElectricPalletStackers.Gameplay
             return _loadHandler == null || _loadHandler.HeldLoad != _targetPallet;
         }
 
-        private void Reset()
-        {
-            BoxCollider boxCollider = GetComponent<BoxCollider>();
-            boxCollider.isTrigger = true;
-        }
     }
 }
