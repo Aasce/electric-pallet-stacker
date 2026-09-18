@@ -1,4 +1,5 @@
 using System;
+using ElectricPalletStackers.PalletStackers;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -13,8 +14,10 @@ namespace ElectricPalletStackers.Ble
         [SerializeField, Min(0f)] private float _minimumRelativeSpeed;
         [Tooltip("Prevents the floor/support surface from being reported as an obstacle collision.")]
         [SerializeField] private bool _ignoreGroundLikeContacts = true;
-        [Tooltip("Contacts whose normal is this aligned with world up/down are treated as ground-like.")]
+        [Tooltip("Contacts whose normal is this aligned with world up are treated as ground-like.")]
         [SerializeField, Range(0f, 1f)] private float _groundNormalDotThreshold = 0.7f;
+        [Tooltip("Fork colliders that may touch PalletStackerLoad cargo without causing a loss. Their contacts with every other object are still reported.")]
+        [SerializeField] private Collider[] _forkCargoSafeColliders;
         [SerializeField] private UnityEvent _onLocalCollisionDetected;
 
         public event Action CollisionDetected;
@@ -47,8 +50,11 @@ namespace ElectricPalletStackers.Ble
 
             for (int index = 0; index < collision.contactCount; index++)
             {
-                Vector3 normal = collision.GetContact(index).normal.normalized;
-                float upAlignment = Mathf.Abs(Vector3.Dot(normal, Vector3.up));
+                ContactPoint contact = collision.GetContact(index);
+                if (IsSafeForkCargoContact(contact)) continue;
+
+                Vector3 normal = contact.normal.normalized;
+                float upAlignment = Vector3.Dot(normal, Vector3.up);
                 if (_ignoreGroundLikeContacts && upAlignment >= _groundNormalDotThreshold) continue;
 
                 foundObstacleContact = true;
@@ -57,6 +63,27 @@ namespace ElectricPalletStackers.Ble
             }
 
             return foundObstacleContact ? maximumImpactSpeed : 0f;
+        }
+
+        private bool IsSafeForkCargoContact(ContactPoint contact)
+        {
+            if (_forkCargoSafeColliders == null) return false;
+
+            for (int index = 0; index < _forkCargoSafeColliders.Length; index++)
+            {
+                Collider forkCollider = _forkCargoSafeColliders[index];
+                if (forkCollider == null) continue;
+
+                Collider otherCollider = null;
+                if (contact.thisCollider == forkCollider) otherCollider = contact.otherCollider;
+                else if (contact.otherCollider == forkCollider) otherCollider = contact.thisCollider;
+
+                if (otherCollider != null &&
+                    otherCollider.GetComponentInParent<PalletStackerLoad>() != null)
+                    return true;
+            }
+
+            return false;
         }
 
         [ContextMenu("Simulate Vehicle Collision")]

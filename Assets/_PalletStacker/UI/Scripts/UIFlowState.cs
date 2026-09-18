@@ -5,6 +5,7 @@ namespace ElectricPalletStackers.UI
         SelectLanguage,
         Welcome,
         Guide,
-        Hidden
+        Hidden,
+        Completed
     }
 }

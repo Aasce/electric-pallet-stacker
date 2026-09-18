@@ -104,6 +104,7 @@ namespace ElectricPalletStackers.PalletStackers
 
             loadBody.interpolation = RigidbodyInterpolation.Interpolate;
             loadBody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            loadBody.WakeUp();
 
             LoadAttached?.Invoke(load);
             return true;

@@ -174,7 +174,7 @@ MonoBehaviour:
   _collisionLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  _minimumRelativeSpeed: 0.2
+  _minimumRelativeSpeed: 0
   _ignoreGroundLikeContacts: 1
   _groundNormalDotThreshold: 0.7
   _onLocalCollisionDetected:

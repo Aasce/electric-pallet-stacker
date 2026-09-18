@@ -10,6 +10,7 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private UISelectLanguagePanel _selectLanguagePanel;
         [SerializeField] private UIWelcomePanel _welcomePanel;
         [SerializeField] private UIGuidePanel _guidePanel;
+        [SerializeField] private UICompletedPanel _completedPanel;
 
         public UIFlowState CurrentState { get; private set; } = UIFlowState.SelectLanguage;
         public bool IsInputCaptured => CurrentState != UIFlowState.Hidden;
@@ -20,6 +21,10 @@ namespace ElectricPalletStackers.UI
         public event Action<bool> InputCaptureChanged;
         public event Action<UILanguageCode> LanguagePreviewChanged;
         public event Action<UILanguageCode> LanguageConfirmed;
+        /// <summary>
+        /// Placeholder hook for systems that need to reset transient state before a new run.
+        /// </summary>
+        public event Action ResetRequested;
 
         private void Awake()
         {
@@ -29,6 +34,7 @@ namespace ElectricPalletStackers.UI
             _selectLanguagePanel?.Hide();
             _welcomePanel?.Hide();
             _guidePanel?.Hide();
+            _completedPanel?.Hide();
 
             CurrentState = UIFlowState.SelectLanguage;
             _inputRouter?.ResetForPanel();
@@ -86,7 +92,16 @@ namespace ElectricPalletStackers.UI
                 case UIFlowState.Guide:
                     TransitionTo(UIFlowState.Hidden);
                     break;
+                case UIFlowState.Completed:
+                    ResetRequested?.Invoke();
+                    TransitionTo(UIFlowState.Welcome);
+                    break;
             }
+        }
+
+        public void ShowCompleted()
+        {
+            TransitionTo(UIFlowState.Completed);
         }
 
         private void HandleLanguageFocusChanged(UILanguageCode language)
@@ -102,6 +117,7 @@ namespace ElectricPalletStackers.UI
             _selectLanguagePanel?.Hide();
             _welcomePanel?.Hide();
             _guidePanel?.Hide();
+            _completedPanel?.Hide();
 
             CurrentState = nextState;
             _inputRouter?.ResetForPanel();
@@ -116,6 +132,9 @@ namespace ElectricPalletStackers.UI
                     break;
                 case UIFlowState.Guide:
                     _guidePanel?.Show();
+                    break;
+                case UIFlowState.Completed:
+                    _completedPanel?.Show();
                     break;
             }
 

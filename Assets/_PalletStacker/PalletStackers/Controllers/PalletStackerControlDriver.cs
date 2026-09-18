@@ -20,6 +20,7 @@ namespace ElectricPalletStackers.PalletStackers
         private readonly List<IPalletStackerControlOutput> _outputs = new List<IPalletStackerControlOutput>();
         private bool _sourceSubscribed;
         private bool _collisionInterlock;
+        private bool _gameplayInterlock;
 
         public PalletStackerControlState CurrentState { get; private set; }
         public PalletStackerDriveCommand CurrentCommand { get; private set; } = PalletStackerDriveCommand.CreateFailSafe();
@@ -30,6 +31,7 @@ namespace ElectricPalletStackers.PalletStackers
         public bool SlowMode => CurrentCommand.SlowMode;
         public bool EmergencyStop => CurrentCommand.EmergencyStop;
         public bool CollisionInterlock => _collisionInterlock;
+        public bool GameplayInterlock => _gameplayInterlock;
 
         public event Action<PalletStackerControlState, ushort> ControlUpdated;
         public event Action<PalletStackerDriveCommand> CommandApplied;
@@ -73,6 +75,26 @@ namespace ElectricPalletStackers.PalletStackers
             if (!_collisionInterlock) return;
             _collisionInterlock = false;
 
+            ReapplyCurrentState();
+        }
+
+        public void SetGameplayInterlock(bool engaged)
+        {
+            if (_gameplayInterlock == engaged) return;
+            _gameplayInterlock = engaged;
+
+            if (engaged)
+            {
+                ApplyCommand(PalletStackerDriveCommand.CreateFailSafe(localInterlock: true));
+                return;
+            }
+
+            ReapplyCurrentState();
+        }
+
+        private void ReapplyCurrentState()
+        {
+
             if (_stateReceiver != null && _stateReceiver.LastAppliedSequence.HasValue)
             {
                 HandleStateApplied(
@@ -96,7 +118,7 @@ namespace ElectricPalletStackers.PalletStackers
                 state,
                 sequence,
                 _slowModeTravelMultiplier,
-                _collisionInterlock);
+                _collisionInterlock || _gameplayInterlock);
             ApplyCommand(command);
             ControlUpdated?.Invoke(state, sequence);
         }
@@ -117,7 +139,8 @@ namespace ElectricPalletStackers.PalletStackers
 
         private void ApplyFailSafe()
         {
-            ApplyCommand(PalletStackerDriveCommand.CreateFailSafe(_collisionInterlock));
+            ApplyCommand(PalletStackerDriveCommand.CreateFailSafe(
+                _collisionInterlock || _gameplayInterlock));
         }
 
         private void ApplyCommand(PalletStackerDriveCommand command)

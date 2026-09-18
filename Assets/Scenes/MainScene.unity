@@ -137,63 +137,6 @@ PhysicsMaterial:
   m_Bounciness: 0
   m_FrictionCombine: 0
   m_BounceCombine: 0
---- !u!1001 &146480855
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 2085204513769715176, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_Name
-      value: Pallet (1)
-      objectReference: {fileID: 0}
-    - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 2.1599998
-      objectReference: {fileID: 0}
-    - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 8.85
-      objectReference: {fileID: 0}
-    - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
 --- !u!1 &299639867
 GameObject:
   m_ObjectHideFlags: 0
@@ -302,7 +245,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: 
   m_UsePipelineSettings: 1
   m_AdditionalLightsShadowResolutionTier: 2
@@ -445,7 +388,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7e9afa4ee162b7a4b9f1bea355276e42, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.UI.UIGuidePanel
 --- !u!134 &431576736
 PhysicsMaterial:
@@ -453,7 +396,7 @@ PhysicsMaterial:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: 
+  m_Name:
   serializedVersion: 2
   m_DynamicFriction: 0.6
   m_StaticFriction: 0.6
@@ -566,7 +509,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 132492cdac3f45f58fdd02e8be5c08d8, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: 
 --- !u!114 &455976370 stripped
 MonoBehaviour:
@@ -577,7 +520,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6220d521f423411f8e6774e0f8a8d8e3, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: 
 --- !u!1 &533318790
 GameObject:
@@ -662,7 +605,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.GraphicRaycaster
   m_IgnoreReversedGraphics: 1
   m_BlockingObjects: 0
@@ -679,7 +622,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
   m_UiScaleMode: 0
   m_ReferencePixelsPerUnit: 100
@@ -763,7 +706,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0.392}
@@ -801,7 +744,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.LayoutElement
   m_IgnoreLayout: 0
   m_MinWidth: -1
@@ -838,7 +781,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 83e4e6cca11330d4088d729ab4fc9d9f, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: 
   m_StartingHoverFilters: []
   m_StartingSelectFilters: []
@@ -889,7 +832,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 75891168f44d4e55bdb86cb06f0cf61a, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Ble.PalletStackerBleDebugPanel
   _bleManager: {fileID: 963828117}
   _client: {fileID: 963828114}
@@ -917,7 +860,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1d23872ef5b24afc97fd3496bd19dcae, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Ble.PalletStackerBleClient
   _bleManager: {fileID: 963828117}
   _stateReceiver: {fileID: 963828116}
@@ -938,7 +881,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ccc1d49426da4e2ca705e993158f4e97, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Ble.PalletStackerCollisionSender
   _bleManager: {fileID: 963828117}
   _serviceUuid: 7b7e0001-7c6f-4f8b-9a5b-2f7c2a4d1000
@@ -958,7 +901,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6fa963b866f9b8e428c63d0d200f519b, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Ble.PalletStackerControlStateReceiver
   _bleManager: {fileID: 963828117}
   _serviceUuid: 7b7e0001-7c6f-4f8b-9a5b-2f7c2a4d1000
@@ -986,7 +929,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ad3d21deb4180c145a44715734d49cc8, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Spaxtek.Ble.Runtime::Spaxtek.Ble.Unity.BleManager
   _initializeOnAwake: 1
   _dontDestroyOnLoad: 1
@@ -1016,7 +959,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f3e3fa27f9634f2b8c048c5dc5715016, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: 
   _stateReceiver: {fileID: 963828116}
   _bleManager: {fileID: 963828117}
@@ -1140,70 +1083,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d9a6bfa089a8b934a855479a1711e366, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.UI.UISelectLanguagePanel
 --- !u!224 &1114851440 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 760676954466425076, guid: f9759c44d244fc7409b1072491444f53, type: 3}
   m_PrefabInstance: {fileID: 1114851438}
   m_PrefabAsset: {fileID: 0}
---- !u!1001 &1185384913
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 2085204513769715176, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_Name
-      value: Pallet (2)
-      objectReference: {fileID: 0}
-    - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 4.14
-      objectReference: {fileID: 0}
-    - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 8.85
-      objectReference: {fileID: 0}
-    - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
 --- !u!1 &1249617917
 GameObject:
   m_ObjectHideFlags: 0
@@ -1328,7 +1214,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 38f6bf3d943ac7945842268c9ef1dca6, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: 
   m_InteractionManager: {fileID: 0}
   m_Colliders: []
@@ -1436,6 +1322,7 @@ RectTransform:
   - {fileID: 729986397}
   - {fileID: 1114851440}
   - {fileID: 1362531949}
+  - {fileID: 2100000003}
   - {fileID: 310148871}
   m_Father: {fileID: 533318791}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1454,7 +1341,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.GraphicRaycaster
   m_IgnoreReversedGraphics: 1
   m_BlockingObjects: 0
@@ -1471,7 +1358,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
   m_UiScaleMode: 0
   m_ReferencePixelsPerUnit: 100
@@ -1617,12 +1504,129 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4accb007b2a4f8d4fb7d631063e1a2eb, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.UI.UIWelcomePanel
 --- !u!224 &1362531949 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 1035574838104469400, guid: 5684774bf29b7fe4e82e7e420d757747, type: 3}
   m_PrefabInstance: {fileID: 1362531947}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &2100000001
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1297741382}
+    m_Modifications:
+    - target: {fileID: 1035574838104469400, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1035574838104469400, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1035574838104469400, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1035574838104469400, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1035574838104469400, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1035574838104469400, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1035574838104469400, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1035574838104469400, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1035574838104469400, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1035574838104469400, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1035574838104469400, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1035574838104469400, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1035574838104469400, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1035574838104469400, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1035574838104469400, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1035574838104469400, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1035574838104469400, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1035574838104469400, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1035574838104469400, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1035574838104469400, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4431324767759703178, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+      propertyPath: m_Name
+      value: UI Completed Panel
+      objectReference: {fileID: 0}
+    - target: {fileID: 4431324767759703178, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+--- !u!114 &2100000002 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 85909728798670906, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+  m_PrefabInstance: {fileID: 2100000001}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e741d3890344b869d2894bde261e88d, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.UI.UICompletedPanel
+--- !u!224 &2100000003 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 1035574838104469400, guid: c0a75412a0c84afc9872738662774d95, type: 3}
+  m_PrefabInstance: {fileID: 2100000001}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &1533760413
 GameObject:
@@ -1671,7 +1675,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0.392}
@@ -1744,6 +1748,7 @@ GameObject:
   - component: {fileID: 1662881605}
   - component: {fileID: 1662881607}
   - component: {fileID: 1662881606}
+  - component: {fileID: 1662881609}
   m_Layer: 0
   m_Name: UI Root
   m_TagString: Untagged
@@ -1761,7 +1766,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 30e71e42ad415414b862fd849f41a72b, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.UI.UIInputRouter
   _stateReceiver: {fileID: 963828116}
   _navigationEnterThreshold: 0.6
@@ -1777,7 +1782,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 79a187958057dd2418d9f00a2868fc7d, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.UI.UIGameplayInputGate
   _uiController: {fileID: 1662881607}
   _stateReceiver: {fileID: 963828116}
@@ -1793,12 +1798,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ec72546729d4123448d0b3dfb073402d, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.UI.UIController
   _inputRouter: {fileID: 1662881605}
   _selectLanguagePanel: {fileID: 1114851439}
   _welcomePanel: {fileID: 1362531948}
   _guidePanel: {fileID: 310148872}
+  _completedPanel: {fileID: 2100000002}
 --- !u!4 &1662881608
 Transform:
   m_ObjectHideFlags: 0
@@ -1814,6 +1820,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1297741382}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1662881609
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1662881604}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0416fa30f94c49969797e228ae9c5ab8, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.UI.UIFlowGameStarter
+  _uiController: {fileID: 1662881607}
+  _appManager: {fileID: 1900000002}
 --- !u!1 &1673396766
 GameObject:
   m_ObjectHideFlags: 0
@@ -1823,6 +1843,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1673396767}
+  - component: {fileID: 2147000000}
   m_Layer: 0
   m_Name: UIs
   m_TagString: Untagged
@@ -1846,6 +1867,22 @@ Transform:
   - {fileID: 533318791}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2147000000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1673396766}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a82373cf5ce46eea45bb23aa37ec484, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.UI.TargetFollower
+  _target: {fileID: 2147000001}
+  _isFollowPosition: 1
+  _isFollowRotation: 1
+  _positionOffset: {x: 0, y: 0, z: 0}
 --- !u!1 &1768029058
 GameObject:
   m_ObjectHideFlags: 0
@@ -1895,7 +1932,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.GraphicRaycaster
   m_IgnoreReversedGraphics: 1
   m_BlockingObjects: 0
@@ -1912,7 +1949,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
   m_UiScaleMode: 0
   m_ReferencePixelsPerUnit: 100
@@ -1995,7 +2032,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0.392}
@@ -2051,7 +2088,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ab68ce6587aab0146b8dabefbd806791, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: 
   m_SendPointerHoverToParent: 1
   m_ClickSpeed: 0.3
@@ -2091,7 +2128,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 76c392e42b5098c458856cdf6ecaaaa1, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: 
   m_FirstSelected: {fileID: 0}
   m_sendNavigationEvents: 0
@@ -2184,13 +2221,329 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
---- !u!1001 &8421806518989267652
+--- !u!4 &2147000001 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 550797599305683205, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+  m_PrefabInstance: {fileID: 3505153867693228158}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1900000100 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8991475523401287712, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+  m_PrefabInstance: {fileID: 3505153867693228158}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bced5574d3eb4dd7b590d5f653eb5884, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.PalletStackers.PalletStackerLoadHandler
+--- !u!1 &1900000000
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1900000001}
+  - component: {fileID: 1900000002}
+  - component: {fileID: 1900000003}
+  - component: {fileID: 1900000004}
+  - component: {fileID: 1900000005}
+  m_Layer: 0
+  m_Name: Gameplay
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1900000001
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1900000000}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1900000021}
+  - {fileID: 1900000011}
+  - {fileID: 1900000061}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1900000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1900000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3464206db6bb4f62b413c52dfcd76d72, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Gameplay.AppManager
+  _roundParticipantComponents:
+  - {fileID: 1900000005}
+  - {fileID: 1900000004}
+  _victorySourceComponents:
+  - {fileID: 1900000004}
+  _failureSourceComponents:
+  - {fileID: 1900000005}
+  _autoStart: 0
+--- !u!114 &1900000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1900000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b53efcad454a47c79efb4f21e99dc5a3, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Gameplay.PalletSpawner
+  _pallet: {fileID: 1900000122}
+  _spawnPoints:
+  - {fileID: 1900000031}
+  - {fileID: 1900000041}
+  - {fileID: 1900000051}
+--- !u!114 &1900000004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1900000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7199609276bc4633a21c8c1bc2b816ac, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Gameplay.PalletRoundController
+  _palletSpawner: {fileID: 1900000003}
+  _loadHandler: {fileID: 1900000100}
+  _destinationZones:
+  - {fileID: 1900000132}
+  - {fileID: 1900000142}
+  - {fileID: 1900000152}
+--- !u!114 &1900000005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1900000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91488e188f254735bb88303966c355c2, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Gameplay.PalletStackerGameController
+  _collisionReporter: {fileID: 455976367}
+  _controlDriver: {fileID: 455976370}
+--- !u!1 &1900000020
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1900000021}
+  m_Layer: 0
+  m_Name: Runtime
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1900000021
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1900000020}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1900000121}
+  m_Father: {fileID: 1900000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1900000010
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1900000011}
+  m_Layer: 0
+  m_Name: Spawn Points
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1900000011
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1900000010}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1900000031}
+  - {fileID: 1900000041}
+  - {fileID: 1900000051}
+  m_Father: {fileID: 1900000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1900000030
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1900000031}
+  m_Layer: 0
+  m_Name: Pallet Spawn 01
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1900000031
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1900000030}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.08, y: 0, z: 8.85}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1900000011}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1900000040
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1900000041}
+  m_Layer: 0
+  m_Name: Pallet Spawn 02
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1900000041
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1900000040}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -4, y: 0, z: 8}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1900000011}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1900000050
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1900000051}
+  m_Layer: 0
+  m_Name: Pallet Spawn 03
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1900000051
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1900000050}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 4, y: 0, z: 8}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1900000011}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1900000060
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1900000061}
+  m_Layer: 0
+  m_Name: Destinations
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1900000061
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1900000060}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1900000131}
+  - {fileID: 1900000141}
+  - {fileID: 1900000151}
+  m_Father: {fileID: 1900000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &1900000120
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 0}
+    m_TransformParent: {fileID: 1900000021}
     m_Modifications:
     - target: {fileID: 2085204513769715176, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
       propertyPath: m_Name
@@ -2214,26 +2567,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -2241,6 +2582,229 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
+--- !u!4 &1900000121 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7060853037902447636, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
+  m_PrefabInstance: {fileID: 1900000120}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1900000122 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4310803303947585967, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}
+  m_PrefabInstance: {fileID: 1900000120}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e377537c8354f6088dd85e396384da1, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.PalletStackers.PalletStackerLoad
+--- !u!1001 &1900000130
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1900000061}
+    m_Modifications:
+    - target: {fileID: 8100000000000000001, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_Name
+      value: Pallet Destination 01
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000002, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -6
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000002, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000002, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000002, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000002, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000002, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000002, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000003, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_Size.x
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000003, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_Size.y
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000003, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_Size.z
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000003, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_Center.y
+      value: 0.75
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+--- !u!4 &1900000131 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8100000000000000002, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+  m_PrefabInstance: {fileID: 1900000130}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1900000132 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8100000000000000004, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+  m_PrefabInstance: {fileID: 1900000130}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e465056cc945468ea4a427c345a1278a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Gameplay.PalletDestinationZone
+--- !u!1001 &1900000140
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1900000061}
+    m_Modifications:
+    - target: {fileID: 8100000000000000001, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_Name
+      value: Pallet Destination 02
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000002, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000002, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000002, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000002, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000003, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_Size.x
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000003, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_Size.y
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000003, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_Size.z
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000003, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_Center.y
+      value: 0.75
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+--- !u!4 &1900000141 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8100000000000000002, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+  m_PrefabInstance: {fileID: 1900000140}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1900000142 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8100000000000000004, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+  m_PrefabInstance: {fileID: 1900000140}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e465056cc945468ea4a427c345a1278a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Gameplay.PalletDestinationZone
+--- !u!1001 &1900000150
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1900000061}
+    m_Modifications:
+    - target: {fileID: 8100000000000000001, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_Name
+      value: Pallet Destination 03
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000002, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000002, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000002, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -7
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000002, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000003, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_Size.x
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000003, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_Size.y
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000003, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_Size.z
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000003, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_Center.y
+      value: 0.75
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+--- !u!4 &1900000151 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8100000000000000002, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+  m_PrefabInstance: {fileID: 1900000150}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1900000152 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8100000000000000004, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+  m_PrefabInstance: {fileID: 1900000150}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e465056cc945468ea4a427c345a1278a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Gameplay.PalletDestinationZone
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -2251,7 +2815,5 @@ SceneRoots:
   - {fileID: 963828118}
   - {fileID: 1547873321}
   - {fileID: 3505153867693228158}
-  - {fileID: 8421806518989267652}
-  - {fileID: 146480855}
-  - {fileID: 1185384913}
+  - {fileID: 1900000001}
   - {fileID: 1673396767}
