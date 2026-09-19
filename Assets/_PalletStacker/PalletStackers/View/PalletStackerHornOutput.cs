@@ -16,6 +16,8 @@ namespace ElectricPalletStackers.PalletStackers
         [SerializeField] private GameObject _activeIndicator;
         [SerializeField] private HornStateEvent _onHornChanged;
 
+        public event Action<bool> HornChanged;
+
         public bool IsActive { get; private set; }
 
         public void Apply(PalletStackerDriveCommand command)
@@ -47,6 +49,7 @@ namespace ElectricPalletStackers.PalletStackers
                 }
             }
 
+            HornChanged?.Invoke(active);
             _onHornChanged?.Invoke(active);
         }
 

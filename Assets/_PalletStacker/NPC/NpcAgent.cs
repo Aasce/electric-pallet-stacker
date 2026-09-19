@@ -18,7 +18,8 @@ namespace ElectricPalletStackers.NPCs
             MovingToConversation,
             WaitingForConversation,
             Talking,
-            EvadingVehicle
+            EvadingVehicle,
+            EvadingHorn
         }
 
         [Header("References")]
@@ -53,6 +54,7 @@ namespace ElectricPalletStackers.NPCs
         private float _conversationDuration;
         private float _vehicleClearAt;
         private float _nextVehicleEvadeTime;
+        private float _nextHornResponseTime;
         private float _nextConversationTime;
         private bool _roundActive;
         private bool _waitingForVehicle;
@@ -133,6 +135,10 @@ namespace ElectricPalletStackers.NPCs
                 case BehaviourState.EvadingVehicle:
                     if (HasArrived()) BeginWandering();
                     break;
+
+                case BehaviourState.EvadingHorn:
+                    if (HasArrived()) BeginEdgeIdle();
+                    break;
             }
 
             UpdateAnimation();
@@ -157,6 +163,7 @@ namespace ElectricPalletStackers.NPCs
         {
             ClearConversation(null, 0f);
             _waitingForVehicle = false;
+            _nextHornResponseTime = 0f;
             _roundActive = roundActive;
 
             if (_agent != null && _agent.isOnNavMesh)
@@ -180,6 +187,7 @@ namespace ElectricPalletStackers.NPCs
         {
             _roundActive = active;
             _waitingForVehicle = false;
+            if (!active) _nextHornResponseTime = 0f;
 
             if (!active)
             {
@@ -215,6 +223,34 @@ namespace ElectricPalletStackers.NPCs
             _conversationPartner = null;
             _conversationDuration = 0f;
             _nextConversationTime = Mathf.Max(_nextConversationTime, Time.time + cooldown);
+        }
+
+        public void ReactToHorn(
+            Vector3 hornPosition,
+            float evadeDistance,
+            float responseCooldown)
+        {
+            if (!_roundActive || _population == null || _agent == null || !_agent.isOnNavMesh)
+                return;
+
+            float nextResponseTime = Time.time + responseCooldown;
+            if (_state == BehaviourState.EvadingHorn || Time.time < _nextHornResponseTime)
+            {
+                _nextHornResponseTime = Mathf.Max(_nextHornResponseTime, nextResponseTime);
+                return;
+            }
+
+            _nextHornResponseTime = nextResponseTime;
+
+            CancelConversationForVehicle();
+            _waitingForVehicle = false;
+
+            if (_population.TryGetHornEvadePoint(this, hornPosition, evadeDistance, out Vector3 point))
+                MoveTo(point, BehaviourState.EvadingHorn);
+            else
+                BeginWandering();
+
+            UpdateAnimation();
         }
 
         private void BeginWandering()

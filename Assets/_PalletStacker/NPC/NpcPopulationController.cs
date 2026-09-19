@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ElectricPalletStackers.Gameplay;
+using ElectricPalletStackers.PalletStackers;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -18,6 +19,15 @@ namespace ElectricPalletStackers.NPCs
         [Header("Vehicle")]
         [SerializeField] private Transform _vehicleTransform;
         [SerializeField] private Rigidbody _vehicleBody;
+
+        [Header("Horn response")]
+        [SerializeField] private PalletStackerHornOutput _hornOutput;
+        [SerializeField, Min(0.5f)] private float _hornReactionRadius = 8f;
+        [SerializeField, Min(0.5f)] private float _hornEvadeDistance = 2.5f;
+        [SerializeField, Min(0.5f)] private float _hornEdgeSearchRadius = 4f;
+        [SerializeField, Min(0f)] private float _hornResponseCooldown = 3f;
+        [SerializeField, Min(0f)] private float _hornMovingSpeedThreshold = 0.2f;
+        [SerializeField, Range(-1f, 1f)] private float _stationaryHornFrontDot = 0f;
 
         [Header("Edge stops")]
         [SerializeField, Min(0.25f)] private float _edgeSearchRadius = 8f;
@@ -43,10 +53,16 @@ namespace ElectricPalletStackers.NPCs
 
         private void OnEnable()
         {
+            if (_hornOutput != null) _hornOutput.HornChanged += OnHornChanged;
             _vehicleColliders = _vehicleBody != null
                 ? _vehicleBody.GetComponentsInChildren<Collider>()
                 : null;
             RebuildPopulationCache();
+        }
+
+        private void OnDisable()
+        {
+            if (_hornOutput != null) _hornOutput.HornChanged -= OnHornChanged;
         }
 
         private void Start()
@@ -167,6 +183,59 @@ namespace ElectricPalletStackers.NPCs
 
             Vector3 secondCandidate = npc.transform.position - side * evadeDistance + away * 0.5f;
             return TryGetReachableSample(npc.Agent, secondCandidate, evadeDistance, filter, out point);
+        }
+
+        public bool TryGetHornEvadePoint(
+            NpcAgent npc,
+            Vector3 hornPosition,
+            float evadeDistance,
+            out Vector3 point)
+        {
+            point = default;
+            if (npc == null || npc.Agent == null) return false;
+
+            Vector3 away = Vector3.ProjectOnPlane(
+                npc.transform.position - hornPosition,
+                Vector3.up).normalized;
+            if (away.sqrMagnitude < 0.001f)
+                away = Vector3.ProjectOnPlane(npc.transform.forward, Vector3.up).normalized;
+            if (away.sqrMagnitude < 0.001f) return false;
+
+            NavMeshQueryFilter filter = CreateFilter(npc.Agent);
+            Vector3 retreatOrigin = npc.transform.position + away * evadeDistance;
+            if (TryGetHornEdgePoint(npc, hornPosition, retreatOrigin, filter, out point))
+                return true;
+
+            if (TryGetHornEvadeSample(npc, hornPosition, away, evadeDistance, filter, out point))
+                return true;
+
+            const float fallbackAngle = 45f;
+            Vector3 firstDirection = Quaternion.AngleAxis(fallbackAngle, Vector3.up) * away;
+            Vector3 firstRetreatOrigin = npc.transform.position + firstDirection * evadeDistance;
+            if (TryGetHornEdgePoint(npc, hornPosition, firstRetreatOrigin, filter, out point))
+                return true;
+
+            if (TryGetHornEvadeSample(
+                    npc,
+                    hornPosition,
+                    firstDirection,
+                    evadeDistance,
+                    filter,
+                    out point))
+                return true;
+
+            Vector3 secondDirection = Quaternion.AngleAxis(-fallbackAngle, Vector3.up) * away;
+            Vector3 secondRetreatOrigin = npc.transform.position + secondDirection * evadeDistance;
+            if (TryGetHornEdgePoint(npc, hornPosition, secondRetreatOrigin, filter, out point))
+                return true;
+
+            return TryGetHornEvadeSample(
+                npc,
+                hornPosition,
+                secondDirection,
+                evadeDistance,
+                filter,
+                out point);
         }
 
         private void SynchronizePopulation()
@@ -419,6 +488,66 @@ namespace ElectricPalletStackers.NPCs
             return true;
         }
 
+        private bool TryGetHornEvadeSample(
+            NpcAgent npc,
+            Vector3 hornPosition,
+            Vector3 direction,
+            float evadeDistance,
+            NavMeshQueryFilter filter,
+            out Vector3 point)
+        {
+            point = default;
+            Vector3 candidate = npc.transform.position + direction.normalized * evadeDistance;
+            if (!TryGetReachableSample(npc.Agent, candidate, 0.75f, filter, out Vector3 sample))
+                return false;
+
+            float currentSqrDistance = (npc.transform.position - hornPosition).sqrMagnitude;
+            if ((sample - hornPosition).sqrMagnitude <= currentSqrDistance) return false;
+
+            point = sample;
+            return true;
+        }
+
+        private bool TryGetHornEdgePoint(
+            NpcAgent npc,
+            Vector3 hornPosition,
+            Vector3 retreatOrigin,
+            NavMeshQueryFilter filter,
+            out Vector3 point)
+        {
+            point = default;
+            if (!NavMesh.FindClosestEdge(retreatOrigin, out NavMeshHit edge, filter)) return false;
+            if ((edge.position - retreatOrigin).sqrMagnitude >
+                _hornEdgeSearchRadius * _hornEdgeSearchRadius)
+                return false;
+
+            Vector3 edgeOffset = edge.normal.normalized * _edgeClearance;
+            Vector3 firstCandidate = edge.position + edgeOffset;
+            if (TryGetReachableSample(npc.Agent, firstCandidate, 0.75f, filter, out Vector3 sample) &&
+                IsFartherFromHorn(npc, hornPosition, sample))
+            {
+                point = sample;
+                return true;
+            }
+
+            Vector3 secondCandidate = edge.position - edgeOffset;
+            if (!TryGetReachableSample(npc.Agent, secondCandidate, 0.75f, filter, out sample) ||
+                !IsFartherFromHorn(npc, hornPosition, sample))
+                return false;
+
+            point = sample;
+            return true;
+        }
+
+        private static bool IsFartherFromHorn(
+            NpcAgent npc,
+            Vector3 hornPosition,
+            Vector3 destination)
+        {
+            return (destination - hornPosition).sqrMagnitude >
+                   (npc.transform.position - hornPosition).sqrMagnitude;
+        }
+
         private bool IsSeparatedFromPopulation(Vector3 point, float minimumSeparation)
         {
             if (_vehicleTransform != null &&
@@ -517,6 +646,47 @@ namespace ElectricPalletStackers.NPCs
                 npc.Initialize(this, _vehicleTransform, _vehicleBody);
                 _npcs.Add(npc);
             }
+        }
+
+        private void OnHornChanged(bool active)
+        {
+            if (!active || !_roundActive || _hornOutput == null) return;
+
+            Vector3 hornPosition = _hornOutput.transform.position;
+            float reactionSqrRadius = _hornReactionRadius * _hornReactionRadius;
+            Vector3 vehicleVelocity = _vehicleBody != null
+                ? Vector3.ProjectOnPlane(_vehicleBody.linearVelocity, Vector3.up)
+                : Vector3.zero;
+            bool vehicleStationary =
+                vehicleVelocity.sqrMagnitude <
+                _hornMovingSpeedThreshold * _hornMovingSpeedThreshold;
+
+            for (int index = 0; index < _npcs.Count; index++)
+            {
+                NpcAgent npc = _npcs[index];
+                if (npc == null ||
+                    (npc.transform.position - hornPosition).sqrMagnitude > reactionSqrRadius)
+                    continue;
+                if (vehicleStationary && !IsInFrontOfVehicle(npc.transform.position)) continue;
+
+                npc.ReactToHorn(
+                    hornPosition,
+                    _hornEvadeDistance,
+                    _hornResponseCooldown);
+            }
+        }
+
+        private bool IsInFrontOfVehicle(Vector3 position)
+        {
+            if (_vehicleTransform == null) return true;
+
+            Vector3 forward = Vector3.ProjectOnPlane(_vehicleTransform.forward, Vector3.up).normalized;
+            Vector3 toNpc = Vector3.ProjectOnPlane(
+                position - _vehicleTransform.position,
+                Vector3.up).normalized;
+            if (forward.sqrMagnitude < 0.001f || toNpc.sqrMagnitude < 0.001f) return true;
+
+            return Vector3.Dot(forward, toNpc) >= _stationaryHornFrontDot;
         }
 
         private static float RandomInRange(Vector2 range)
