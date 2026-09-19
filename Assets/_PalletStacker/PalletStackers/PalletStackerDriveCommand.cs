@@ -52,10 +52,8 @@ namespace ElectricPalletStackers.PalletStackers
         {
             if (state == null) return CreateFailSafe(localInterlock);
 
-            bool movementInhibited = localInterlock ||
-                                     !state.Enabled ||
-                                     state.TillerStop ||
-                                     state.EmergencyStop;
+            bool movementInhibited = localInterlock || !state.TravelAllowed;
+            bool auxiliaryControlsEnabled = state.Enabled;
             float travel = movementInhibited ? 0f : state.TravelNormalized;
             if (state.SlowMode) travel *= slowModeTravelMultiplier;
 
@@ -64,8 +62,8 @@ namespace ElectricPalletStackers.PalletStackers
                 travel,
                 state.SteerDeg,
                 state.TillerDeg,
-                movementInhibited ? PalletStackerLiftState.Neutral : state.Lift,
-                state.Horn,
+                auxiliaryControlsEnabled ? state.Lift : PalletStackerLiftState.Neutral,
+                auxiliaryControlsEnabled && state.Horn,
                 state.SlowMode,
                 movementInhibited,
                 state.EmergencyStop,

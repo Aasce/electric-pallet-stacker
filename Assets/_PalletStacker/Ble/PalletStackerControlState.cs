@@ -42,7 +42,6 @@ namespace ElectricPalletStackers.Ble
         [SerializeField] private PalletStackerLiftState liftState;
 
         public bool Enabled => enabled;
-        // Retained for protocol compatibility; gameplay stop behavior is derived from TillerStop.
         public bool Stop => stop;
         public bool EmergencyStop => emergencyStop;
         public bool Horn => horn;
@@ -54,7 +53,7 @@ namespace ElectricPalletStackers.Ble
         public PalletStackerLiftState Lift => liftState;
         public float TravelNormalized => PalletStackerBleProtocol.NormalizeTravelRaw(travelRaw);
         public bool TillerStop => tillerDeg <= LowerTillerStopMaximumDegrees || tillerDeg >= UpperTillerStopMinimumDegrees;
-        public bool TravelAllowed => enabled && !TillerStop && !emergencyStop;
+        public bool TravelAllowed => enabled && !stop && !TillerStop && !emergencyStop;
         public float SafeTravelNormalized => TravelAllowed ? TravelNormalized : 0f;
 
         internal static PalletStackerControlState FromProtocol(

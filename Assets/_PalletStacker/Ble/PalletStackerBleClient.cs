@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Spaxtek.Ble.Core;
 using Spaxtek.Ble.Unity;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace ElectricPalletStackers.Ble
 {
@@ -23,7 +24,13 @@ namespace ElectricPalletStackers.Ble
         [Header("Connection")]
         [SerializeField] private bool _connectOnEnable = true;
         [SerializeField] private bool _disconnectOnDisable = true;
-        [SerializeField, Min(1f)] private float _scanTimeoutSeconds = 10f;
+        [Tooltip("How long each scan attempt runs during the initial retry phase.")]
+        [SerializeField, Min(0.1f)] private float _initialScanRetrySeconds = 2f;
+        [FormerlySerializedAs("_scanTimeoutSeconds")]
+        [Tooltip("How long to use the initial retry interval before logging a warning.")]
+        [SerializeField, Min(1f)] private float _scanWarningAfterSeconds = 10f;
+        [Tooltip("How long each scan attempt runs after the warning has been logged.")]
+        [SerializeField, Min(0.1f)] private float _persistentScanRetrySeconds = 5f;
         [SerializeField] private string _deviceName = PalletStackerBleProtocol.DeviceName;
         [SerializeField] private string _serviceUuid = PalletStackerBleProtocol.ServiceUuidText;
 
@@ -164,32 +171,57 @@ namespace ElectricPalletStackers.Ble
 
         private async Task<BleAdvertisement> FindDeviceAsync(CancellationToken cancellationToken)
         {
-            _advertisementCompletion = new TaskCompletionSource<BleAdvertisement>(
+            TaskCompletionSource<BleAdvertisement> advertisementCompletion =
+                new TaskCompletionSource<BleAdvertisement>(
                 TaskCreationOptions.RunContinuationsAsynchronously);
-
-            using CancellationTokenSource scanCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            scanCancellation.CancelAfter(TimeSpan.FromSeconds(_scanTimeoutSeconds));
+            _advertisementCompletion = advertisementCompletion;
+            float elapsedScanSeconds = 0f;
+            bool warningLogged = false;
 
             try
             {
-                if (_logLifecycle) Debug.Log($"[BLE] Scanning for {_deviceName}...", this);
-                await _bleManager.StartScanAsync(
-                    new BleScanFilter(_deviceName),
-                    scanCancellation.Token);
-
-                Task cancelled = Task.Delay(Timeout.Infinite, scanCancellation.Token);
-                Task completed = await Task.WhenAny(_advertisementCompletion.Task, cancelled);
-                if (completed != _advertisementCompletion.Task)
+                while (true)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    throw new TimeoutException($"BLE device '{_deviceName}' was not found within {_scanTimeoutSeconds:0.#} seconds.");
-                }
+                    float retrySeconds = warningLogged
+                        ? Mathf.Max(0.1f, _persistentScanRetrySeconds)
+                        : Mathf.Max(0.1f, _initialScanRetrySeconds);
 
-                return await _advertisementCompletion.Task;
+                    if (_logLifecycle)
+                        Debug.Log($"[BLE] Scanning for {_deviceName}; retry in {retrySeconds:0.#} seconds if not found...", this);
+
+                    await _bleManager.StartScanAsync(
+                        new BleScanFilter(_deviceName),
+                        cancellationToken);
+
+                    Task retryDelay = Task.Delay(
+                        TimeSpan.FromSeconds(retrySeconds),
+                        cancellationToken);
+                    Task completed = await Task.WhenAny(advertisementCompletion.Task, retryDelay);
+                    if (completed == advertisementCompletion.Task)
+                        return await advertisementCompletion.Task;
+
+                    cancellationToken.ThrowIfCancellationRequested();
+                    await _bleManager.StopScanAsync(CancellationToken.None);
+
+                    if (advertisementCompletion.Task.IsCompleted)
+                        return await advertisementCompletion.Task;
+
+                    elapsedScanSeconds += retrySeconds;
+                    if (!warningLogged && elapsedScanSeconds >= Mathf.Max(1f, _scanWarningAfterSeconds))
+                    {
+                        warningLogged = true;
+                        Debug.LogWarning(
+                            $"[BLE] Device '{_deviceName}' was not found within {_scanWarningAfterSeconds:0.#} seconds. " +
+                            $"Continuing to retry every {_persistentScanRetrySeconds:0.#} seconds.",
+                            this);
+                    }
+                }
             }
             finally
             {
-                _advertisementCompletion = null;
+                if (ReferenceEquals(_advertisementCompletion, advertisementCompletion))
+                    _advertisementCompletion = null;
                 try
                 {
                     await _bleManager.StopScanAsync(CancellationToken.None);
