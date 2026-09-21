@@ -40,6 +40,7 @@ namespace ElectricPalletStackers.Ble
         public event Action<ushort, ushort> SequenceGapDetected;
         public event Action<ushort> ControlAcknowledged;
         public event Action<ushort, string> ControlAckFailed;
+        public event Action<byte[]> ControlPacketReceived;
         public event Action<string> PayloadRejected;
         public event Action SourceUnavailable;
 
@@ -179,6 +180,10 @@ namespace ElectricPalletStackers.Ble
 
         private void ProcessControlPayload(ReadOnlyMemory<byte> payload)
         {
+            // Surface the exact notification bytes before validation/deduplication,
+            // matching the reference Python client's [CONTROL RX] diagnostic.
+            ControlPacketReceived?.Invoke(payload.ToArray());
+
             if (!TryApplyPayload(payload, out ushort sequence, out bool duplicate, out string error))
             {
                 RejectPayload(error);

@@ -153,8 +153,9 @@ namespace ElectricPalletStackers.Ble
                     "COLLISION_EVENT");
                 BleGattCharacteristic ack = RequireAckCharacteristic(service);
 
-                _stateReceiver?.ConfigureAckWriteMode(SelectWriteMode(ack.Properties));
-                _collisionSender?.ConfigureWriteMode(SelectWriteMode(collision.Properties));
+                // The reference Python client always uses response=True for both writes.
+                _stateReceiver?.ConfigureAckWriteMode(BleWriteMode.WithResponse);
+                _collisionSender?.ConfigureWriteMode(BleWriteMode.WithResponse);
                 await _bleManager.SubscribeAsync(controlId, linkedCancellation.Token);
                 await _bleManager.SubscribeAsync(ack.Id, linkedCancellation.Token);
 
@@ -358,10 +359,8 @@ namespace ElectricPalletStackers.Ble
                 BleGattCharacteristic characteristic = service.Characteristics[index];
                 if (characteristic.Id.CharacteristicUuid != uuid) continue;
 
-                BleCharacteristicProperties writable = BleCharacteristicProperties.Write |
-                                                        BleCharacteristicProperties.WriteWithoutResponse;
-                if ((characteristic.Properties & writable) == 0)
-                    throw new InvalidOperationException($"{label} is not writable.");
+                if ((characteristic.Properties & BleCharacteristicProperties.Write) == 0)
+                    throw new InvalidOperationException($"{label} must support writes with response.");
                 return characteristic;
             }
 
@@ -375,12 +374,10 @@ namespace ElectricPalletStackers.Ble
                 BleGattCharacteristic characteristic = service.Characteristics[index];
                 if (characteristic.Id.CharacteristicUuid != PalletStackerBleProtocol.AckUuid) continue;
 
-                BleCharacteristicProperties writable = BleCharacteristicProperties.Write |
-                                                        BleCharacteristicProperties.WriteWithoutResponse;
                 if ((characteristic.Properties & BleCharacteristicProperties.Notify) == 0 ||
-                    (characteristic.Properties & writable) == 0)
+                    (characteristic.Properties & BleCharacteristicProperties.Write) == 0)
                 {
-                    throw new InvalidOperationException("ACK characteristic must support Notify and Write or WriteWithoutResponse.");
+                    throw new InvalidOperationException("ACK characteristic must support Notify and writes with response.");
                 }
 
                 return characteristic;
@@ -390,11 +387,5 @@ namespace ElectricPalletStackers.Ble
                 $"Required ACK characteristic was not found: {PalletStackerBleProtocol.AckUuid:D}.");
         }
 
-        private static BleWriteMode SelectWriteMode(BleCharacteristicProperties properties)
-        {
-            return (properties & BleCharacteristicProperties.Write) != 0
-                ? BleWriteMode.WithResponse
-                : BleWriteMode.WithoutResponse;
-        }
     }
 }

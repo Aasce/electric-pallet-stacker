@@ -339,9 +339,9 @@ namespace ElectricPalletStackers.Ble
             SetColumn(_mappedValues2,
                 $"{FormatBool(state.Stop)}\n{FormatBool(state.EmergencyStop)}\n{FormatBool(state.SlowMode)}\n{drive}");
 
-            SetColumn(_mappedLabels3, "Steering:\nTiller:\nTravel:\nLift:\nSteering out:");
+            SetColumn(_mappedLabels3, "Steering:\nTiller:\nTravel raw:\nLift:\nSteering out:");
             SetColumn(_mappedValues3,
-                $"{state.SteerDeg}°\n{state.TillerDeg}°\n{state.SafeTravelNormalized:0.000}\n{state.Lift}\n{steering}");
+                $"{state.SteerDeg}°\n{state.TillerDeg}°\n{state.TravelRaw}\n{state.Lift}\n{steering}");
         }
 
         private void RefreshKeys()
@@ -408,6 +408,7 @@ namespace ElectricPalletStackers.Ble
                 _stateReceiver.SequenceGapDetected += HandleSequenceGap;
                 _stateReceiver.ControlAcknowledged += HandleControlAcknowledged;
                 _stateReceiver.ControlAckFailed += HandleControlAckFailed;
+                _stateReceiver.ControlPacketReceived += HandleControlPacketReceived;
                 _stateReceiver.PayloadRejected += HandlePayloadRejected;
             }
 
@@ -450,6 +451,7 @@ namespace ElectricPalletStackers.Ble
                 _stateReceiver.SequenceGapDetected -= HandleSequenceGap;
                 _stateReceiver.ControlAcknowledged -= HandleControlAcknowledged;
                 _stateReceiver.ControlAckFailed -= HandleControlAckFailed;
+                _stateReceiver.ControlPacketReceived -= HandleControlPacketReceived;
                 _stateReceiver.PayloadRejected -= HandlePayloadRejected;
             }
 
@@ -484,6 +486,7 @@ namespace ElectricPalletStackers.Ble
         private void HandleSequenceGap(ushort expected, ushort actual) => AddLog($"CONTROL GAP expected={expected}, actual={actual}");
         private void HandleControlAcknowledged(ushort sequence) => AddLog($"CONTROL ACK TX seq={sequence}");
         private void HandleControlAckFailed(ushort sequence, string error) => AddLog($"CONTROL ACK FAILED seq={sequence}: {error}");
+        private void HandleControlPacketReceived(byte[] packet) => _lastRawPacket = packet;
         private void HandlePayloadRejected(string error) => AddLog($"CONTROL REJECTED: {error}");
         private void HandleCollisionAttempted(ushort sequence, int attempt) => AddLog($"COLLISION TX seq={sequence}, attempt={attempt}");
         private void HandleCollisionConfirmed(ushort sequence) => AddLog($"COLLISION CONFIRMED seq={sequence}");

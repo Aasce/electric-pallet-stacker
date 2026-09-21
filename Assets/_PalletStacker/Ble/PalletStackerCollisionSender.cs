@@ -111,13 +111,15 @@ namespace ElectricPalletStackers.Ble
             }
 
             ushort sequence = _nextSequence;
-            _nextSequence = unchecked((ushort)(_nextSequence + 1));
 
             if (_bleManager == null || !_bleManager.HasConnection)
                 return Fail(sequence, "There is no active BLE connection.");
             if (!_collisionId.HasValue)
                 return Fail(sequence, "COLLISION_EVENT characteristic UUID is not configured.");
 
+            // Match the reference client: consume a sequence only for a send started
+            // while the BLE link and characteristic are available.
+            _nextSequence = unchecked((ushort)(_nextSequence + 1));
             _sendInProgress = true;
             _pendingSequence = sequence;
             _pendingAck = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);

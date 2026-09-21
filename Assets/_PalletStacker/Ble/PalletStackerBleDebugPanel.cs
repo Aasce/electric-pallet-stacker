@@ -162,7 +162,7 @@ namespace ElectricPalletStackers.Ble
             {
                 GUILayout.Space(4f);
                 GUILayout.Label($"Enabled={state.Enabled}  Stop={state.Stop}  Tiller Stop={state.TillerStop}  E-Stop={state.EmergencyStop}  Horn={state.Horn}  Slow={state.SlowMode}");
-                GUILayout.Label($"Steer={state.SteerDeg}°  Tiller={state.TillerDeg}°  TravelRaw={state.TravelRaw}  Travel={state.SafeTravelNormalized:0.000}  Lift={state.Lift}");
+                GUILayout.Label($"Steer={state.SteerDeg}°  Tiller={state.TillerDeg}°  TravelRaw={state.TravelRaw}  TravelSafe={state.SafeTravelNormalized:0.000}  Lift={state.Lift}");
             }
 
             GUILayout.Space(8f);
