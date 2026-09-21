@@ -198,6 +198,24 @@ MonoBehaviour:
   _localFacingEuler: {x: 0, y: 0, z: 0}
   _followPosition: 1
   _followRotation: 1
+  _rotationMode: 0
+  _head: {fileID: 0}
+  _rotationDeadZoneDegrees: 10
+  _maximumComfortYawSpeed: 25
+  _comfortYawSmoothTime: 0.18
+  _snapAlignmentThresholdDegrees: 50
+  _snapAlignmentStepDegrees: 30
+  _snapCooldownSeconds: 0.35
+  _useTurnVignette: 1
+  _turnVignettePrefab: {fileID: 8429981633443581377, guid: 6c8af5c8012f01440af6cb2bc3eb987c, type: 3}
+  _vignetteEngageYawSpeed: 8
+  _vignetteReleaseYawSpeed: 3
+  _vignetteFullYawSpeed: 45
+  _vignetteYawSmoothingTime: 0.15
+  _minimumVignetteAperture: 0.68
+  _vignetteFeathering: 0.2
+  _vignetteEaseInTime: 0.12
+  _vignetteEaseOutTime: 0.2
 --- !u!114 &8991475523401287712
 MonoBehaviour:
   m_ObjectHideFlags: 0
