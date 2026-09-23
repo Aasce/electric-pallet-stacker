@@ -32,11 +32,11 @@ namespace ElectricPalletStackers.UI
             if (_selectLanguagePanel != null)
                 _selectLanguagePanel.FocusChanged += HandleLanguageFocusChanged;
 
-            _selectLanguagePanel?.Hide();
-            _welcomePanel?.Hide();
-            _guidePanel?.Hide();
-            _completedPanel?.Hide();
-            _failedPanel?.Hide();
+            _selectLanguagePanel?.HideImmediate();
+            _welcomePanel?.HideImmediate();
+            _guidePanel?.HideImmediate();
+            _completedPanel?.HideImmediate();
+            _failedPanel?.HideImmediate();
 
             CurrentState = UIFlowState.SelectLanguage;
             _inputRouter?.ResetForPanel();

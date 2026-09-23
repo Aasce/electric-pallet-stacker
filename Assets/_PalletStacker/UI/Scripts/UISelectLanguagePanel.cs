@@ -24,9 +24,10 @@ namespace ElectricPalletStackers.UI
             SubscribeButtons();
         }
 
-        private void OnDisable()
+        protected override void OnDisable()
         {
             UnsubscribeButtons();
+            base.OnDisable();
         }
 
         public override void ResetView()
