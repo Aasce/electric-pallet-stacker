@@ -126,7 +126,15 @@ namespace ElectricPalletStackers.Ble
             ushort sequence = _nextInjectedSequence++;
             bool horn = (sequence & 1) != 0;
             byte flags = (byte)(0x01 | (horn ? 0x08 : 0x00));
-            sbyte steer = (sbyte)(horn ? -30 : 30);
+            PalletStackerBleInputMapping inputMapping = _stateReceiver?.InputMapping;
+            if (inputMapping == null)
+            {
+                AddLog("VALID: BLE input mapping is missing.");
+                return;
+            }
+
+            sbyte steer = inputMapping.EncodeSteeringDeg(horn ? -30f : 30f);
+            sbyte tiller = inputMapping.EncodeTillerDeg(55f);
             byte travel = horn ? (byte)80 : (byte)200;
             byte lift = horn ? (byte)PalletStackerLiftState.Down : (byte)PalletStackerLiftState.Up;
 
@@ -137,7 +145,7 @@ namespace ElectricPalletStackers.Ble
                 (byte)(sequence >> 8),
                 flags,
                 unchecked((byte)steer),
-                (byte)55,
+                unchecked((byte)tiller),
                 travel,
                 lift
             };
@@ -310,7 +318,7 @@ namespace ElectricPalletStackers.Ble
                 $"Version       {packet[0]}\n" +
                 $"Sequence      {sequence} (0x{sequence:X4})\n" +
                 $"Flags         0x{packet[3]:X2} ({Convert.ToString(packet[3], 2).PadLeft(8, '0')})\n" +
-                $"Steer byte    {unchecked((sbyte)packet[4])}     Tiller byte {packet[5]}\n" +
+                $"Steer byte    {unchecked((sbyte)packet[4])}     Tiller byte {unchecked((sbyte)packet[5])}\n" +
                 $"Travel byte   {packet[6]}     Lift byte   {packet[7]}";
         }
 
@@ -478,7 +486,6 @@ namespace ElectricPalletStackers.Ble
 
         private void HandleStateApplied(PalletStackerControlState state, ushort sequence, PalletStackerControlFields changed)
         {
-            _lastRawPacket = EncodeControlState(state, sequence);
             AddLog($"CONTROL APPLIED seq={sequence}, changed={changed}, travel={state.TravelRaw}, lift={state.Lift}");
         }
 
@@ -512,28 +519,6 @@ namespace ElectricPalletStackers.Ble
         }
 
         private bool IsConnected() => _bleManager != null && _bleManager.HasConnection;
-
-        private static byte[] EncodeControlState(PalletStackerControlState state, ushort sequence)
-        {
-            byte flags = 0;
-            if (state.Enabled) flags |= 1 << 0;
-            if (state.Stop) flags |= 1 << 1;
-            if (state.EmergencyStop) flags |= 1 << 2;
-            if (state.Horn) flags |= 1 << 3;
-            if (state.SlowMode) flags |= 1 << 4;
-
-            return new[]
-            {
-                PalletStackerBleProtocol.Version,
-                (byte)(sequence & 0xFF),
-                (byte)(sequence >> 8),
-                flags,
-                unchecked((byte)(sbyte)state.SteerDeg),
-                (byte)state.TillerDeg,
-                (byte)state.TravelRaw,
-                (byte)state.LiftState
-            };
-        }
 
         private static string FormatSequence(ushort? sequence) => sequence.HasValue ? sequence.Value.ToString() : "-";
         private static string FormatBool(bool value) => value ? "YES" : "NO";

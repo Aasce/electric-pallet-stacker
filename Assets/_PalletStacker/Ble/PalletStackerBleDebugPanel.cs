@@ -70,7 +70,15 @@ namespace ElectricPalletStackers.Ble
             ushort sequence = _nextInjectedSequence++;
             bool horn = (sequence & 1) != 0;
             byte flags = (byte)(0x01 | (horn ? 0x08 : 0x00));
-            sbyte steer = (sbyte)(horn ? -30 : 30);
+            PalletStackerBleInputMapping inputMapping = _stateReceiver?.InputMapping;
+            if (inputMapping == null)
+            {
+                AddLog("VALID: BLE input mapping is missing.");
+                return;
+            }
+
+            sbyte steer = inputMapping.EncodeSteeringDeg(horn ? -30f : 30f);
+            sbyte tiller = inputMapping.EncodeTillerDeg(55f);
             byte travel = horn ? (byte)80 : (byte)200;
             byte lift = horn ? (byte)PalletStackerLiftState.Down : (byte)PalletStackerLiftState.Up;
 
@@ -81,7 +89,7 @@ namespace ElectricPalletStackers.Ble
                 (byte)(sequence >> 8),
                 flags,
                 unchecked((byte)steer),
-                (byte)55,
+                unchecked((byte)tiller),
                 travel,
                 lift
             };

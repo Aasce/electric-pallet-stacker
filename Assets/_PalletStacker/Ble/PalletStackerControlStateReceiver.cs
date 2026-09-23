@@ -12,6 +12,7 @@ namespace ElectricPalletStackers.Ble
     {
         [Header("BLE source")]
         [SerializeField] private BleManager _bleManager;
+        [SerializeField] private PalletStackerBleInputMapping _inputMapping;
 
         [Header("Protocol UUIDs")]
         [SerializeField] private string _serviceUuid = PalletStackerBleProtocol.ServiceUuidText;
@@ -32,6 +33,7 @@ namespace ElectricPalletStackers.Ble
         private ushort? _lastAppliedSequence;
 
         public PalletStackerControlState CurrentState => _currentState;
+        public PalletStackerBleInputMapping InputMapping => _inputMapping;
         public ushort? LastAppliedSequence => _lastAppliedSequence;
 
         public event Action<PalletStackerControlState, PalletStackerControlFields> StateChanged;
@@ -92,6 +94,11 @@ namespace ElectricPalletStackers.Ble
             }
         }
 
+        public void ConfigureInputMapping(PalletStackerBleInputMapping inputMapping)
+        {
+            _inputMapping = inputMapping;
+        }
+
         public void ConfigureCharacteristics(string serviceUuid, string controlStateUuid, string ackUuid)
         {
             _serviceUuid = serviceUuid ?? string.Empty;
@@ -129,6 +136,7 @@ namespace ElectricPalletStackers.Ble
         {
             if (!PalletStackerBleProtocol.TryDecodeControlState(
                     payload.Span,
+                    _inputMapping,
                     out sequence,
                     out PalletStackerControlState candidate,
                     out error))

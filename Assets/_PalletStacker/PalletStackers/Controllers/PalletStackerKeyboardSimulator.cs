@@ -177,6 +177,13 @@ namespace ElectricPalletStackers.PalletStackers
                 return;
             }
 
+            PalletStackerBleInputMapping inputMapping = _stateReceiver.InputMapping;
+            if (inputMapping == null)
+            {
+                Debug.LogWarning("[KEYBOARD SIM] BLE input mapping is missing.", this);
+                return;
+            }
+
             byte flags = 0;
             if (snapshot.Enabled) flags |= EnabledFlag;
             if (snapshot.Stop) flags |= StopFlag;
@@ -185,14 +192,16 @@ namespace ElectricPalletStackers.PalletStackers
             if (snapshot.SlowMode) flags |= SlowModeFlag;
 
             ushort sequence = NextSequence();
+            sbyte rawSteering = inputMapping.EncodeSteeringDeg(snapshot.SteeringDegrees);
+            sbyte rawTiller = inputMapping.EncodeTillerDeg(snapshot.TillerDegrees);
             byte[] packet =
             {
                 PalletStackerBleProtocol.Version,
                 (byte)(sequence & 0xFF),
                 (byte)(sequence >> 8),
                 flags,
-                unchecked((byte)(sbyte)snapshot.SteeringDegrees),
-                (byte)snapshot.TillerDegrees,
+                unchecked((byte)rawSteering),
+                unchecked((byte)rawTiller),
                 (byte)snapshot.TravelRaw,
                 (byte)snapshot.Lift
             };

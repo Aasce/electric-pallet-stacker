@@ -23,6 +23,7 @@ namespace ElectricPalletStackers.Ble
 
         public static bool TryDecodeControlState(
             ReadOnlySpan<byte> packet,
+            PalletStackerBleInputMapping inputMapping,
             out ushort sequence,
             out PalletStackerControlState state,
             out string error)
@@ -49,22 +50,19 @@ namespace ElectricPalletStackers.Ble
                 return false;
             }
 
-            int steerDeg = unchecked((sbyte)packet[4]);
-            int tillerDeg = packet[5];
+            if (inputMapping == null)
+            {
+                error = "CONTROL_STATE input mapping is not configured.";
+                return false;
+            }
+
+            int rawSteerDeg = unchecked((sbyte)packet[4]);
+            int rawTillerDeg = unchecked((sbyte)packet[5]);
             int travelRaw = packet[6];
             int liftState = packet[7];
 
-            if (steerDeg < -90 || steerDeg > 90)
-            {
-                error = $"steerDeg must be between -90 and 90; received {steerDeg}.";
-                return false;
-            }
-
-            if (tillerDeg > 100)
-            {
-                error = $"tillerDeg must be between 0 and 100; received {tillerDeg}.";
-                return false;
-            }
+            if (!inputMapping.TryMapSteeringDeg(rawSteerDeg, out int steerDeg, out error)) return false;
+            if (!inputMapping.TryMapTillerDeg(rawTillerDeg, out int tillerDeg, out error)) return false;
 
             if (liftState > (int)PalletStackerLiftState.Down)
             {
