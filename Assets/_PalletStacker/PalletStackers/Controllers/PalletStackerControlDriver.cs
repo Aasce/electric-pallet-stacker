@@ -11,11 +11,9 @@ namespace ElectricPalletStackers.PalletStackers
         [Header("Composition")]
         [SerializeField] private PalletStackerControlStateReceiver _stateReceiver;
         [SerializeField] private PalletStackerCollisionReporter _collisionReporter;
+        [SerializeField] private PalletStackerVehicleSettings _settings;
         [Tooltip("MonoBehaviours implementing IPalletStackerControlOutput.")]
         [SerializeField] private MonoBehaviour[] _outputComponents;
-
-        [Header("Command policy")]
-        [SerializeField, Range(0.05f, 1f)] private float _slowModeTravelMultiplier = 0.4f;
 
         private readonly List<IPalletStackerControlOutput> _outputs = new List<IPalletStackerControlOutput>();
         private bool _sourceSubscribed;
@@ -117,7 +115,7 @@ namespace ElectricPalletStackers.PalletStackers
             PalletStackerDriveCommand command = PalletStackerDriveCommand.FromControlState(
                 state,
                 sequence,
-                _slowModeTravelMultiplier,
+                SlowModeTravelMultiplier,
                 _collisionInterlock || _gameplayInterlock);
             ApplyCommand(command);
             ControlUpdated?.Invoke(state, sequence);
@@ -128,6 +126,10 @@ namespace ElectricPalletStackers.PalletStackers
             CurrentState = null;
             ApplyFailSafe();
         }
+
+        private float SlowModeTravelMultiplier => _settings != null
+            ? _settings.SlowModeTravelMultiplier
+            : PalletStackerVehicleSettings.DefaultSlowModeTravelMultiplier;
 
         private void HandleLocalCollision()
         {

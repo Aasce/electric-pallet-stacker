@@ -30,7 +30,6 @@ namespace ElectricPalletStackers.PalletStackers
         [Header("Simulation")]
         [SerializeField] private bool _simulationEnabled = true;
         [SerializeField] private bool _yieldToBleConnection = true;
-        [SerializeField] private bool _vehicleEnabled = true;
         [SerializeField, Range(1, 90)] private int _maximumSteeringDegrees = 30;
         [SerializeField, Min(1f)] private float _steeringSpeedDegreesPerSecond = 90f;
         [SerializeField, Min(1f)] private float _steeringReturnSpeedDegreesPerSecond = 120f;
@@ -39,7 +38,6 @@ namespace ElectricPalletStackers.PalletStackers
 
         private KeyboardStateSnapshot _lastSnapshot;
         private bool _hasLastSnapshot;
-        private bool _emergencyStop;
         private bool _bleOwnsControl;
         private float _simulatedSteeringDegrees;
         private float _simulatedTillerDegrees;
@@ -84,18 +82,6 @@ namespace ElectricPalletStackers.PalletStackers
                 if (!_simulationEnabled && !_bleOwnsControl) InjectFailSafeState();
             }
 
-            if (keyboard.xKey.wasPressedThisFrame)
-            {
-                _vehicleEnabled = !_vehicleEnabled;
-                _hasLastSnapshot = false;
-            }
-
-            if (keyboard.eKey.wasPressedThisFrame)
-            {
-                _emergencyStop = !_emergencyStop;
-                _hasLastSnapshot = false;
-            }
-
             if (!IsSimulationActive) return;
             UpdateSteering(keyboard);
             UpdateTiller(keyboard);
@@ -129,9 +115,9 @@ namespace ElectricPalletStackers.PalletStackers
 
             bool slowMode = keyboard.leftShiftKey.isPressed || keyboard.rightShiftKey.isPressed;
             return new KeyboardStateSnapshot(
-                _vehicleEnabled,
+                keyboard.xKey.isPressed,
                 keyboard.spaceKey.isPressed,
-                _emergencyStop,
+                keyboard.eKey.isPressed,
                 keyboard.hKey.isPressed,
                 slowMode,
                 steering,

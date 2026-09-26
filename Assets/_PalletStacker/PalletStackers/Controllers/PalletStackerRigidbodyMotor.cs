@@ -8,6 +8,7 @@ namespace ElectricPalletStackers.PalletStackers
     {
         [Header("Dependencies")]
         [SerializeField] private Rigidbody _body;
+        [SerializeField] private PalletStackerVehicleSettings _settings;
 
         [Header("Vehicle geometry")]
         [Tooltip("Fallback local-space forward axis used when the axle references cannot define a direction.")]
@@ -18,13 +19,6 @@ namespace ElectricPalletStackers.PalletStackers
         [SerializeField] private Transform _steeredRearAxleReference;
         [Tooltip("Fallback wheelbase used when either axle reference is missing.")]
         [SerializeField, Min(0.01f)] private float _wheelBaseMeters = 1.2f;
-        [SerializeField, Range(1f, 80f)] private float _maximumSteeringAngleDegrees = 45f;
-
-        [Header("Speed")]
-        [SerializeField, Min(0f)] private float _maximumForwardSpeed = 2.5f;
-        [SerializeField, Min(0f)] private float _maximumReverseSpeed = 1.5f;
-        [SerializeField, Min(0.01f)] private float _acceleration = 3f;
-        [SerializeField, Min(0.01f)] private float _serviceBrakeDeceleration = 6f;
 
         private float _targetSpeed;
         private float _currentSpeed;
@@ -61,12 +55,12 @@ namespace ElectricPalletStackers.PalletStackers
             _movementInhibited = command.MovementInhibited;
             _steeringDegrees = Mathf.Clamp(
                 command.SteeringDegrees,
-                -_maximumSteeringAngleDegrees,
-                _maximumSteeringAngleDegrees);
+                -MaximumSteeringAngleDegrees,
+                MaximumSteeringAngleDegrees);
 
             float speedLimit = command.TravelNormalized >= 0f
-                ? _maximumForwardSpeed
-                : _maximumReverseSpeed;
+                ? MaximumForwardSpeed
+                : MaximumReverseSpeed;
             _targetSpeed = _movementInhibited
                 ? 0f
                 : Mathf.Clamp(command.TravelNormalized, -1f, 1f) * speedLimit;
@@ -94,7 +88,7 @@ namespace ElectricPalletStackers.PalletStackers
         {
             if (_body == null) return;
 
-            float rate = ShouldBrake() ? _serviceBrakeDeceleration : _acceleration;
+            float rate = ShouldBrake() ? ServiceBrakeDeceleration : Acceleration;
             _currentSpeed = Mathf.MoveTowards(_currentSpeed, _targetSpeed, rate * Time.fixedDeltaTime);
             if (Mathf.Abs(_currentSpeed) < 0.0001f)
             {
@@ -145,6 +139,26 @@ namespace ElectricPalletStackers.PalletStackers
             if (Mathf.Approximately(_targetSpeed, 0f)) return true;
             return Mathf.Sign(_currentSpeed) != Mathf.Sign(_targetSpeed) && !Mathf.Approximately(_currentSpeed, 0f);
         }
+
+        private float MaximumForwardSpeed => _settings != null
+            ? _settings.MaximumForwardSpeed
+            : PalletStackerVehicleSettings.DefaultMaximumForwardSpeed;
+
+        private float MaximumReverseSpeed => _settings != null
+            ? _settings.MaximumReverseSpeed
+            : PalletStackerVehicleSettings.DefaultMaximumReverseSpeed;
+
+        private float Acceleration => _settings != null
+            ? _settings.Acceleration
+            : PalletStackerVehicleSettings.DefaultAcceleration;
+
+        private float ServiceBrakeDeceleration => _settings != null
+            ? _settings.ServiceBrakeDeceleration
+            : PalletStackerVehicleSettings.DefaultServiceBrakeDeceleration;
+
+        private float MaximumSteeringAngleDegrees => _settings != null
+            ? _settings.MaximumSteeringAngleDegrees
+            : PalletStackerVehicleSettings.DefaultMaximumSteeringAngleDegrees;
 
         private Vector3 SafeLocalForward()
         {

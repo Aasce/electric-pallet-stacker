@@ -116,13 +116,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _stateReceiver: {fileID: 0}
   _collisionReporter: {fileID: 6482732429717059144}
+  _settings: {fileID: 11400000, guid: 185ec762c7b64b7a80da1d21db8fbce4, type: 2}
   _outputComponents:
   - {fileID: 5210768195172812719}
   - {fileID: 8052187625384246911}
   - {fileID: 7618002372905023212}
   - {fileID: 4634689111448651331}
   - {fileID: 7364921046813579204}
-  _slowModeTravelMultiplier: 0.4
 --- !u!114 &5210768195172812719
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -136,15 +136,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _body: {fileID: 3273737744600335219}
+  _settings: {fileID: 11400000, guid: 185ec762c7b64b7a80da1d21db8fbce4, type: 2}
   _localForwardAxis: {x: 0, y: 0, z: 1}
   _fixedFrontAxleReference: {fileID: 5832042734575591163}
   _steeredRearAxleReference: {fileID: 164840407510776842}
   _wheelBaseMeters: 1.6761278
-  _maximumSteeringAngleDegrees: 45
-  _maximumForwardSpeed: 2.5
-  _maximumReverseSpeed: 1.5
-  _acceleration: 3
-  _serviceBrakeDeceleration: 6
 --- !u!114 &8052187625384246911
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -901,9 +897,7 @@ MonoBehaviour:
   _forkMeshFilter: {fileID: 6288907893302402753}
   _loadHandler: {fileID: 8991475523401287712}
   _vehicleRoot: {fileID: 550797599305683205}
-  _minHeight: 0.3
-  _maxHeight: 2
-  _speed: 1
+  _settings: {fileID: 11400000, guid: 185ec762c7b64b7a80da1d21db8fbce4, type: 2}
   _targetHeightNormalized: 0
   _obstructionLayers:
     serializedVersion: 2

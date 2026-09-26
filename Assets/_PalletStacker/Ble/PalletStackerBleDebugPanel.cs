@@ -162,7 +162,7 @@ namespace ElectricPalletStackers.Ble
                     : _keyboardSimulator.IsSimulationActive ? "KEYBOARD" : "FAIL-SAFE";
                 GUILayout.Label($"Control owner: {owner}    Keyboard simulation: {(_keyboardSimulator.SimulationEnabled ? "ON" : "OFF")}    Last sim seq: {FormatSequence(_keyboardSimulator.LastInjectedSequence)}");
                 GUILayout.Label("Keys: W/S travel, A/D steer, Up/Down tiller, R/F forks, H horn, Shift slow");
-                GUILayout.Label("      Space stop, E E-stop, X enable, Tab keyboard on/off, C collision, V clear stop");
+                GUILayout.Label("      Hold Space stop, E E-stop, X enable; Tab keyboard on/off, C collision, V clear stop");
             }
 
             PalletStackerControlState state = _stateReceiver?.CurrentState;

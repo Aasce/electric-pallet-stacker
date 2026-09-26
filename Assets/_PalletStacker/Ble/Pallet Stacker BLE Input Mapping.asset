@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Ble.PalletStackerBleInputMapping
   _rawSteeringDeg: {x: -90, y: 90}
   _mappedSteeringDeg: {x: -90, y: 90}
-  _clampedSteeringDeg: {x: -30, y: 30}
+  _clampedSteeringDeg: {x: -40, y: 40}
   _rawTillerDeg: {x: -128, y: 127}
   _mappedTillerDeg: {x: -128, y: 127}
   _clampedTillerDeg: {x: 0, y: 100}

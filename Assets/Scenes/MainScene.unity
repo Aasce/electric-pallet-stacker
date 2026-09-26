@@ -4018,7 +4018,6 @@ MonoBehaviour:
   _controlDriver: {fileID: 455976370}
   _simulationEnabled: 1
   _yieldToBleConnection: 1
-  _vehicleEnabled: 1
   _maximumSteeringDegrees: 30
   _steeringSpeedDegreesPerSecond: 90
   _steeringReturnSpeedDegreesPerSecond: 120

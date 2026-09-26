@@ -10,11 +10,7 @@ namespace ElectricPalletStackers.PalletStackers
         [SerializeField] private MeshFilter _forkMeshFilter;
         [SerializeField] private PalletStackerLoadHandler _loadHandler;
         [SerializeField] private Transform _vehicleRoot;
-
-        [Space]
-        [SerializeField] private float _minHeight;
-        [SerializeField] private float _maxHeight;
-        [SerializeField] private float _speed = 1f;
+        [SerializeField] private PalletStackerVehicleSettings _settings;
 
         [SerializeField, Range(0f, 1f)] private float _targetHeightNormalized;
 
@@ -30,11 +26,17 @@ namespace ElectricPalletStackers.PalletStackers
         public event Action<float> OnHeightChanged;
 
         public Transform Forks => forks;
-        public float MinHeight => _minHeight;
-        public float MaxHeight => _maxHeight;
-        public float Speed => _speed;
-        public float CurrentHeight => forks != null ? forks.localPosition.y : _minHeight;
-        public float TargetHeight => Mathf.Lerp(_minHeight, _maxHeight, _targetHeightNormalized);
+        public float MinHeight => _settings != null
+            ? _settings.MinimumForkHeight
+            : PalletStackerVehicleSettings.DefaultMinimumForkHeight;
+        public float MaxHeight => _settings != null
+            ? _settings.MaximumForkHeight
+            : PalletStackerVehicleSettings.DefaultMaximumForkHeight;
+        public float Speed => _settings != null
+            ? _settings.ForkLiftSpeed
+            : PalletStackerVehicleSettings.DefaultForkLiftSpeed;
+        public float CurrentHeight => forks != null ? forks.localPosition.y : MinHeight;
+        public float TargetHeight => Mathf.Lerp(MinHeight, MaxHeight, _targetHeightNormalized);
         public float TargetHeightNormalized => _targetHeightNormalized;
 
         private void FixedUpdate()
@@ -45,7 +47,7 @@ namespace ElectricPalletStackers.PalletStackers
             float nextHeight = Mathf.MoveTowards(
                 previousHeight,
                 TargetHeight,
-                _speed * Time.fixedDeltaTime);
+                Speed * Time.fixedDeltaTime);
             float heightDelta = nextHeight - previousHeight;
             if (IsMotionBlocked(heightDelta)) return;
 
@@ -60,7 +62,7 @@ namespace ElectricPalletStackers.PalletStackers
             _targetHeightNormalized = Mathf.Clamp01(normalizedHeight);
 
         public void SetTargetHeight(float height) =>
-            _targetHeightNormalized = Mathf.InverseLerp(_minHeight, _maxHeight, height);
+            _targetHeightNormalized = Mathf.InverseLerp(MinHeight, MaxHeight, height);
 
         public void SetLiftDirection(float direction)
         {
@@ -75,7 +77,7 @@ namespace ElectricPalletStackers.PalletStackers
             if (forks == null) return;
 
             Vector3 position = forks.localPosition;
-            position.y = _minHeight;
+            position.y = MinHeight;
             forks.localPosition = position;
             OnHeightChanged?.Invoke(position.y);
         }
@@ -175,10 +177,10 @@ namespace ElectricPalletStackers.PalletStackers
 
         private void OnDrawGizmosSelected()
         {
-            if (forks == null || _speed <= 0f) return;
+            if (forks == null || Speed <= 0f) return;
 
-            DrawObstructionBox(_speed * Time.fixedDeltaTime, new Color(1f, 0.65f, 0.1f, 0.25f));
-            DrawObstructionBox(-_speed * Time.fixedDeltaTime, new Color(1f, 0.2f, 0.1f, 0.25f));
+            DrawObstructionBox(Speed * Time.fixedDeltaTime, new Color(1f, 0.65f, 0.1f, 0.25f));
+            DrawObstructionBox(-Speed * Time.fixedDeltaTime, new Color(1f, 0.2f, 0.1f, 0.25f));
         }
 
         private void DrawObstructionBox(float heightDelta, Color color)

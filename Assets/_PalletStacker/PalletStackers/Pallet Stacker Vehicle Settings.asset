@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d42a83c4b0eb42c8a7694705e45731e4, type: 3}
+  m_Name: Pallet Stacker Vehicle Settings
+  m_EditorClassIdentifier: 
+  _maximumForwardSpeed: 1.5
+  _maximumReverseSpeed: 1
+  _acceleration: 2
+  _serviceBrakeDeceleration: 6
+  _slowModeTravelMultiplier: 0.4
+  _maximumSteeringAngleDegrees: 35
+  _minimumForkHeight: 0.3
+  _maximumForkHeight: 2
+  _forkLiftSpeed: 0.75
