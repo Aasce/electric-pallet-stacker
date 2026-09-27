@@ -8,6 +8,10 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.XR.Interaction.Toolkit.Attachment;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
+using UnityEngine.XR.Interaction.Toolkit.Interactors.Casters;
 using UnityEngine.XR.Interaction.Toolkit.UI;
 
 namespace ElectricPalletStackers.Editor
@@ -42,24 +46,26 @@ namespace ElectricPalletStackers.Editor
 
         private static GameObject BuildPrefab()
         {
-            GameObject root = new("Phone Call Panel", typeof(RectTransform), typeof(Canvas),
-                typeof(CanvasScaler), typeof(TrackedDeviceGraphicRaycaster), typeof(CanvasGroup),
-                typeof(AudioSource), typeof(PhoneCallPanel));
+            GameObject root = new("Phone Call Panel", typeof(AudioSource), typeof(Rigidbody),
+                typeof(BoxCollider), typeof(XRGrabInteractable), typeof(PhoneCallPanel));
 
-            RectTransform rootRect = root.GetComponent<RectTransform>();
-            rootRect.sizeDelta = new Vector2(160f, 320f);
-            rootRect.localScale = Vector3.one * 0.001f;
+            GameObject canvasObject = new("Phone Canvas", typeof(RectTransform), typeof(Canvas),
+                typeof(CanvasScaler), typeof(TrackedDeviceGraphicRaycaster), typeof(CanvasGroup));
+            RectTransform canvasRect = canvasObject.GetComponent<RectTransform>();
+            canvasRect.SetParent(root.transform, false);
+            canvasRect.sizeDelta = new Vector2(160f, 320f);
+            canvasRect.localScale = Vector3.one * 0.001f;
 
-            Canvas canvas = root.GetComponent<Canvas>();
+            Canvas canvas = canvasObject.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.WorldSpace;
             canvas.sortingOrder = 100;
 
-            CanvasScaler scaler = root.GetComponent<CanvasScaler>();
+            CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ConstantPixelSize;
             scaler.referencePixelsPerUnit = 100f;
             scaler.dynamicPixelsPerUnit = 10f;
 
-            CanvasGroup canvasGroup = root.GetComponent<CanvasGroup>();
+            CanvasGroup canvasGroup = canvasObject.GetComponent<CanvasGroup>();
             canvasGroup.alpha = 0f;
             canvasGroup.interactable = false;
             canvasGroup.blocksRaycasts = false;
@@ -69,10 +75,35 @@ namespace ElectricPalletStackers.Editor
             audioSource.loop = false;
             audioSource.spatialBlend = 1f;
 
+            Rigidbody body = root.GetComponent<Rigidbody>();
+            body.useGravity = false;
+            body.isKinematic = true;
+            body.mass = 1f;
+            body.linearDamping = 0f;
+            body.angularDamping = 0.05f;
+            body.constraints = RigidbodyConstraints.FreezeRotation;
+
+            BoxCollider moveCollider = root.GetComponent<BoxCollider>();
+            moveCollider.center = new Vector3(0f, -0.176f, 0f);
+            moveCollider.size = new Vector3(0.14f, 0.045f, 0.025f);
+            moveCollider.isTrigger = false;
+
+            XRGrabInteractable grabInteractable = root.GetComponent<XRGrabInteractable>();
+            grabInteractable.colliders.Clear();
+            grabInteractable.colliders.Add(moveCollider);
+            grabInteractable.movementType = XRBaseInteractable.MovementType.Instantaneous;
+            grabInteractable.useDynamicAttach = true;
+            grabInteractable.trackPosition = true;
+            grabInteractable.smoothPosition = false;
+            grabInteractable.trackRotation = false;
+            grabInteractable.trackScale = false;
+            grabInteractable.throwOnDetach = false;
+            grabInteractable.retainTransformParent = true;
+
             Sprite roundedSprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
             Sprite circleSprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
 
-            Image background = CreateImage("Background", rootRect, FacebookBlue, roundedSprite);
+            Image background = CreateImage("Background", canvasRect, FacebookBlue, roundedSprite);
             Stretch(background.rectTransform, Vector2.zero, Vector2.zero);
             background.type = Image.Type.Sliced;
             background.raycastTarget = false;
@@ -81,10 +112,17 @@ namespace ElectricPalletStackers.Editor
             shadow.effectColor = new Color(0f, 0f, 0f, 0.35f);
             shadow.effectDistance = new Vector2(3f, -4f);
 
+            Image moveHandle = CreateImage(
+                "Move Handle", canvasRect, new Color(1f, 1f, 1f, 0.75f), roundedSprite);
+            SetRect(moveHandle.rectTransform, new Vector2(0f, -176f), new Vector2(96f, 14f));
+            moveHandle.type = Image.Type.Sliced;
+            moveHandle.raycastTarget = false;
+
             TextMeshProUGUI status = CreateText(
-                "Incoming Call", background.rectTransform, "CUỘC GỌI ĐẾN", 13f,
+                "Call Status", background.rectTransform, "Incoming call", 13f,
                 FontStyles.Bold, new Color(1f, 1f, 1f, 0.82f));
-            SetRect(status.rectTransform, new Vector2(0f, 118f), new Vector2(140f, 28f));
+            SetRect(status.rectTransform, new Vector2(0f, 118f), new Vector2(146f, 28f));
+            EnableAutoSizing(status, 9f, 13f);
 
             Image avatar = CreateImage(
                 "Caller Avatar", background.rectTransform, new Color(1f, 1f, 1f, 0.2f), circleSprite);
@@ -99,46 +137,63 @@ namespace ElectricPalletStackers.Editor
                 "Caller Number", background.rectTransform, "0123456789", 22f,
                 FontStyles.Bold, Color.white);
             SetRect(caller.rectTransform, new Vector2(0f, 3f), new Vector2(145f, 38f));
+            EnableAutoSizing(caller, 14f, 22f);
 
             TextMeshProUGUI hint = CreateText(
-                "Interaction Hint", background.rectTransform, "Chạm để trả lời", 11f,
+                "Interaction Hint", background.rectTransform, "Tap to answer", 11f,
                 FontStyles.Normal, new Color(1f, 1f, 1f, 0.72f));
             SetRect(hint.rectTransform, new Vector2(0f, -29f), new Vector2(140f, 24f));
 
-            RectTransform actions = CreateContainer("Actions", background.rectTransform);
-            Stretch(actions, Vector2.zero, Vector2.zero);
+            RectTransform incomingActions = CreateContainer("Incoming Call Actions", background.rectTransform);
+            Stretch(incomingActions, Vector2.zero, Vector2.zero);
 
             Button reject = CreateRoundButton(
-                "Reject Button", actions, new Vector2(-44f, -93f),
-                RejectRed, circleSprite, "X");
+                "Reject Button", incomingActions, new Vector2(-44f, -93f),
+                RejectRed, circleSprite, roundedSprite);
             Button accept = CreateRoundButton(
-                "Accept Button", actions, new Vector2(44f, -93f),
-                AcceptGreen, circleSprite, "✓");
+                "Accept Button", incomingActions, new Vector2(44f, -93f),
+                AcceptGreen, circleSprite, roundedSprite);
 
             TextMeshProUGUI rejectLabel = CreateText(
-                "Reject Label", actions, "Từ chối", 10f,
+                "Reject Label", incomingActions, "Decline", 10f,
                 FontStyles.Normal, new Color(1f, 1f, 1f, 0.9f));
             SetRect(rejectLabel.rectTransform, new Vector2(-44f, -137f), new Vector2(70f, 20f));
 
             TextMeshProUGUI acceptLabel = CreateText(
-                "Accept Label", actions, "Nhận", 10f,
+                "Accept Label", incomingActions, "Accept", 10f,
                 FontStyles.Normal, new Color(1f, 1f, 1f, 0.9f));
             SetRect(acceptLabel.rectTransform, new Vector2(44f, -137f), new Vector2(70f, 20f));
 
+            RectTransform activeCallActions = CreateContainer("Active Call Actions", background.rectTransform);
+            Stretch(activeCallActions, Vector2.zero, Vector2.zero);
+            Button hangUp = CreateRoundButton(
+                "Hang Up Button", activeCallActions, new Vector2(0f, -93f),
+                RejectRed, circleSprite, roundedSprite);
+            TextMeshProUGUI hangUpLabel = CreateText(
+                "Hang Up Label", activeCallActions, "End", 10f,
+                FontStyles.Normal, new Color(1f, 1f, 1f, 0.9f));
+            SetRect(hangUpLabel.rectTransform, new Vector2(0f, -137f), new Vector2(80f, 20f));
+            activeCallActions.gameObject.SetActive(false);
+
             SerializedObject panel = new(root.GetComponent<PhoneCallPanel>());
             panel.FindProperty("_canvasGroup").objectReferenceValue = canvasGroup;
-            panel.FindProperty("_content").objectReferenceValue = rootRect;
+            panel.FindProperty("_content").objectReferenceValue = canvasRect;
             panel.FindProperty("_statusLabel").objectReferenceValue = status;
             panel.FindProperty("_callerLabel").objectReferenceValue = caller;
             panel.FindProperty("_hintLabel").objectReferenceValue = hint;
-            panel.FindProperty("_actions").objectReferenceValue = actions.gameObject;
+            panel.FindProperty("_incomingActions").objectReferenceValue = incomingActions.gameObject;
+            panel.FindProperty("_activeCallActions").objectReferenceValue = activeCallActions.gameObject;
             panel.FindProperty("_rejectButton").objectReferenceValue = reject;
             panel.FindProperty("_acceptButton").objectReferenceValue = accept;
+            panel.FindProperty("_hangUpButton").objectReferenceValue = hangUp;
+            panel.FindProperty("_moveCollider").objectReferenceValue = moveCollider;
+            panel.FindProperty("_moveInteractable").objectReferenceValue = grabInteractable;
             panel.FindProperty("_audioSource").objectReferenceValue = audioSource;
             panel.FindProperty("_defaultCaller").stringValue = "0123456789";
             panel.ApplyModifiedPropertiesWithoutUndo();
 
-            SetLayerRecursively(root, LayerMask.NameToLayer("UI"));
+            root.layer = LayerMask.NameToLayer("Default");
+            SetLayerRecursively(canvasObject, LayerMask.NameToLayer("UI"));
 
             GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
             Object.DestroyImmediate(root);
@@ -178,15 +233,64 @@ namespace ElectricPalletStackers.Editor
                 vehicleMotor != null ? vehicleMotor.GetComponent<Rigidbody>() : null;
             simulator.FindProperty("_collisionReporter").objectReferenceValue = collisionReporter;
             simulator.FindProperty("_callerDisplay").stringValue = "0123456789";
-            simulator.FindProperty("_initialDelayRange").vector2Value = new Vector2(10f, 30f);
-            simulator.FindProperty("_ringDurationRange").vector2Value = new Vector2(5f, 10f);
+            simulator.FindProperty("_initialDelayRange").vector2Value = new Vector2(5f, 10f);
+            simulator.FindProperty("_ringDurationRange").vector2Value = new Vector2(10f, 15f);
             simulator.FindProperty("_conversationDurationRange").vector2Value = new Vector2(5f, 10f);
             simulator.FindProperty("_rejectRetryDelay").floatValue = 5f;
             simulator.ApplyModifiedPropertiesWithoutUndo();
 
+            ConfigureHandGrabInteractors();
+
             EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
             EditorSceneManager.SaveScene(SceneManager.GetActiveScene());
             Selection.activeGameObject = eventObject;
+        }
+
+        private static void ConfigureHandGrabInteractors()
+        {
+            NearFarInteractor[] interactors = Object.FindObjectsByType<NearFarInteractor>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            foreach (NearFarInteractor interactor in interactors)
+            {
+                Transform hand = interactor != null ? interactor.transform.parent : null;
+                if (hand == null || !hand.name.EndsWith("Hand", System.StringComparison.Ordinal)) continue;
+
+                Transform aimPose = hand.Find("Aim Pose");
+                if (aimPose == null) continue;
+
+                interactor.attachTransform = aimPose;
+
+                SphereInteractionCaster sphereCaster = interactor.GetComponent<SphereInteractionCaster>();
+                if (sphereCaster != null) sphereCaster.castOrigin = aimPose;
+
+                CurveInteractionCaster curveCaster = interactor.GetComponent<CurveInteractionCaster>();
+                if (curveCaster != null) curveCaster.castOrigin = aimPose;
+
+                InteractionAttachController attachController =
+                    interactor.GetComponent<InteractionAttachController>();
+                if (attachController != null) attachController.transformToFollow = aimPose;
+
+                EditorUtility.SetDirty(interactor);
+                PrefabUtility.RecordPrefabInstancePropertyModifications(interactor);
+                if (sphereCaster != null)
+                {
+                    EditorUtility.SetDirty(sphereCaster);
+                    PrefabUtility.RecordPrefabInstancePropertyModifications(sphereCaster);
+                }
+
+                if (curveCaster != null)
+                {
+                    EditorUtility.SetDirty(curveCaster);
+                    PrefabUtility.RecordPrefabInstancePropertyModifications(curveCaster);
+                }
+
+                if (attachController != null)
+                {
+                    EditorUtility.SetDirty(attachController);
+                    PrefabUtility.RecordPrefabInstancePropertyModifications(attachController);
+                }
+            }
         }
 
         private static Button CreateRoundButton(
@@ -194,10 +298,10 @@ namespace ElectricPalletStackers.Editor
             RectTransform parent,
             Vector2 position,
             Color color,
-            Sprite sprite,
-            string glyph)
+            Sprite backgroundSprite,
+            Sprite iconPlaceholderSprite)
         {
-            Image image = CreateImage(name, parent, color, sprite);
+            Image image = CreateImage(name, parent, color, backgroundSprite);
             SetRect(image.rectTransform, position, new Vector2(68f, 68f));
             image.raycastTarget = true;
 
@@ -219,9 +323,11 @@ namespace ElectricPalletStackers.Editor
             navigation.mode = Navigation.Mode.None;
             button.navigation = navigation;
 
-            TextMeshProUGUI icon = CreateText(
-                "Icon", image.rectTransform, glyph, 28f, FontStyles.Bold, Color.white);
-            Stretch(icon.rectTransform, Vector2.zero, Vector2.zero);
+            Image icon = CreateImage(
+                "Icon Placeholder", image.rectTransform, Color.white, iconPlaceholderSprite);
+            SetRect(icon.rectTransform, Vector2.zero, new Vector2(24f, 24f));
+            icon.preserveAspect = true;
+            icon.raycastTarget = false;
             return button;
         }
 
@@ -274,6 +380,14 @@ namespace ElectricPalletStackers.Editor
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = position;
             rect.sizeDelta = size;
+        }
+
+        private static void EnableAutoSizing(TextMeshProUGUI label, float minimumSize, float maximumSize)
+        {
+            label.enableAutoSizing = true;
+            label.fontSizeMin = minimumSize;
+            label.fontSizeMax = maximumSize;
+            label.overflowMode = TextOverflowModes.Ellipsis;
         }
 
         private static void Stretch(RectTransform rect, Vector2 minOffset, Vector2 maxOffset)

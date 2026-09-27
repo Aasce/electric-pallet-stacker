@@ -1,8 +1,13 @@
 using System;
 using DG.Tweening;
+using ElectricPalletStackers.PalletStackers;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.XR.Interaction.Toolkit.Attachment;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
+using UnityEngine.XR.Interaction.Toolkit.Interactors.Casters;
 
 namespace ElectricPalletStackers.UI
 {
@@ -15,14 +20,20 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private TMP_Text _statusLabel;
         [SerializeField] private TMP_Text _callerLabel;
         [SerializeField] private TMP_Text _hintLabel;
-        [SerializeField] private GameObject _actions;
+        [SerializeField] private GameObject _incomingActions;
+        [SerializeField] private GameObject _activeCallActions;
         [SerializeField] private Button _rejectButton;
         [SerializeField] private Button _acceptButton;
+        [SerializeField] private Button _hangUpButton;
+
+        [Header("Hand Interaction")]
+        [SerializeField] private Collider _moveCollider;
+        [SerializeField] private XRGrabInteractable _moveInteractable;
 
         [Header("Placement")]
         [Tooltip("Defaults to the main camera when left empty.")]
         [SerializeField] private Transform _viewer;
-        [SerializeField] private Vector3 _viewerOffset = new(0.12f, -0.03f, 0.55f);
+        [SerializeField] private Vector3 _viewerOffset = new(-0.06f, -0.03f, 0.55f);
 
         [Header("Presentation")]
         [SerializeField] private string _defaultCaller = "0123456789";
@@ -36,12 +47,16 @@ namespace ElectricPalletStackers.UI
 
         private Vector3 _baseScale = Vector3.one;
         private bool _isInitialized;
+        private float _callStartedAt;
+        private int _lastDisplayedCallSecond = -1;
 
         public bool IsRinging { get; private set; }
+        public bool IsInCall { get; private set; }
         public string CallerDisplay => _callerLabel != null ? _callerLabel.text : string.Empty;
 
         public event Action CallAccepted;
         public event Action CallRejected;
+        public event Action CallEndedByUser;
 
         private void Awake()
         {
@@ -53,7 +68,19 @@ namespace ElectricPalletStackers.UI
         {
             if (_rejectButton != null) _rejectButton.onClick.RemoveListener(RejectCall);
             if (_acceptButton != null) _acceptButton.onClick.RemoveListener(AcceptCall);
+            if (_hangUpButton != null) _hangUpButton.onClick.RemoveListener(HangUpCall);
             KillTweens();
+        }
+
+        private void Update()
+        {
+            if (!IsInCall) return;
+
+            int elapsedSeconds = Mathf.Max(0, Mathf.FloorToInt(Time.realtimeSinceStartup - _callStartedAt));
+            if (elapsedSeconds == _lastDisplayedCallSecond) return;
+
+            _lastDisplayedCallSecond = elapsedSeconds;
+            UpdateCallDuration(elapsedSeconds);
         }
 
         [ContextMenu("Simulate Incoming Call")]
@@ -69,6 +96,8 @@ namespace ElectricPalletStackers.UI
             PlaceInFrontOfViewer();
 
             IsRinging = true;
+            IsInCall = false;
+            SetMoveInteractionEnabled(true);
             SetRingingVisual();
             PlayClip(_ringtoneClip, true);
             KillTweens();
@@ -102,6 +131,9 @@ namespace ElectricPalletStackers.UI
         {
             if (!IsRinging) return;
             IsRinging = false;
+            IsInCall = true;
+            _callStartedAt = Time.realtimeSinceStartup;
+            _lastDisplayedCallSecond = -1;
             SetActiveCallVisual();
             PlayClip(_conversationClip, false);
             CallAccepted?.Invoke();
@@ -115,8 +147,18 @@ namespace ElectricPalletStackers.UI
             Hide();
         }
 
+        public void HangUpCall()
+        {
+            if (!IsInCall) return;
+
+            IsInCall = false;
+            CallEndedByUser?.Invoke();
+            Hide();
+        }
+
         public void FinishCall()
         {
+            IsInCall = false;
             Hide();
         }
 
@@ -124,6 +166,8 @@ namespace ElectricPalletStackers.UI
         {
             Initialize();
             IsRinging = false;
+            IsInCall = false;
+            SetMoveInteractionEnabled(false);
             KillTweens();
             StopAudio();
 
@@ -148,6 +192,7 @@ namespace ElectricPalletStackers.UI
         {
             Initialize();
             IsRinging = false;
+            IsInCall = false;
             KillTweens();
             StopAudio();
 
@@ -159,6 +204,7 @@ namespace ElectricPalletStackers.UI
             }
 
             if (_content != null) _content.localScale = _baseScale;
+            SetMoveInteractionEnabled(false);
         }
 
         private void Initialize()
@@ -173,12 +219,97 @@ namespace ElectricPalletStackers.UI
                 if (caller != null) _callerLabel = caller.GetComponent<TMP_Text>();
             }
 
+            if (_moveCollider == null) _moveCollider = GetComponent<Collider>();
+            if (_moveInteractable == null) _moveInteractable = GetComponent<XRGrabInteractable>();
+            if (_moveInteractable != null && _moveCollider != null &&
+                !_moveInteractable.colliders.Contains(_moveCollider))
+            {
+                _moveInteractable.colliders.Add(_moveCollider);
+            }
+
+            Rigidbody moveBody = GetComponent<Rigidbody>();
+            if (moveBody != null)
+            {
+                moveBody.useGravity = false;
+                moveBody.isKinematic = true;
+            }
+
+            IgnoreGameplayCollisions();
+            ConfigureHandGrabInteractors();
+
             _baseScale = _content != null ? _content.localScale : transform.localScale;
 
             if (_rejectButton != null) _rejectButton.onClick.AddListener(RejectCall);
             if (_acceptButton != null) _acceptButton.onClick.AddListener(AcceptCall);
+            if (_hangUpButton != null) _hangUpButton.onClick.AddListener(HangUpCall);
 
             _isInitialized = true;
+        }
+
+        private static void ConfigureHandGrabInteractors()
+        {
+            NearFarInteractor[] interactors = FindObjectsByType<NearFarInteractor>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            for (int index = 0; index < interactors.Length; index++)
+            {
+                NearFarInteractor interactor = interactors[index];
+                Transform hand = interactor != null ? interactor.transform.parent : null;
+                if (hand == null || !hand.name.EndsWith("Hand", StringComparison.Ordinal)) continue;
+
+                Transform aimPose = hand.Find("Aim Pose");
+                if (aimPose == null) continue;
+
+                interactor.attachTransform = aimPose;
+
+                SphereInteractionCaster sphereCaster = interactor.GetComponent<SphereInteractionCaster>();
+                if (sphereCaster != null) sphereCaster.castOrigin = aimPose;
+
+                CurveInteractionCaster curveCaster = interactor.GetComponent<CurveInteractionCaster>();
+                if (curveCaster != null) curveCaster.castOrigin = aimPose;
+
+                InteractionAttachController attachController =
+                    interactor.GetComponent<InteractionAttachController>();
+                if (attachController != null) attachController.transformToFollow = aimPose;
+            }
+        }
+
+        private void IgnoreGameplayCollisions()
+        {
+            if (_moveCollider == null) return;
+
+            CharacterController[] playerControllers = FindObjectsByType<CharacterController>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            for (int index = 0; index < playerControllers.Length; index++)
+            {
+                CharacterController controller = playerControllers[index];
+                if (controller != null) Physics.IgnoreCollision(_moveCollider, controller, true);
+            }
+
+            PalletStacker[] vehicles = FindObjectsByType<PalletStacker>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            for (int index = 0; index < vehicles.Length; index++)
+                IgnoreColliders(vehicles[index].GetComponentsInChildren<Collider>(true));
+
+            PalletStackerLoad[] loads = FindObjectsByType<PalletStackerLoad>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            for (int index = 0; index < loads.Length; index++)
+                IgnoreColliders(loads[index].GetComponentsInChildren<Collider>(true));
+        }
+
+        private void IgnoreColliders(Collider[] colliders)
+        {
+            if (_moveCollider == null || colliders == null) return;
+
+            for (int index = 0; index < colliders.Length; index++)
+            {
+                Collider other = colliders[index];
+                if (other != null && other != _moveCollider)
+                    Physics.IgnoreCollision(_moveCollider, other, true);
+            }
         }
 
         private void PlaceInFrontOfViewer()
@@ -186,25 +317,37 @@ namespace ElectricPalletStackers.UI
             if (_viewer == null && Camera.main != null) _viewer = Camera.main.transform;
             if (_viewer == null) return;
 
-            transform.position = _viewer.TransformPoint(_viewerOffset);
-
-            Vector3 forward = Vector3.ProjectOnPlane(_viewer.forward, Vector3.up);
-            if (forward.sqrMagnitude < 0.001f) forward = _viewer.forward;
-            transform.rotation = Quaternion.LookRotation(forward.normalized, Vector3.up);
+            Quaternion yawRotation = Quaternion.Euler(0f, _viewer.eulerAngles.y, 0f);
+            transform.position = _viewer.position + yawRotation * _viewerOffset;
+            transform.rotation = yawRotation;
         }
 
         private void SetRingingVisual()
         {
-            if (_statusLabel != null) _statusLabel.text = "CUỘC GỌI ĐẾN";
-            if (_hintLabel != null) _hintLabel.text = "Chạm để trả lời";
-            if (_actions != null) _actions.SetActive(true);
+            if (_statusLabel != null) _statusLabel.text = "Incoming call";
+            if (_hintLabel != null) _hintLabel.text = "Tap to answer";
+            if (_incomingActions != null) _incomingActions.SetActive(true);
+            if (_activeCallActions != null) _activeCallActions.SetActive(false);
         }
 
         private void SetActiveCallVisual()
         {
-            if (_statusLabel != null) _statusLabel.text = "ĐANG TRONG CUỘC GỌI";
-            if (_hintLabel != null) _hintLabel.text = "Giữ xe đứng yên";
-            if (_actions != null) _actions.SetActive(false);
+            if (_statusLabel != null) _statusLabel.text = "In call";
+            if (_incomingActions != null) _incomingActions.SetActive(false);
+            if (_activeCallActions != null) _activeCallActions.SetActive(true);
+            UpdateCallDuration(0);
+        }
+
+        private void UpdateCallDuration(int elapsedSeconds)
+        {
+            if (_hintLabel == null) return;
+
+            int hours = elapsedSeconds / 3600;
+            int minutes = elapsedSeconds / 60 % 60;
+            int seconds = elapsedSeconds % 60;
+            _hintLabel.text = hours > 0
+                ? $"{hours:00}:{minutes:00}:{seconds:00}"
+                : $"{minutes:00}:{seconds:00}";
         }
 
         private void PlayClip(AudioClip clip, bool loop)
@@ -223,6 +366,12 @@ namespace ElectricPalletStackers.UI
             _audioSource.Stop();
             _audioSource.clip = null;
             _audioSource.loop = false;
+        }
+
+        private void SetMoveInteractionEnabled(bool enabled)
+        {
+            if (_moveCollider != null) _moveCollider.enabled = enabled;
+            if (_moveInteractable != null) _moveInteractable.enabled = enabled;
         }
 
         private void KillTweens()

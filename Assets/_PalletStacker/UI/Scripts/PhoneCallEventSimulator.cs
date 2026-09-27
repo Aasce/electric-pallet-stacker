@@ -19,8 +19,8 @@ namespace ElectricPalletStackers.UI
 
         [Header("Call Timing")]
         [SerializeField] private string _callerDisplay = "0123456789";
-        [SerializeField] private Vector2 _initialDelayRange = new(10f, 30f);
-        [SerializeField] private Vector2 _ringDurationRange = new(5f, 10f);
+        [SerializeField] private Vector2 _initialDelayRange = new(5f, 10f);
+        [SerializeField] private Vector2 _ringDurationRange = new(10f, 15f);
         [SerializeField] private Vector2 _conversationDurationRange = new(5f, 10f);
         [SerializeField, Min(0f)] private float _rejectRetryDelay = 5f;
 
@@ -29,6 +29,7 @@ namespace ElectricPalletStackers.UI
         [SerializeField, Min(0.1f)] private float _npcRamSpeed = 5f;
 
         private Coroutine _callRoutine;
+        private float _retryAt = -1f;
         private bool _eventScheduledThisRound;
         private bool _activeConversation;
         private bool _accidentTriggered;
@@ -45,6 +46,7 @@ namespace ElectricPalletStackers.UI
             {
                 _phoneCallPanel.CallAccepted += HandleCallAccepted;
                 _phoneCallPanel.CallRejected += HandleCallRejected;
+                _phoneCallPanel.CallEndedByUser += HandleCallEndedByUser;
             }
 
             if (_appManager == null) return;
@@ -60,6 +62,7 @@ namespace ElectricPalletStackers.UI
             {
                 _phoneCallPanel.CallAccepted -= HandleCallAccepted;
                 _phoneCallPanel.CallRejected -= HandleCallRejected;
+                _phoneCallPanel.CallEndedByUser -= HandleCallEndedByUser;
             }
 
             if (_appManager != null)
@@ -69,6 +72,7 @@ namespace ElectricPalletStackers.UI
             }
 
             CancelCallRoutine();
+            CancelRetryCall();
         }
 
         [ContextMenu("Simulate Call Now")]
@@ -76,11 +80,19 @@ namespace ElectricPalletStackers.UI
         {
             ResolveReferences();
             CancelCallRoutine();
+            CancelRetryCall();
             BeginRinging();
         }
 
         private void Update()
         {
+            if (_retryAt >= 0f && Time.realtimeSinceStartup >= _retryAt)
+            {
+                _retryAt = -1f;
+                if (_appManager == null || _appManager.CurrentState == GameState.Playing)
+                    BeginRinging();
+            }
+
             if (!_activeConversation || _accidentTriggered || !IsVehicleMoving()) return;
             TriggerNpcAccident();
         }
@@ -97,6 +109,7 @@ namespace ElectricPalletStackers.UI
             if (nextState == GameState.Playing) return;
 
             CancelCallRoutine();
+            CancelRetryCall();
             _activeConversation = false;
             _phoneCallPanel?.HideImmediate();
         }
@@ -107,6 +120,7 @@ namespace ElectricPalletStackers.UI
 
             _eventScheduledThisRound = true;
             CancelCallRoutine();
+            CancelRetryCall();
             _phoneCallPanel?.HideImmediate();
             _callRoutine = StartCoroutine(ShowCallAfterDelay(RandomInRange(_initialDelayRange)));
         }
@@ -133,6 +147,7 @@ namespace ElectricPalletStackers.UI
             yield return new WaitForSecondsRealtime(duration);
             _callRoutine = null;
             _phoneCallPanel?.Hide();
+            ScheduleRetryCall();
         }
 
         private void HandleCallAccepted()
@@ -155,7 +170,19 @@ namespace ElectricPalletStackers.UI
         {
             CancelCallRoutine();
             _activeConversation = false;
-            _callRoutine = StartCoroutine(ShowCallAfterDelay(_rejectRetryDelay));
+            ScheduleRetryCall();
+        }
+
+        private void HandleCallEndedByUser()
+        {
+            CancelCallRoutine();
+            _activeConversation = false;
+            ScheduleRetryCall();
+        }
+
+        private void ScheduleRetryCall()
+        {
+            _retryAt = Time.realtimeSinceStartup + _rejectRetryDelay;
         }
 
         private bool IsVehicleMoving()
@@ -173,6 +200,7 @@ namespace ElectricPalletStackers.UI
             _accidentTriggered = true;
             _activeConversation = false;
             CancelCallRoutine();
+            CancelRetryCall();
             _phoneCallPanel?.FinishCall();
 
             NpcAgent closestNpc = FindClosestNpc();
@@ -230,6 +258,11 @@ namespace ElectricPalletStackers.UI
             if (_callRoutine == null) return;
             StopCoroutine(_callRoutine);
             _callRoutine = null;
+        }
+
+        private void CancelRetryCall()
+        {
+            _retryAt = -1f;
         }
 
         private static float RandomInRange(Vector2 range)
