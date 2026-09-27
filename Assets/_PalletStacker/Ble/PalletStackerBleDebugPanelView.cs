@@ -364,7 +364,7 @@ namespace ElectricPalletStackers.Ble
                 $"{FormatSequence(_keyboardSimulator?.LastInjectedSequence)}\nA / D\nH\nE\nC");
 
             SetColumn(_keysLabels3, "\nTiller:\nSlow:\nEnable:\nClear collision stop:");
-            SetColumn(_keysValues3, "\nUp / Down\nShift\nX\nV");
+            SetColumn(_keysValues3, "\nUp / Down\nShift\nX (toggle)\nV");
         }
 
         private static void SetColumn(TMP_Text text, string value)

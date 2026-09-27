@@ -39,6 +39,7 @@ namespace ElectricPalletStackers.PalletStackers
         private KeyboardStateSnapshot _lastSnapshot;
         private bool _hasLastSnapshot;
         private bool _bleOwnsControl;
+        private bool _simulatedEnabled;
         private float _simulatedSteeringDegrees;
         private float _simulatedTillerDegrees;
 
@@ -57,6 +58,7 @@ namespace ElectricPalletStackers.PalletStackers
 
             _simulatedSteeringDegrees = 0f;
             _simulatedTillerDegrees = _tillerDegrees;
+            _simulatedEnabled = false;
             _hasLastSnapshot = false;
         }
 
@@ -79,10 +81,15 @@ namespace ElectricPalletStackers.PalletStackers
             {
                 _simulationEnabled = !_simulationEnabled;
                 _hasLastSnapshot = false;
-                if (!_simulationEnabled && !_bleOwnsControl) InjectFailSafeState();
+                if (!_simulationEnabled && !_bleOwnsControl)
+                {
+                    _simulatedEnabled = false;
+                    InjectFailSafeState();
+                }
             }
 
             if (!IsSimulationActive) return;
+            if (keyboard.xKey.wasPressedThisFrame) _simulatedEnabled = !_simulatedEnabled;
             UpdateSteering(keyboard);
             UpdateTiller(keyboard);
 
@@ -115,7 +122,7 @@ namespace ElectricPalletStackers.PalletStackers
 
             bool slowMode = keyboard.leftShiftKey.isPressed || keyboard.rightShiftKey.isPressed;
             return new KeyboardStateSnapshot(
-                keyboard.xKey.isPressed,
+                _simulatedEnabled,
                 keyboard.spaceKey.isPressed,
                 keyboard.eKey.isPressed,
                 keyboard.hKey.isPressed,
@@ -232,6 +239,7 @@ namespace ElectricPalletStackers.PalletStackers
             if (state == BleConnectionState.Connected)
             {
                 if (!_bleOwnsControl) InjectFailSafeState();
+                _simulatedEnabled = false;
                 _bleOwnsControl = true;
                 _hasLastSnapshot = false;
                 return;

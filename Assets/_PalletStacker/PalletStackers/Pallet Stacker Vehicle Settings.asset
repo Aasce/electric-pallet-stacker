@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _maximumForwardSpeed: 1.5
   _maximumReverseSpeed: 1
-  _acceleration: 2
-  _serviceBrakeDeceleration: 6
+  _acceleration: 6
+  _serviceBrakeDeceleration: 2
   _slowModeTravelMultiplier: 0.4
   _maximumSteeringAngleDegrees: 35
   _minimumForkHeight: 0.3
