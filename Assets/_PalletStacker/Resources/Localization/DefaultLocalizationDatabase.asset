@@ -1,0 +1,102 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af3d64f0dc2344f88bdc4e0f9594f27b, type: 3}
+  m_Name: DefaultLocalizationDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Localization.LocalizationDatabase
+  _entries:
+  - _key: common.confirm
+    _english: Press E-Stop to Confirm
+    _vietnamese: Nhấn dừng khẩn cấp để xác nhận
+    _japanese: 非常停止ボタンで決定
+  - _key: common.continue
+    _english: Press E-Stop to Continue
+    _vietnamese: Nhấn dừng khẩn cấp để tiếp tục
+    _japanese: 非常停止ボタンで続行
+  - _key: language.english
+    _english: English
+    _vietnamese: Tiếng Anh
+    _japanese: 英語
+  - _key: language.vietnamese
+    _english: Vietnamese
+    _vietnamese: Tiếng Việt
+    _japanese: ベトナム語
+  - _key: language.japanese
+    _english: Japanese
+    _vietnamese: Tiếng Nhật
+    _japanese: 日本語
+  - _key: selectLanguage.title
+    _english: Select Language
+    _vietnamese: Chọn ngôn ngữ
+    _japanese: 言語を選択
+  - _key: selectLanguage.navigationHint
+    _english: Use Travel to select language
+    _vietnamese: Dùng cần di chuyển để chọn ngôn ngữ
+    _japanese: 走行レバーで言語を選択
+  - _key: welcome.title
+    _english: Welcome
+    _vietnamese: Chào mừng
+    _japanese: ようこそ
+  - _key: welcome.description
+    _english: This training simulation recreates accident scenarios involving a walkie pallet stacker.
+    _vietnamese: Mô phỏng huấn luyện này tái hiện các tình huống tai nạn liên quan đến xe nâng tay cao chạy điện.
+    _japanese: この訓練シミュレーションでは、歩行操作式パレットスタッカーに関する事故状況を再現します。
+  - _key: guide.title
+    _english: Guide
+    _vietnamese: Hướng dẫn
+    _japanese: 操作ガイド
+  - _key: guide.scrollHint
+    _english: Use Travel to scroll
+    _vietnamese: Dùng cần di chuyển để cuộn
+    _japanese: 走行レバーでスクロール
+  - _key: completed.title
+    _english: Completed
+    _vietnamese: Hoàn thành
+    _japanese: 完了
+  - _key: completed.description
+    _english: You have successfully completed the training simulation.
+    _vietnamese: Bạn đã hoàn thành mô phỏng huấn luyện.
+    _japanese: 訓練シミュレーションを完了しました。
+  - _key: failed.title
+    _english: Failed
+    _vietnamese: Không đạt
+    _japanese: 失敗
+  - _key: failed.description
+    _english: A collision was detected. The training simulation has failed.
+    _vietnamese: Đã phát hiện va chạm. Mô phỏng huấn luyện không đạt.
+    _japanese: 衝突を検知しました。訓練シミュレーションは失敗です。
+  - _key: phone.incomingCall
+    _english: Incoming call
+    _vietnamese: Cuộc gọi đến
+    _japanese: 着信
+  - _key: phone.inCall
+    _english: In call
+    _vietnamese: Đang gọi
+    _japanese: 通話中
+  - _key: phone.tapToAnswer
+    _english: Tap to answer
+    _vietnamese: Chạm để trả lời
+    _japanese: タップして応答
+  - _key: phone.decline
+    _english: Decline
+    _vietnamese: Từ chối
+    _japanese: 拒否
+  - _key: phone.accept
+    _english: Accept
+    _vietnamese: Chấp nhận
+    _japanese: 応答
+  - _key: phone.end
+    _english: End
+    _vietnamese: Kết thúc
+    _japanese: 終了
+  _languageProfiles:
+  - _language: 2
+    _fontOverride: {fileID: 11400000, guid: aebbc5a4476e71744bf67ff1e2fb85fd, type: 2}

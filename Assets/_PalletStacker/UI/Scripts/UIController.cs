@@ -1,11 +1,17 @@
 using System;
+using ElectricPalletStackers.Localization;
 using UnityEngine;
 
 namespace ElectricPalletStackers.UI
 {
     [DisallowMultipleComponent]
+    [RequireComponent(typeof(LocalizationManager))]
     public sealed class UIController : MonoBehaviour
     {
+        [Header("Services")]
+        [SerializeField] private LocalizationManager _localizationManager;
+
+        [Header("UI Flow")]
         [SerializeField] private UIInputRouter _inputRouter;
         [SerializeField] private UISelectLanguagePanel _selectLanguagePanel;
         [SerializeField] private UIWelcomePanel _welcomePanel;
@@ -15,13 +21,13 @@ namespace ElectricPalletStackers.UI
 
         public UIFlowState CurrentState { get; private set; } = UIFlowState.SelectLanguage;
         public bool IsInputCaptured => CurrentState != UIFlowState.Hidden;
-        public UILanguageCode FocusedLanguage { get; private set; } = UILanguageCode.En;
-        public UILanguageCode SelectedLanguage { get; private set; } = UILanguageCode.En;
+        public LanguageCode FocusedLanguage { get; private set; } = LanguageCode.En;
+        public LanguageCode SelectedLanguage { get; private set; } = LanguageCode.En;
 
         public event Action<UIFlowState> PanelChanged;
         public event Action<bool> InputCaptureChanged;
-        public event Action<UILanguageCode> LanguagePreviewChanged;
-        public event Action<UILanguageCode> LanguageConfirmed;
+        public event Action<LanguageCode> LanguagePreviewChanged;
+        public event Action<LanguageCode> LanguageConfirmed;
         /// <summary>
         /// Placeholder hook for systems that need to reset transient state before a new run.
         /// </summary>
@@ -29,6 +35,12 @@ namespace ElectricPalletStackers.UI
 
         private void Awake()
         {
+            if (_localizationManager == null)
+                _localizationManager = GetComponent<LocalizationManager>();
+            if (_localizationManager == null)
+                _localizationManager = gameObject.AddComponent<LocalizationManager>();
+            _localizationManager.Initialize();
+
             if (_selectLanguagePanel != null)
                 _selectLanguagePanel.FocusChanged += HandleLanguageFocusChanged;
 
@@ -112,9 +124,10 @@ namespace ElectricPalletStackers.UI
             TransitionTo(UIFlowState.Failed);
         }
 
-        private void HandleLanguageFocusChanged(UILanguageCode language)
+        private void HandleLanguageFocusChanged(LanguageCode language)
         {
             FocusedLanguage = language;
+            _localizationManager?.SetLanguage(language);
             LanguagePreviewChanged?.Invoke(language);
         }
 

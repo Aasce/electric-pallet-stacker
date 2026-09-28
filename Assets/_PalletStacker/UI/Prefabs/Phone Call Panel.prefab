@@ -245,6 +245,7 @@ GameObject:
   - component: {fileID: 5474630712870461376}
   - component: {fileID: 2710646086047601091}
   - component: {fileID: 7749256236942842259}
+  - component: {fileID: 900000000000000001}
   m_Layer: 5
   m_Name: Reject Label
   m_TagString: Untagged
@@ -457,6 +458,7 @@ GameObject:
   - component: {fileID: 2753946868317192321}
   - component: {fileID: 3922763875334366446}
   - component: {fileID: 7369217536810573967}
+  - component: {fileID: 900000000000000002}
   m_Layer: 5
   m_Name: Accept Label
   m_TagString: Untagged
@@ -594,6 +596,7 @@ GameObject:
   - component: {fileID: 7087690131047150681}
   - component: {fileID: 5464190428538423260}
   - component: {fileID: 351776617802261}
+  - component: {fileID: 900000000000000003}
   m_Layer: 5
   m_Name: Hang Up Label
   m_TagString: Untagged
@@ -2051,6 +2054,48 @@ MonoBehaviour:
   _audioSource: {fileID: 1756692767191309676}
   _ringtoneClip: {fileID: 0}
   _conversationClip: {fileID: 0}
+--- !u!114 &900000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1360752598668649853}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 169af1aa369d4ea385a747138f2d801a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Localization.LocalizedText
+  _target: {fileID: 7749256236942842259}
+  _key: phone.decline
+--- !u!114 &900000000000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2886205357499770160}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 169af1aa369d4ea385a747138f2d801a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Localization.LocalizedText
+  _target: {fileID: 7369217536810573967}
+  _key: phone.accept
+--- !u!114 &900000000000000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3528597779794480372}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 169af1aa369d4ea385a747138f2d801a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Localization.LocalizedText
+  _target: {fileID: 351776617802261}
+  _key: phone.end
 --- !u!1 &8047548459485120314
 GameObject:
   m_ObjectHideFlags: 0

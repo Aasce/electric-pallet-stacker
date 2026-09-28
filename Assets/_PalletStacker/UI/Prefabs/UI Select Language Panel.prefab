@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 3316841213364858104}
   - component: {fileID: 1388675854740367676}
   - component: {fileID: 409187484837809848}
+  - component: {fileID: 900000000000000001}
   m_Layer: 0
   m_Name: Confirm Hint
   m_TagString: Untagged
@@ -148,6 +149,7 @@ GameObject:
   - component: {fileID: 8143381514429911125}
   - component: {fileID: 8955487881980297258}
   - component: {fileID: 2519810889242232789}
+  - component: {fileID: 900000000000000002}
   m_Layer: 0
   m_Name: Previous Hint
   m_TagString: Untagged
@@ -285,6 +287,7 @@ GameObject:
   - component: {fileID: 2683618641851196498}
   - component: {fileID: 2657115333008355709}
   - component: {fileID: 7735380052881581217}
+  - component: {fileID: 900000000000000003}
   m_Layer: 0
   m_Name: Title
   m_TagString: Untagged
@@ -1045,3 +1048,45 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 3293507876116644157, guid: f4ca324795e6bad4287d975e6f184641, type: 3}
   m_PrefabInstance: {fileID: 5132968730541726159}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &900000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 306735349269884830}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 169af1aa369d4ea385a747138f2d801a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Localization.LocalizedText
+  _target: {fileID: 409187484837809848}
+  _key: common.confirm
+--- !u!114 &900000000000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3290690389064669276}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 169af1aa369d4ea385a747138f2d801a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Localization.LocalizedText
+  _target: {fileID: 2519810889242232789}
+  _key: selectLanguage.navigationHint
+--- !u!114 &900000000000000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4848817327973514714}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 169af1aa369d4ea385a747138f2d801a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Localization.LocalizedText
+  _target: {fileID: 7735380052881581217}
+  _key: selectLanguage.title

@@ -1,5 +1,6 @@
 using System;
 using DG.Tweening;
+using ElectricPalletStackers.Localization;
 using ElectricPalletStackers.PalletStackers;
 using TMPro;
 using UnityEngine;
@@ -12,7 +13,7 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors.Casters;
 namespace ElectricPalletStackers.UI
 {
     [DisallowMultipleComponent]
-    public sealed class PhoneCallPanel : MonoBehaviour
+    public sealed class PhoneCallPanel : MonoBehaviour, ILocalizedView
     {
         [Header("Content")]
         [SerializeField] private CanvasGroup _canvasGroup;
@@ -49,6 +50,9 @@ namespace ElectricPalletStackers.UI
         private bool _isInitialized;
         private float _callStartedAt;
         private int _lastDisplayedCallSecond = -1;
+        private ILocalizationService _localization;
+        private TMP_FontAsset _statusDefaultFont;
+        private TMP_FontAsset _hintDefaultFont;
 
         public bool IsRinging { get; private set; }
         public bool IsInCall { get; private set; }
@@ -57,6 +61,24 @@ namespace ElectricPalletStackers.UI
         public event Action CallAccepted;
         public event Action CallRejected;
         public event Action CallEndedByUser;
+
+        public void ApplyLocalization(ILocalizationService localization)
+        {
+            _localization = localization;
+            CacheLocalizedFonts();
+            ApplyLocalizedFonts();
+
+            if (IsInCall)
+            {
+                SetLocalizedText(_statusLabel, LocalizationKeys.Phone.InCall, "In call");
+                if (_lastDisplayedCallSecond >= 0) UpdateCallDuration(_lastDisplayedCallSecond);
+            }
+            else
+            {
+                SetLocalizedText(_statusLabel, LocalizationKeys.Phone.IncomingCall, "Incoming call");
+                SetLocalizedText(_hintLabel, LocalizationKeys.Phone.TapToAnswer, "Tap to answer");
+            }
+        }
 
         private void Awake()
         {
@@ -324,15 +346,15 @@ namespace ElectricPalletStackers.UI
 
         private void SetRingingVisual()
         {
-            if (_statusLabel != null) _statusLabel.text = "Incoming call";
-            if (_hintLabel != null) _hintLabel.text = "Tap to answer";
+            SetLocalizedText(_statusLabel, LocalizationKeys.Phone.IncomingCall, "Incoming call");
+            SetLocalizedText(_hintLabel, LocalizationKeys.Phone.TapToAnswer, "Tap to answer");
             if (_incomingActions != null) _incomingActions.SetActive(true);
             if (_activeCallActions != null) _activeCallActions.SetActive(false);
         }
 
         private void SetActiveCallVisual()
         {
-            if (_statusLabel != null) _statusLabel.text = "In call";
+            SetLocalizedText(_statusLabel, LocalizationKeys.Phone.InCall, "In call");
             if (_incomingActions != null) _incomingActions.SetActive(false);
             if (_activeCallActions != null) _activeCallActions.SetActive(true);
             UpdateCallDuration(0);
@@ -378,6 +400,29 @@ namespace ElectricPalletStackers.UI
         {
             if (_canvasGroup != null) _canvasGroup.DOKill();
             if (_content != null) _content.DOKill();
+        }
+
+        private void SetLocalizedText(TMP_Text target, string key, string fallback)
+        {
+            if (target == null) return;
+            target.text = _localization != null ? _localization.GetText(key) : fallback;
+        }
+
+        private void CacheLocalizedFonts()
+        {
+            if (_statusDefaultFont == null && _statusLabel != null)
+                _statusDefaultFont = _statusLabel.font;
+            if (_hintDefaultFont == null && _hintLabel != null)
+                _hintDefaultFont = _hintLabel.font;
+        }
+
+        private void ApplyLocalizedFonts()
+        {
+            TMP_FontAsset fontOverride = _localization?.GetFontOverride();
+            if (_statusLabel != null)
+                _statusLabel.font = fontOverride != null ? fontOverride : _statusDefaultFont;
+            if (_hintLabel != null)
+                _hintLabel.font = fontOverride != null ? fontOverride : _hintDefaultFont;
         }
     }
 }

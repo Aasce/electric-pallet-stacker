@@ -1,4 +1,5 @@
 using System;
+using ElectricPalletStackers.Localization;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -15,9 +16,9 @@ namespace ElectricPalletStackers.UI
         private bool _hasFocusedLanguage;
         private bool _buttonsSubscribed;
 
-        public UILanguageCode FocusedLanguage { get; private set; } = UILanguageCode.En;
+        public LanguageCode FocusedLanguage { get; private set; } = LanguageCode.En;
 
-        public event Action<UILanguageCode> FocusChanged;
+        public event Action<LanguageCode> FocusChanged;
 
         private void OnEnable()
         {
@@ -32,7 +33,7 @@ namespace ElectricPalletStackers.UI
 
         public override void ResetView()
         {
-            FocusLanguage(_hasFocusedLanguage ? FocusedLanguage : UILanguageCode.En);
+            FocusLanguage(_hasFocusedLanguage ? FocusedLanguage : LanguageCode.En);
         }
 
         public void NavigateNext()
@@ -58,7 +59,7 @@ namespace ElectricPalletStackers.UI
             if (customButton != null) FocusButton(customButton);
         }
 
-        private void FocusLanguage(UILanguageCode language)
+        private void FocusLanguage(LanguageCode language)
         {
             UICustomButton button = GetButton(language);
             if (button != null) FocusButton(button);
@@ -75,17 +76,17 @@ namespace ElectricPalletStackers.UI
 
         private void HandleButtonFocused(UICustomButton button)
         {
-            UILanguageCode language;
+            LanguageCode language;
             if (button == _vietnameseButton)
-                language = UILanguageCode.Vi;
+                language = LanguageCode.Vi;
             else if (button == _japaneseButton)
-                language = UILanguageCode.Ja;
+                language = LanguageCode.Ja;
             else
-                language = UILanguageCode.En;
+                language = LanguageCode.En;
 
-            _englishButton?.SetFocused(language == UILanguageCode.En);
-            _vietnameseButton?.SetFocused(language == UILanguageCode.Vi);
-            _japaneseButton?.SetFocused(language == UILanguageCode.Ja);
+            _englishButton?.SetFocused(language == LanguageCode.En);
+            _vietnameseButton?.SetFocused(language == LanguageCode.Vi);
+            _japaneseButton?.SetFocused(language == LanguageCode.Ja);
 
             bool changed = !_hasFocusedLanguage || FocusedLanguage != language;
             _hasFocusedLanguage = true;
@@ -93,13 +94,13 @@ namespace ElectricPalletStackers.UI
             if (changed) FocusChanged?.Invoke(language);
         }
 
-        private UICustomButton GetButton(UILanguageCode language)
+        private UICustomButton GetButton(LanguageCode language)
         {
             switch (language)
             {
-                case UILanguageCode.Vi:
+                case LanguageCode.Vi:
                     return _vietnameseButton;
-                case UILanguageCode.Ja:
+                case LanguageCode.Ja:
                     return _japaneseButton;
                 default:
                     return _englishButton;
@@ -123,5 +124,6 @@ namespace ElectricPalletStackers.UI
             if (_japaneseButton != null) _japaneseButton.Focused -= HandleButtonFocused;
             _buttonsSubscribed = false;
         }
+
     }
 }
