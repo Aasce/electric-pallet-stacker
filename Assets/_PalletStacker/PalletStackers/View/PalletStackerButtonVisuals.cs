@@ -49,13 +49,13 @@ namespace ElectricPalletStackers.PalletStackers
 
         public void Apply(PalletStackerDriveCommand command)
         {
-            if (command.Lift != _lastLiftState)
+            if (command.LiftInput != _lastLiftState)
             {
-                _lastLiftState = command.Lift;
-                ApplyLiftPose(LiftAngle(command.Lift));
+                _lastLiftState = command.LiftInput;
+                ApplyLiftPose(LiftAngle(command.LiftInput));
             }
 
-            int travelDirection = TravelDirection(command.TravelNormalized);
+            int travelDirection = TravelDirection(command.TravelInputNormalized);
             if (travelDirection != _lastTravelDirection)
             {
                 _lastTravelDirection = travelDirection;

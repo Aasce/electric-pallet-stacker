@@ -19,12 +19,43 @@ namespace ElectricPalletStackers.PalletStackers
             bool movementInhibited,
             bool emergencyStop,
             bool localInterlock)
+            : this(
+                sequence,
+                travelNormalized,
+                steeringDegrees,
+                tillerDegrees,
+                lift,
+                horn,
+                slowMode,
+                movementInhibited,
+                emergencyStop,
+                localInterlock,
+                travelNormalized,
+                lift)
+        {
+        }
+
+        private PalletStackerDriveCommand(
+            ushort sequence,
+            float travelNormalized,
+            float steeringDegrees,
+            float tillerDegrees,
+            PalletStackerLiftState lift,
+            bool horn,
+            bool slowMode,
+            bool movementInhibited,
+            bool emergencyStop,
+            bool localInterlock,
+            float travelInputNormalized,
+            PalletStackerLiftState liftInput)
         {
             Sequence = sequence;
             TravelNormalized = travelNormalized;
             SteeringDegrees = steeringDegrees;
             TillerDegrees = tillerDegrees;
             Lift = lift;
+            TravelInputNormalized = travelInputNormalized;
+            LiftInput = liftInput;
             Horn = horn;
             SlowMode = slowMode;
             MovementInhibited = movementInhibited;
@@ -33,10 +64,14 @@ namespace ElectricPalletStackers.PalletStackers
         }
 
         public ushort Sequence { get; }
+        // Effective values consumed by the physical motor and lift outputs.
         public float TravelNormalized { get; }
         public float SteeringDegrees { get; }
         public float TillerDegrees { get; }
         public PalletStackerLiftState Lift { get; }
+        // Requested values remain live for model visuals while actions are interlocked.
+        public float TravelInputNormalized { get; }
+        public PalletStackerLiftState LiftInput { get; }
         public bool Horn { get; }
         public bool SlowMode { get; }
         public bool MovementInhibited { get; }
@@ -48,11 +83,12 @@ namespace ElectricPalletStackers.PalletStackers
             PalletStackerControlState state,
             ushort sequence,
             float slowModeTravelMultiplier,
-            bool localInterlock)
+            bool localInterlock,
+            bool actionInterlock = false)
         {
-            if (state == null) return CreateFailSafe(localInterlock);
+            if (state == null) return CreateFailSafe(localInterlock || actionInterlock);
 
-            bool movementInhibited = localInterlock || !state.TravelAllowed;
+            bool movementInhibited = localInterlock || actionInterlock || !state.TravelAllowed;
             bool auxiliaryControlsEnabled = state.Enabled;
             float travel = movementInhibited ? 0f : state.TravelNormalized;
             if (state.SlowMode) travel *= slowModeTravelMultiplier;
@@ -62,12 +98,37 @@ namespace ElectricPalletStackers.PalletStackers
                 travel,
                 state.SteerDeg,
                 state.TillerDeg,
-                auxiliaryControlsEnabled ? state.Lift : PalletStackerLiftState.Neutral,
+                auxiliaryControlsEnabled && !actionInterlock
+                    ? state.Lift
+                    : PalletStackerLiftState.Neutral,
                 auxiliaryControlsEnabled && state.Horn,
                 state.SlowMode,
                 movementInhibited,
                 state.EmergencyStop,
-                localInterlock);
+                localInterlock || actionInterlock,
+                state.TravelNormalized,
+                state.Lift);
+        }
+
+        public PalletStackerDriveCommand WithAnalogInputs(
+            float travelNormalized,
+            float travelInputNormalized,
+            float steeringDegrees,
+            float tillerDegrees)
+        {
+            return new PalletStackerDriveCommand(
+                Sequence,
+                travelNormalized,
+                steeringDegrees,
+                tillerDegrees,
+                Lift,
+                Horn,
+                SlowMode,
+                MovementInhibited,
+                EmergencyStop,
+                LocalInterlock,
+                travelInputNormalized,
+                LiftInput);
         }
 
         public static PalletStackerDriveCommand CreateFailSafe(bool localInterlock = false)

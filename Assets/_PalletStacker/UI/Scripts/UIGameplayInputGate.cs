@@ -12,17 +12,7 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private PalletStackerControlDriver _controlDriver;
         [SerializeField, Range(0f, 1f)] private float _neutralReleaseThreshold = 0.25f;
 
-        private bool _initialDriverEnabled;
         private bool _waitingForNeutral;
-
-        private void Awake()
-        {
-            if (_controlDriver == null) return;
-            _initialDriverEnabled = _controlDriver.enabled;
-
-            if (_uiController == null || _uiController.IsInputCaptured)
-                _controlDriver.enabled = false;
-        }
 
         private void OnEnable()
         {
@@ -48,7 +38,7 @@ namespace ElectricPalletStackers.UI
             }
 
             _waitingForNeutral = false;
-            if (_controlDriver != null) _controlDriver.enabled = _initialDriverEnabled;
+            _controlDriver?.SetInputCaptureInterlock(false);
         }
 
         private void ApplyCurrentCaptureState()
@@ -58,7 +48,7 @@ namespace ElectricPalletStackers.UI
             if (_uiController.IsInputCaptured)
             {
                 _waitingForNeutral = false;
-                _controlDriver.enabled = false;
+                _controlDriver.SetInputCaptureInterlock(true);
                 return;
             }
 
@@ -73,7 +63,7 @@ namespace ElectricPalletStackers.UI
             if (captured)
             {
                 _waitingForNeutral = false;
-                _controlDriver.enabled = false;
+                _controlDriver.SetInputCaptureInterlock(true);
                 return;
             }
 
@@ -88,8 +78,7 @@ namespace ElectricPalletStackers.UI
         {
             if (_uiController != null && _uiController.IsInputCaptured)
             {
-                if (_controlDriver != null && _controlDriver.enabled)
-                    _controlDriver.enabled = false;
+                _controlDriver?.SetInputCaptureInterlock(true);
                 return;
             }
 
@@ -98,20 +87,20 @@ namespace ElectricPalletStackers.UI
 
         private void HandleSourceUnavailable()
         {
-            if (_uiController != null && _uiController.IsInputCaptured && _controlDriver != null)
-                _controlDriver.enabled = false;
+            if (_uiController != null && _uiController.IsInputCaptured)
+                _controlDriver?.SetInputCaptureInterlock(true);
         }
 
         private void TryReleaseControl()
         {
-            if (!_waitingForNeutral || !_initialDriverEnabled || _controlDriver == null || _stateReceiver == null)
+            if (!_waitingForNeutral || _controlDriver == null || _stateReceiver == null)
                 return;
 
             PalletStackerControlState state = _stateReceiver.CurrentState;
             if (state == null || Mathf.Abs(state.TravelNormalized) > _neutralReleaseThreshold) return;
 
             _waitingForNeutral = false;
-            _controlDriver.enabled = true;
+            _controlDriver.SetInputCaptureInterlock(false);
         }
     }
 }
