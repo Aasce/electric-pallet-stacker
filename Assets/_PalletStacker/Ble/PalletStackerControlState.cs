@@ -28,9 +28,6 @@ namespace ElectricPalletStackers.Ble
     [Serializable]
     public sealed class PalletStackerControlState
     {
-        public const int LowerTillerStopMaximumDegrees = 10;
-        public const int UpperTillerStopMinimumDegrees = 90;
-
         [SerializeField] private bool enabled;
         [SerializeField] private bool stop = true;
         [SerializeField] private bool emergencyStop;
@@ -39,6 +36,8 @@ namespace ElectricPalletStackers.Ble
         [SerializeField] private int steerDeg;
         [SerializeField] private int tillerDeg;
         [SerializeField] private int travelRaw = 127;
+        [SerializeField] private float travelNormalized;
+        [SerializeField] private bool tillerStop = true;
         [SerializeField] private PalletStackerLiftState liftState;
 
         public bool Enabled => enabled;
@@ -51,8 +50,8 @@ namespace ElectricPalletStackers.Ble
         public int TravelRaw => travelRaw;
         public int LiftState => (int)liftState;
         public PalletStackerLiftState Lift => liftState;
-        public float TravelNormalized => PalletStackerBleProtocol.NormalizeTravelRaw(travelRaw);
-        public bool TillerStop => tillerDeg <= LowerTillerStopMaximumDegrees || tillerDeg >= UpperTillerStopMinimumDegrees;
+        public float TravelNormalized => travelNormalized;
+        public bool TillerStop => tillerStop;
         public bool TravelAllowed => enabled && !stop && !TillerStop && !emergencyStop;
         public float SafeTravelNormalized => TravelAllowed ? TravelNormalized : 0f;
 
@@ -65,6 +64,8 @@ namespace ElectricPalletStackers.Ble
             int steerDeg,
             int tillerDeg,
             int travelRaw,
+            float travelNormalized,
+            bool tillerStop,
             PalletStackerLiftState liftState)
         {
             return new PalletStackerControlState
@@ -77,6 +78,8 @@ namespace ElectricPalletStackers.Ble
                 steerDeg = steerDeg,
                 tillerDeg = tillerDeg,
                 travelRaw = travelRaw,
+                travelNormalized = travelNormalized,
+                tillerStop = tillerStop,
                 liftState = liftState
             };
         }
@@ -93,6 +96,8 @@ namespace ElectricPalletStackers.Ble
                 steerDeg = steerDeg,
                 tillerDeg = tillerDeg,
                 travelRaw = travelRaw,
+                travelNormalized = travelNormalized,
+                tillerStop = tillerStop,
                 liftState = liftState
             };
         }

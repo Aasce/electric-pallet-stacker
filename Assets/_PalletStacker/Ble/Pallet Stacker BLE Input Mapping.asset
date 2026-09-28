@@ -12,9 +12,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d43c10a9dcaf46ad9d7e69812ae93e5b, type: 3}
   m_Name: Pallet Stacker BLE Input Mapping
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Ble.PalletStackerBleInputMapping
+  _enabledFlagMask: 1
+  _stopFlagMask: 2
+  _emergencyStopFlagMask: 4
+  _hornFlagMask: 8
+  _slowModeFlagMask: 16
   _rawSteeringDeg: {x: -90, y: 90}
   _mappedSteeringDeg: {x: -90, y: 90}
   _clampedSteeringDeg: {x: -40, y: 40}
   _rawTillerDeg: {x: -128, y: 127}
   _mappedTillerDeg: {x: -128, y: 127}
   _clampedTillerDeg: {x: 0, y: 100}
+  _lowerTillerStopMaximumDeg: 10
+  _upperTillerStopMinimumDeg: 90
+  _rawTravel: {x: 11, y: 245}
+  _neutralTravelRaw: {x: 117, y: 151}
+  _mappedTravel: {x: 1, y: -1}
+  _clampedTravel: {x: -1, y: 1}
+  _liftNeutralValue: 0
+  _liftUpValue: 1
+  _liftDownValue: 2

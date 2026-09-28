@@ -14,13 +14,6 @@ namespace ElectricPalletStackers.PalletStackers
     [DisallowMultipleComponent]
     public sealed class PalletStackerKeyboardSimulator : MonoBehaviour
     {
-        private const byte EnabledFlag = 1 << 0;
-        private const byte StopFlag = 1 << 1;
-        private const byte EmergencyStopFlag = 1 << 2;
-        private const byte HornFlag = 1 << 3;
-        private const byte SlowModeFlag = 1 << 4;
-        private const byte NeutralTravel = 127;
-
         [Header("Pipeline")]
         [SerializeField] private PalletStackerControlStateReceiver _stateReceiver;
         [SerializeField] private BleManager _bleManager;
@@ -112,7 +105,7 @@ namespace ElectricPalletStackers.PalletStackers
 
         private KeyboardStateSnapshot ReadSnapshot(Keyboard keyboard)
         {
-            int travelRaw = ResolveAxis(keyboard.wKey.isPressed, keyboard.sKey.isPressed, 255, 0, NeutralTravel);
+            int travelDirection = ResolveAxis(keyboard.wKey.isPressed, keyboard.sKey.isPressed, 1, -1, 0);
             int steering = Mathf.RoundToInt(_simulatedSteeringDegrees);
 
             PalletStackerLiftState lift = PalletStackerLiftState.Neutral;
@@ -129,7 +122,7 @@ namespace ElectricPalletStackers.PalletStackers
                 slowMode,
                 steering,
                 _tillerDegrees,
-                travelRaw,
+                travelDirection,
                 lift);
         }
 
@@ -177,12 +170,12 @@ namespace ElectricPalletStackers.PalletStackers
                 return;
             }
 
-            byte flags = 0;
-            if (snapshot.Enabled) flags |= EnabledFlag;
-            if (snapshot.Stop) flags |= StopFlag;
-            if (snapshot.EmergencyStop) flags |= EmergencyStopFlag;
-            if (snapshot.Horn) flags |= HornFlag;
-            if (snapshot.SlowMode) flags |= SlowModeFlag;
+            byte flags = inputMapping.EncodeFlags(
+                snapshot.Enabled,
+                snapshot.Stop,
+                snapshot.EmergencyStop,
+                snapshot.Horn,
+                snapshot.SlowMode);
 
             ushort sequence = NextSequence();
             sbyte rawSteering = inputMapping.EncodeSteeringDeg(snapshot.SteeringDegrees);
@@ -195,8 +188,8 @@ namespace ElectricPalletStackers.PalletStackers
                 flags,
                 unchecked((byte)rawSteering),
                 unchecked((byte)rawTiller),
-                (byte)snapshot.TravelRaw,
-                (byte)snapshot.Lift
+                inputMapping.EncodeTravel(snapshot.TravelNormalized),
+                inputMapping.EncodeLiftState(snapshot.Lift)
             };
 
             if (!_stateReceiver.TryApplyPayload(
@@ -222,7 +215,7 @@ namespace ElectricPalletStackers.PalletStackers
                 slowMode: false,
                 steeringDegrees: 0,
                 tillerDegrees: _tillerDegrees,
-                travelRaw: NeutralTravel,
+                travelNormalized: 0f,
                 lift: PalletStackerLiftState.Neutral));
         }
 
@@ -265,7 +258,7 @@ namespace ElectricPalletStackers.PalletStackers
                 bool slowMode,
                 int steeringDegrees,
                 int tillerDegrees,
-                int travelRaw,
+                float travelNormalized,
                 PalletStackerLiftState lift)
             {
                 Enabled = enabled;
@@ -275,7 +268,7 @@ namespace ElectricPalletStackers.PalletStackers
                 SlowMode = slowMode;
                 SteeringDegrees = steeringDegrees;
                 TillerDegrees = tillerDegrees;
-                TravelRaw = travelRaw;
+                TravelNormalized = travelNormalized;
                 Lift = lift;
             }
 
@@ -286,7 +279,7 @@ namespace ElectricPalletStackers.PalletStackers
             public bool SlowMode { get; }
             public int SteeringDegrees { get; }
             public int TillerDegrees { get; }
-            public int TravelRaw { get; }
+            public float TravelNormalized { get; }
             public PalletStackerLiftState Lift { get; }
 
             public bool Equals(KeyboardStateSnapshot other)
@@ -298,7 +291,7 @@ namespace ElectricPalletStackers.PalletStackers
                        SlowMode == other.SlowMode &&
                        SteeringDegrees == other.SteeringDegrees &&
                        TillerDegrees == other.TillerDegrees &&
-                       TravelRaw == other.TravelRaw &&
+                       TravelNormalized.Equals(other.TravelNormalized) &&
                        Lift == other.Lift;
             }
 
@@ -318,7 +311,7 @@ namespace ElectricPalletStackers.PalletStackers
                     hash = (hash * 397) ^ SlowMode.GetHashCode();
                     hash = (hash * 397) ^ SteeringDegrees;
                     hash = (hash * 397) ^ TillerDegrees;
-                    hash = (hash * 397) ^ TravelRaw;
+                    hash = (hash * 397) ^ TravelNormalized.GetHashCode();
                     hash = (hash * 397) ^ (int)Lift;
                     return hash;
                 }

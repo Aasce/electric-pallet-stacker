@@ -19,8 +19,6 @@ namespace ElectricPalletStackers.Ble
         public static readonly Guid CollisionEventUuid = Guid.Parse(CollisionEventUuidText);
         public static readonly Guid AckUuid = Guid.Parse(AckUuidText);
 
-        private const byte ReservedFlagMask = 0xE0;
-
         public static bool TryDecodeControlState(
             ReadOnlySpan<byte> packet,
             PalletStackerBleInputMapping inputMapping,
@@ -43,13 +41,6 @@ namespace ElectricPalletStackers.Ble
                 return false;
             }
 
-            byte flags = packet[3];
-            if ((flags & ReservedFlagMask) != 0)
-            {
-                error = $"CONTROL_STATE reserved flags must be zero; received 0x{flags:X2}.";
-                return false;
-            }
-
             if (inputMapping == null)
             {
                 error = "CONTROL_STATE input mapping is not configured.";
@@ -61,26 +52,32 @@ namespace ElectricPalletStackers.Ble
             int travelRaw = packet[6];
             int liftState = packet[7];
 
+            if (!inputMapping.TryDecodeFlags(
+                    packet[3],
+                    out bool enabled,
+                    out bool stop,
+                    out bool emergencyStop,
+                    out bool horn,
+                    out bool slowMode,
+                    out error)) return false;
             if (!inputMapping.TryMapSteeringDeg(rawSteerDeg, out int steerDeg, out error)) return false;
             if (!inputMapping.TryMapTillerDeg(rawTillerDeg, out int tillerDeg, out error)) return false;
-
-            if (liftState > (int)PalletStackerLiftState.Down)
-            {
-                error = $"liftState must be 0, 1 or 2; received {liftState}.";
-                return false;
-            }
+            if (!inputMapping.TryMapTravel(travelRaw, out float travelNormalized, out error)) return false;
+            if (!inputMapping.TryMapLiftState(liftState, out PalletStackerLiftState lift, out error)) return false;
 
             sequence = DecodeUInt16LittleEndian(packet[1], packet[2]);
             state = PalletStackerControlState.FromProtocol(
-                enabled: (flags & (1 << 0)) != 0,
-                stop: (flags & (1 << 1)) != 0,
-                emergencyStop: (flags & (1 << 2)) != 0,
-                horn: (flags & (1 << 3)) != 0,
-                slowMode: (flags & (1 << 4)) != 0,
+                enabled,
+                stop,
+                emergencyStop,
+                horn,
+                slowMode,
                 steerDeg,
                 tillerDeg,
                 travelRaw,
-                (PalletStackerLiftState)liftState);
+                travelNormalized,
+                inputMapping.IsTillerStopped(tillerDeg),
+                lift);
 
             error = string.Empty;
             return true;
@@ -115,15 +112,6 @@ namespace ElectricPalletStackers.Ble
                 (byte)(sequence & 0xFF),
                 (byte)(sequence >> 8)
             };
-        }
-
-        public static float NormalizeTravelRaw(int travelRaw)
-        {
-            if (travelRaw <= 10) return -1f;
-            if (travelRaw <= 116) return -(117f - travelRaw) / 106f;
-            if (travelRaw <= 137) return 0f;
-            if (travelRaw <= 244) return (travelRaw - 137f) / 108f;
-            return 1f;
         }
 
         private static ushort DecodeUInt16LittleEndian(byte low, byte high)

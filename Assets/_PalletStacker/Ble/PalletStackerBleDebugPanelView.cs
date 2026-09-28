@@ -125,7 +125,6 @@ namespace ElectricPalletStackers.Ble
 
             ushort sequence = _nextInjectedSequence++;
             bool horn = (sequence & 1) != 0;
-            byte flags = (byte)(0x01 | (horn ? 0x08 : 0x00));
             PalletStackerBleInputMapping inputMapping = _stateReceiver?.InputMapping;
             if (inputMapping == null)
             {
@@ -133,10 +132,17 @@ namespace ElectricPalletStackers.Ble
                 return;
             }
 
+            byte flags = inputMapping.EncodeFlags(
+                enabled: true,
+                stop: false,
+                emergencyStop: false,
+                horn,
+                slowMode: false);
             sbyte steer = inputMapping.EncodeSteeringDeg(horn ? -30f : 30f);
             sbyte tiller = inputMapping.EncodeTillerDeg(55f);
-            byte travel = horn ? (byte)80 : (byte)200;
-            byte lift = horn ? (byte)PalletStackerLiftState.Down : (byte)PalletStackerLiftState.Up;
+            byte travel = inputMapping.EncodeTravel(horn ? -0.35f : 0.58f);
+            byte lift = inputMapping.EncodeLiftState(
+                horn ? PalletStackerLiftState.Down : PalletStackerLiftState.Up);
 
             _lastInjectedPacket = new[]
             {
