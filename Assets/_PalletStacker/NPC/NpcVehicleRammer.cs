@@ -1,4 +1,6 @@
+using System;
 using ElectricPalletStackers.Ble;
+using ElectricPalletStackers.PalletStackers;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -8,35 +10,46 @@ namespace ElectricPalletStackers.NPCs
     public sealed class NpcVehicleRammer : MonoBehaviour
     {
         [SerializeField, Min(0.05f)] private float _impactDistance = 0.25f;
-        [SerializeField, Min(1f)] private float _maximumChaseDuration = 8f;
+        [SerializeField, Min(0f)] private float _frontClearance = 0.15f;
+        [SerializeField, Min(0.05f)] private float _destinationRefreshDistance = 0.1f;
 
         private NpcAgent _npc;
         private NavMeshAgent _agent;
-        private Transform _vehicle;
+        private Rigidbody _vehicleBody;
+        private PalletStackerRigidbodyMotor _vehicleMotor;
         private PalletStackerCollisionReporter _collisionReporter;
         private Collider[] _vehicleColliders;
-        private float _deadline;
+        private Action _impactHandler;
+        private float _movingSpeedThreshold;
         private float _originalSpeed;
         private float _originalStoppingDistance;
         private ObstacleAvoidanceType _originalAvoidance;
+        private Vector3 _lastDestination;
         private bool _active;
+        private bool _hasDestination;
         private bool _hasCachedAgentState;
         private bool _restored;
 
-        public void BeginRam(
+        public void BeginApproach(
             NpcAgent npc,
-            Transform vehicle,
+            Rigidbody vehicleBody,
+            PalletStackerRigidbodyMotor vehicleMotor,
             PalletStackerCollisionReporter collisionReporter,
-            float speed)
+            float movingSpeedThreshold,
+            Action impactHandler)
         {
             _npc = npc;
             _agent = npc != null ? npc.Agent : GetComponent<NavMeshAgent>();
-            _vehicle = vehicle;
+            _vehicleBody = vehicleBody;
+            _vehicleMotor = vehicleMotor;
             _collisionReporter = collisionReporter;
-            _vehicleColliders = vehicle != null ? vehicle.GetComponentsInChildren<Collider>() : null;
-            if (_agent == null || !_agent.isOnNavMesh || _vehicle == null)
+            _movingSpeedThreshold = Mathf.Max(0f, movingSpeedThreshold);
+            _impactHandler = impactHandler;
+            _vehicleColliders = vehicleBody != null
+                ? vehicleBody.GetComponentsInChildren<Collider>()
+                : null;
+            if (_agent == null || !_agent.isOnNavMesh || _vehicleBody == null)
             {
-                _collisionReporter?.ReportCollision();
                 Destroy(this);
                 return;
             }
@@ -47,35 +60,110 @@ namespace ElectricPalletStackers.NPCs
             _hasCachedAgentState = true;
 
             if (_npc != null) _npc.enabled = false;
-            _agent.speed = Mathf.Max(speed, _originalSpeed);
-            _agent.stoppingDistance = 0f;
-            _agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
+            // Keep the NPC's normal movement settings so the approach still looks
+            // like walking rather than an artificial sprint into the vehicle.
             _agent.isStopped = false;
-            _deadline = Time.time + _maximumChaseDuration;
             _active = true;
         }
 
         private void Update()
         {
-            if (!_active || _agent == null || !_agent.isOnNavMesh || _vehicle == null) return;
+            if (!_active || _agent == null || !_agent.isOnNavMesh || _vehicleBody == null) return;
 
-            _agent.SetDestination(_vehicle.position);
-            if (DistanceToVehicle() <= _impactDistance)
+            if (!IsVehicleMoving())
             {
-                CompleteImpact();
+                CancelApproach();
                 return;
             }
 
-            if (Time.time >= _deadline)
+            Vector3 destination = GetVehicleFrontPoint();
+            if (!_hasDestination ||
+                (destination - _lastDestination).sqrMagnitude >=
+                _destinationRefreshDistance * _destinationRefreshDistance)
             {
-                Debug.LogWarning("NPC ram timed out before contact; applying the simulated accident result.", this);
-                CompleteImpact();
+                if (TryGetNavMeshDestination(destination, out Vector3 navMeshDestination))
+                {
+                    _agent.SetDestination(navMeshDestination);
+                    _lastDestination = destination;
+                    _hasDestination = true;
+                }
             }
+
+            if (DistanceToVehicle() <= _impactDistance)
+                CompleteImpact();
+        }
+
+        public void CancelApproach()
+        {
+            if (!_active) return;
+            _active = false;
+            RestoreNpc();
+            Destroy(this);
+        }
+
+        private bool IsVehicleMoving()
+        {
+            if (_vehicleMotor != null)
+                return Mathf.Abs(_vehicleMotor.CurrentSpeed) > _movingSpeedThreshold;
+
+            Vector3 planarVelocity = Vector3.ProjectOnPlane(
+                _vehicleBody.linearVelocity,
+                Vector3.up);
+            return planarVelocity.sqrMagnitude > _movingSpeedThreshold * _movingSpeedThreshold;
+        }
+
+        private Vector3 GetVehicleFrontPoint()
+        {
+            Vector3 forward = _vehicleMotor != null
+                ? Vector3.ProjectOnPlane(_vehicleMotor.WorldForward, Vector3.up)
+                : Vector3.ProjectOnPlane(_vehicleBody.transform.forward, Vector3.up);
+            if (forward.sqrMagnitude < 0.001f) forward = Vector3.forward;
+            forward.Normalize();
+
+            Vector3 origin = _vehicleBody.position;
+            float frontDistance = 0f;
+            if (_vehicleColliders != null)
+            {
+                for (int index = 0; index < _vehicleColliders.Length; index++)
+                {
+                    Collider vehicleCollider = _vehicleColliders[index];
+                    if (vehicleCollider == null || !vehicleCollider.enabled || vehicleCollider.isTrigger)
+                        continue;
+
+                    Bounds bounds = vehicleCollider.bounds;
+                    Vector3 extents = bounds.extents;
+                    float projectedExtent = Mathf.Abs(forward.x) * extents.x +
+                                            Mathf.Abs(forward.y) * extents.y +
+                                            Mathf.Abs(forward.z) * extents.z;
+                    float projectedCenter = Vector3.Dot(bounds.center - origin, forward);
+                    frontDistance = Mathf.Max(frontDistance, projectedCenter + projectedExtent);
+                }
+            }
+
+            return origin + forward * (frontDistance + _frontClearance);
+        }
+
+        private bool TryGetNavMeshDestination(Vector3 target, out Vector3 destination)
+        {
+            NavMeshQueryFilter filter = new()
+            {
+                agentTypeID = _agent.agentTypeID,
+                areaMask = _agent.areaMask
+            };
+
+            if (NavMesh.SamplePosition(target, out NavMeshHit hit, 1.5f, filter))
+            {
+                destination = hit.position;
+                return true;
+            }
+
+            destination = default;
+            return false;
         }
 
         private float DistanceToVehicle()
         {
-            float closestDistance = Vector3.Distance(transform.position, _vehicle.position);
+            float closestDistance = Vector3.Distance(transform.position, _vehicleBody.position);
             if (_vehicleColliders == null) return closestDistance;
 
             for (int index = 0; index < _vehicleColliders.Length; index++)
@@ -98,6 +186,7 @@ namespace ElectricPalletStackers.NPCs
             _active = false;
             if (_agent != null && _agent.isOnNavMesh) _agent.isStopped = true;
             _collisionReporter?.ReportCollision();
+            _impactHandler?.Invoke();
             RestoreNpc();
             Destroy(this);
         }
@@ -119,7 +208,11 @@ namespace ElectricPalletStackers.NPCs
                 _agent.obstacleAvoidanceType = _originalAvoidance;
             }
 
-            if (_npc != null) _npc.enabled = true;
+            if (_npc != null)
+            {
+                _npc.enabled = true;
+                _npc.ResumeNormalBehaviour();
+            }
         }
     }
 }

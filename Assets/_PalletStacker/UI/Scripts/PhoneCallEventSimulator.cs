@@ -26,9 +26,9 @@ namespace ElectricPalletStackers.UI
 
         [Header("Safety Consequence")]
         [SerializeField, Min(0f)] private float _movingSpeedThreshold = 0.1f;
-        [SerializeField, Min(0.1f)] private float _npcRamSpeed = 5f;
 
         private Coroutine _callRoutine;
+        private NpcVehicleRammer _activeNpcApproach;
         private float _retryAt = -1f;
         private bool _eventScheduledThisRound;
         private bool _activeConversation;
@@ -73,6 +73,7 @@ namespace ElectricPalletStackers.UI
 
             CancelCallRoutine();
             CancelRetryCall();
+            StopNpcApproach();
         }
 
         [ContextMenu("Simulate Call Now")]
@@ -93,14 +94,23 @@ namespace ElectricPalletStackers.UI
                     BeginRinging();
             }
 
-            if (!_activeConversation || _accidentTriggered || !IsVehicleMoving()) return;
-            TriggerNpcAccident();
+            if (!_activeConversation || _accidentTriggered)
+            {
+                StopNpcApproach();
+                return;
+            }
+
+            if (IsVehicleMoving())
+                BeginNpcApproach();
+            else
+                StopNpcApproach();
         }
 
         private void HandleRoundStarted()
         {
             _eventScheduledThisRound = false;
             _accidentTriggered = false;
+            StopNpcApproach();
             ScheduleInitialCall();
         }
 
@@ -111,6 +121,7 @@ namespace ElectricPalletStackers.UI
             CancelCallRoutine();
             CancelRetryCall();
             _activeConversation = false;
+            StopNpcApproach();
             _phoneCallPanel?.HideImmediate();
         }
 
@@ -163,6 +174,7 @@ namespace ElectricPalletStackers.UI
             yield return new WaitForSecondsRealtime(duration);
             _callRoutine = null;
             _activeConversation = false;
+            StopNpcApproach();
             _phoneCallPanel?.FinishCall();
         }
 
@@ -170,6 +182,7 @@ namespace ElectricPalletStackers.UI
         {
             CancelCallRoutine();
             _activeConversation = false;
+            StopNpcApproach();
             ScheduleRetryCall();
         }
 
@@ -177,6 +190,7 @@ namespace ElectricPalletStackers.UI
         {
             CancelCallRoutine();
             _activeConversation = false;
+            StopNpcApproach();
             ScheduleRetryCall();
         }
 
@@ -195,25 +209,44 @@ namespace ElectricPalletStackers.UI
             return planarVelocity.sqrMagnitude > _movingSpeedThreshold * _movingSpeedThreshold;
         }
 
-        private void TriggerNpcAccident()
+        private void BeginNpcApproach()
         {
-            _accidentTriggered = true;
-            _activeConversation = false;
-            CancelCallRoutine();
-            CancelRetryCall();
-            _phoneCallPanel?.FinishCall();
+            if (_activeNpcApproach != null) return;
 
             NpcAgent closestNpc = FindClosestNpc();
             if (closestNpc == null || _vehicleBody == null)
             {
                 Debug.LogWarning("No active NPC was available for the phone-distraction accident.", this);
-                _collisionReporter?.ReportCollision();
                 return;
             }
 
-            NpcVehicleRammer rammer = closestNpc.GetComponent<NpcVehicleRammer>();
-            if (rammer == null) rammer = closestNpc.gameObject.AddComponent<NpcVehicleRammer>();
-            rammer.BeginRam(closestNpc, _vehicleBody.transform, _collisionReporter, _npcRamSpeed);
+            _activeNpcApproach = closestNpc.GetComponent<NpcVehicleRammer>();
+            if (_activeNpcApproach == null)
+                _activeNpcApproach = closestNpc.gameObject.AddComponent<NpcVehicleRammer>();
+            _activeNpcApproach.BeginApproach(
+                closestNpc,
+                _vehicleBody,
+                _vehicleMotor,
+                _collisionReporter,
+                _movingSpeedThreshold,
+                HandleNpcImpact);
+        }
+
+        private void StopNpcApproach()
+        {
+            if (_activeNpcApproach == null) return;
+            _activeNpcApproach.CancelApproach();
+            _activeNpcApproach = null;
+        }
+
+        private void HandleNpcImpact()
+        {
+            _activeNpcApproach = null;
+            _accidentTriggered = true;
+            _activeConversation = false;
+            CancelCallRoutine();
+            CancelRetryCall();
+            _phoneCallPanel?.FinishCall();
         }
 
         private NpcAgent FindClosestNpc()

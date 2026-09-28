@@ -4271,7 +4271,6 @@ MonoBehaviour:
   _conversationDurationRange: {x: 5, y: 10}
   _rejectRetryDelay: 5
   _movingSpeedThreshold: 0.1
-  _npcRamSpeed: 5
 --- !u!1 &1249617917
 GameObject:
   m_ObjectHideFlags: 0

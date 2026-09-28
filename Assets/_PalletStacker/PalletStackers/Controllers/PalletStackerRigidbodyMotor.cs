@@ -27,6 +27,7 @@ namespace ElectricPalletStackers.PalletStackers
 
         public float CurrentSpeed => _currentSpeed;
         public float TargetSpeed => _targetSpeed;
+        public Vector3 WorldForward => GetYawOnlyRotation() * SafeLocalForward();
 
         private void Awake()
         {

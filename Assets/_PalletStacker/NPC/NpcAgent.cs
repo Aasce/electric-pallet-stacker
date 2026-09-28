@@ -225,6 +225,23 @@ namespace ElectricPalletStackers.NPCs
             _nextConversationTime = Mathf.Max(_nextConversationTime, Time.time + cooldown);
         }
 
+        public void ResumeNormalBehaviour()
+        {
+            _waitingForVehicle = false;
+
+            if (!_roundActive)
+            {
+                _state = BehaviourState.Paused;
+                StopAtCurrentPosition();
+            }
+            else
+            {
+                BeginWandering();
+            }
+
+            UpdateAnimation();
+        }
+
         public void ReactToHorn(
             Vector3 hornPosition,
             float evadeDistance,
