@@ -14,11 +14,11 @@ TagManager:
   - UI
   - 
   - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Environment
+  - PalletLoad
+  - Destination
+  - Vehicle
+  - Ground
   - 
   - 
   - 

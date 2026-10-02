@@ -18,7 +18,7 @@ GameObject:
   - component: {fileID: 6482732429717059144}
   - component: {fileID: 8279041802158470694}
   - component: {fileID: 8991475523401287712}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Pallet Stacker
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -123,6 +123,7 @@ MonoBehaviour:
   - {fileID: 7618002372905023212}
   - {fileID: 4634689111448651331}
   - {fileID: 7364921046813579204}
+  _analogSmoothingTime: 0.08
 --- !u!114 &5210768195172812719
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -169,7 +170,7 @@ MonoBehaviour:
   _collisionSender: {fileID: 0}
   _collisionLayers:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 768
   _minimumRelativeSpeed: 0
   _ignoreGroundLikeContacts: 1
   _groundNormalDotThreshold: 0.7
@@ -230,7 +231,7 @@ MonoBehaviour:
   _detectionSize: {x: 1.15, y: 0.7, z: 0.9}
   _loadLayers:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 512
   _breakForce: 100000
   _breakTorque: 100000
   _releaseAtMinimumHeightTolerance: 0.03
@@ -247,7 +248,7 @@ GameObject:
   - component: {fileID: 7421127214286989433}
   - component: {fileID: 974986272973509222}
   - component: {fileID: 8257934869751756424}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -338,7 +339,7 @@ GameObject:
   - component: {fileID: 1401356214227416106}
   - component: {fileID: 2188162854372613763}
   - component: {fileID: 5337033611358724166}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Lift Button R
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -429,7 +430,7 @@ GameObject:
   - component: {fileID: 132941202339006511}
   - component: {fileID: 2588011611115910329}
   - component: {fileID: 7364921046813579204}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Steering Wheel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -554,7 +555,7 @@ GameObject:
   - component: {fileID: 6652876162743854783}
   - component: {fileID: 3796291713534834783}
   - component: {fileID: 7750072480029670667}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Hose
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -642,7 +643,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7444792790634152618}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: View
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -676,7 +677,7 @@ GameObject:
   - component: {fileID: 3666053957203881964}
   - component: {fileID: 403649624470791603}
   - component: {fileID: 5879761973134420876}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Travel Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -766,7 +767,7 @@ GameObject:
   - component: {fileID: 4711947707871130580}
   - component: {fileID: 2687202934131289105}
   - component: {fileID: 2942945791922566663}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Lift Button L
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -855,7 +856,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8410341275839414686}
   - component: {fileID: 2871494232518386074}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Mast
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -901,7 +902,7 @@ MonoBehaviour:
   _targetHeightNormalized: 0
   _obstructionLayers:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 768
   _obstructionSkin: 0.01
   _obstructionHorizontalPadding: 0.01
 --- !u!1 &3335457538247719715
@@ -915,7 +916,7 @@ GameObject:
   - component: {fileID: 567939251368314607}
   - component: {fileID: 1297074244316245287}
   - component: {fileID: 2441326700971202398}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Hose.001
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1003,7 +1004,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7581625421876138868}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1039,7 +1040,7 @@ GameObject:
   - component: {fileID: 88296503959227144}
   - component: {fileID: 1651452374257083092}
   - component: {fileID: 7618002372905023212}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Steering Column
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1153,7 +1154,7 @@ GameObject:
   - component: {fileID: 3787135921219832547}
   - component: {fileID: 8254220214469737164}
   - component: {fileID: 2738105581546146762}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Operator Platform
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1247,7 +1248,7 @@ GameObject:
   - component: {fileID: 5837098102143072530}
   - component: {fileID: 780000000000000001}
   - component: {fileID: 780000000000000002}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Forks
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1366,7 +1367,7 @@ MonoBehaviour:
   _vehicleRoot: {fileID: 550797599305683205}
   _collisionLayers:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 768
   _ignoreGroundLikeContacts: 1
   _groundClearance: 0.03
 --- !u!1 &4684141124493317398
@@ -1380,7 +1381,7 @@ GameObject:
   - component: {fileID: 2378818687345648190}
   - component: {fileID: 6218069304272305004}
   - component: {fileID: 6793277194138568185}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Body
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1490,7 +1491,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5553017287546790716}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Offset
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1529,7 +1530,7 @@ GameObject:
   - component: {fileID: 3139035999542919760}
   - component: {fileID: 735285205900270317}
   - component: {fileID: 7617467959571421284}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Key
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1619,7 +1620,7 @@ GameObject:
   - component: {fileID: 2865056711924946085}
   - component: {fileID: 8981082495026832823}
   - component: {fileID: 3761104965497949334}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Lift Chains
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1709,7 +1710,7 @@ GameObject:
   - component: {fileID: 5832042734575591163}
   - component: {fileID: 7889907231277684507}
   - component: {fileID: 3155840423910125281}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Wheel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1799,7 +1800,7 @@ GameObject:
   - component: {fileID: 8767313562830544649}
   - component: {fileID: 2261579094335814272}
   - component: {fileID: 1355661588412272780}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Unknow Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1890,7 +1891,7 @@ GameObject:
   - component: {fileID: 983948408717150161}
   - component: {fileID: 1925951302014218082}
   - component: {fileID: 4634689111448651331}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Horn Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1997,7 +1998,7 @@ GameObject:
   - component: {fileID: 5559798507516940465}
   - component: {fileID: 3531532324856639440}
   - component: {fileID: 5205706461148970268}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Emergency Stop Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}

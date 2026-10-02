@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8428782820383504043}
   - component: {fileID: 8303400106182768204}
   - component: {fileID: 61334083774935896}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: 3DGeom-10
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -99,7 +99,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5356682627654809154}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: View
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -133,7 +133,7 @@ GameObject:
   - component: {fileID: 6854982687278755680}
   - component: {fileID: 5373228373265117127}
   - component: {fileID: 8405893569329529521}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: 3DGeom-14
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -224,7 +224,7 @@ GameObject:
   - component: {fileID: 4310803303947585967}
   - component: {fileID: 6618762143416783199}
   - component: {fileID: 2900232317706221684}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Pallet
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -308,8 +308,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.2, y: 0.9, z: 1.2}
-  m_Center: {x: 0, y: 1, z: 0}
+  m_Size: {x: 1.2, y: 1.3, z: 1.2}
+  m_Center: {x: 0, y: 0.8, z: 0}
 --- !u!1 &2631945736446770206
 GameObject:
   m_ObjectHideFlags: 0
@@ -319,7 +319,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2106038950398967367}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Pallet
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -356,7 +356,7 @@ GameObject:
   - component: {fileID: 6446594211439642223}
   - component: {fileID: 6987194093961533062}
   - component: {fileID: 6154804921010878155}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: 3DGeom-8
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -446,7 +446,7 @@ GameObject:
   - component: {fileID: 6855754128568136838}
   - component: {fileID: 4053985967772865352}
   - component: {fileID: 5051499527903578319}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Base
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -487,8 +487,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.08, y: 0.5, z: 1.2}
-  m_Center: {x: -0.57, y: 0.25, z: 0}
+  m_Size: {x: 0.08, y: 0.15, z: 1.2}
+  m_Center: {x: -0.57, y: 0.08, z: 0}
 --- !u!65 &5051499527903578319
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -508,8 +508,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.08, y: 0.5, z: 1.2}
-  m_Center: {x: 0.57, y: 0.25, z: 0}
+  m_Size: {x: 0.08, y: 0.15, z: 1.2}
+  m_Center: {x: 0.57, y: 0.08, z: 0}
 --- !u!1 &8203664977559565436
 GameObject:
   m_ObjectHideFlags: 0
@@ -521,7 +521,7 @@ GameObject:
   - component: {fileID: 5155550955900560503}
   - component: {fileID: 5200795772651916958}
   - component: {fileID: 7241034601836757311}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: 3DGeom-9
   m_TagString: Untagged
   m_Icon: {fileID: 0}

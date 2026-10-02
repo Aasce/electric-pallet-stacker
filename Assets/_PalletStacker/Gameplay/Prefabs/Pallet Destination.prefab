@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8100000000000000002}
   - component: {fileID: 8100000000000000003}
   - component: {fileID: 8100000000000000004}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Pallet Destination
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -81,7 +81,7 @@ GameObject:
   - component: {fileID: 8100000000000000012}
   - component: {fileID: 8100000000000000013}
   - component: {fileID: 8100000000000000014}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Destination Visual
   m_TagString: Untagged
   m_Icon: {fileID: 0}
