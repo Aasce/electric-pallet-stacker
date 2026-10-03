@@ -12,6 +12,13 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors.Casters;
 
 namespace ElectricPalletStackers.UI
 {
+    public enum PhoneCallState
+    {
+        Hidden,
+        Ringing,
+        InCall
+    }
+
     [DisallowMultipleComponent]
     public sealed class PhoneCallPanel : MonoBehaviour, ILocalizedView
     {
@@ -41,11 +48,6 @@ namespace ElectricPalletStackers.UI
         [SerializeField, Min(0f)] private float _transitionDuration = 0.2f;
         [SerializeField] private bool _startHidden = true;
 
-        [Header("Optional Audio (assign later)")]
-        [SerializeField] private AudioSource _audioSource;
-        [SerializeField] private AudioClip _ringtoneClip;
-        [SerializeField] private AudioClip _conversationClip;
-
         private Vector3 _baseScale = Vector3.one;
         private bool _isInitialized;
         private float _callStartedAt;
@@ -56,11 +58,13 @@ namespace ElectricPalletStackers.UI
 
         public bool IsRinging { get; private set; }
         public bool IsInCall { get; private set; }
+        public PhoneCallState State { get; private set; }
         public string CallerDisplay => _callerLabel != null ? _callerLabel.text : string.Empty;
 
         public event Action CallAccepted;
         public event Action CallRejected;
         public event Action CallEndedByUser;
+        public event Action<PhoneCallState, PhoneCallState> StateChanged;
 
         public void ApplyLocalization(ILocalizationService localization)
         {
@@ -119,9 +123,9 @@ namespace ElectricPalletStackers.UI
 
             IsRinging = true;
             IsInCall = false;
+            SetState(PhoneCallState.Ringing);
             SetMoveInteractionEnabled(true);
             SetRingingVisual();
-            PlayClip(_ringtoneClip, true);
             KillTweens();
 
             if (_canvasGroup == null) return;
@@ -154,10 +158,10 @@ namespace ElectricPalletStackers.UI
             if (!IsRinging) return;
             IsRinging = false;
             IsInCall = true;
+            SetState(PhoneCallState.InCall);
             _callStartedAt = Time.realtimeSinceStartup;
             _lastDisplayedCallSecond = -1;
             SetActiveCallVisual();
-            PlayClip(_conversationClip, false);
             CallAccepted?.Invoke();
         }
 
@@ -189,9 +193,9 @@ namespace ElectricPalletStackers.UI
             Initialize();
             IsRinging = false;
             IsInCall = false;
+            SetState(PhoneCallState.Hidden);
             SetMoveInteractionEnabled(false);
             KillTweens();
-            StopAudio();
 
             if (_canvasGroup == null) return;
 
@@ -215,8 +219,8 @@ namespace ElectricPalletStackers.UI
             Initialize();
             IsRinging = false;
             IsInCall = false;
+            SetState(PhoneCallState.Hidden);
             KillTweens();
-            StopAudio();
 
             if (_canvasGroup != null)
             {
@@ -372,22 +376,12 @@ namespace ElectricPalletStackers.UI
                 : $"{minutes:00}:{seconds:00}";
         }
 
-        private void PlayClip(AudioClip clip, bool loop)
+        private void SetState(PhoneCallState nextState)
         {
-            if (_audioSource == null || clip == null) return;
-
-            _audioSource.Stop();
-            _audioSource.clip = clip;
-            _audioSource.loop = loop;
-            _audioSource.Play();
-        }
-
-        private void StopAudio()
-        {
-            if (_audioSource == null) return;
-            _audioSource.Stop();
-            _audioSource.clip = null;
-            _audioSource.loop = false;
+            if (State == nextState) return;
+            PhoneCallState previousState = State;
+            State = nextState;
+            StateChanged?.Invoke(previousState, nextState);
         }
 
         private void SetMoveInteractionEnabled(bool enabled)

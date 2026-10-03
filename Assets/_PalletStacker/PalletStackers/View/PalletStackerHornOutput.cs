@@ -12,7 +12,6 @@ namespace ElectricPalletStackers.PalletStackers
         {
         }
 
-        [SerializeField] private AudioSource _audioSource;
         [SerializeField] private GameObject _activeIndicator;
         [SerializeField] private HornStateEvent _onHornChanged;
 
@@ -36,19 +35,6 @@ namespace ElectricPalletStackers.PalletStackers
             IsActive = active;
 
             if (_activeIndicator != null) _activeIndicator.SetActive(active);
-            if (_audioSource != null && _audioSource.clip != null)
-            {
-                if (active)
-                {
-                    _audioSource.loop = true;
-                    if (!_audioSource.isPlaying) _audioSource.Play();
-                }
-                else
-                {
-                    _audioSource.Stop();
-                }
-            }
-
             HornChanged?.Invoke(active);
             _onHornChanged?.Invoke(active);
         }

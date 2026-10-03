@@ -1,4 +1,5 @@
 using ElectricPalletStackers.Ble;
+using ElectricPalletStackers.Audio;
 using ElectricPalletStackers.Gameplay;
 using ElectricPalletStackers.PalletStackers;
 using ElectricPalletStackers.UI;
@@ -46,8 +47,9 @@ namespace ElectricPalletStackers.Editor
 
         private static GameObject BuildPrefab()
         {
-            GameObject root = new("Phone Call Panel", typeof(AudioSource), typeof(Rigidbody),
-                typeof(BoxCollider), typeof(XRGrabInteractable), typeof(PhoneCallPanel));
+            GameObject root = new("Phone Call Panel", typeof(Rigidbody),
+                typeof(BoxCollider), typeof(XRGrabInteractable), typeof(PhoneCallPanel),
+                typeof(PhoneCallAudioPresenter));
 
             GameObject canvasObject = new("Phone Canvas", typeof(RectTransform), typeof(Canvas),
                 typeof(CanvasScaler), typeof(TrackedDeviceGraphicRaycaster), typeof(CanvasGroup));
@@ -69,11 +71,6 @@ namespace ElectricPalletStackers.Editor
             canvasGroup.alpha = 0f;
             canvasGroup.interactable = false;
             canvasGroup.blocksRaycasts = false;
-
-            AudioSource audioSource = root.GetComponent<AudioSource>();
-            audioSource.playOnAwake = false;
-            audioSource.loop = false;
-            audioSource.spatialBlend = 1f;
 
             Rigidbody body = root.GetComponent<Rigidbody>();
             body.useGravity = false;
@@ -188,7 +185,6 @@ namespace ElectricPalletStackers.Editor
             panel.FindProperty("_hangUpButton").objectReferenceValue = hangUp;
             panel.FindProperty("_moveCollider").objectReferenceValue = moveCollider;
             panel.FindProperty("_moveInteractable").objectReferenceValue = grabInteractable;
-            panel.FindProperty("_audioSource").objectReferenceValue = audioSource;
             panel.FindProperty("_defaultCaller").stringValue = "0123456789";
             panel.ApplyModifiedPropertiesWithoutUndo();
 

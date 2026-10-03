@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace ElectricPalletStackers.PalletStackers
@@ -24,10 +25,13 @@ namespace ElectricPalletStackers.PalletStackers
         private float _currentSpeed;
         private float _steeringDegrees;
         private bool _movementInhibited = true;
+        private bool _isMoving;
 
         public float CurrentSpeed => _currentSpeed;
         public float TargetSpeed => _targetSpeed;
         public Vector3 WorldForward => GetYawOnlyRotation() * SafeLocalForward();
+
+        public event Action<bool> MovementChanged;
 
         private void Awake()
         {
@@ -74,6 +78,7 @@ namespace ElectricPalletStackers.PalletStackers
             _targetSpeed = 0f;
             _currentSpeed = 0f;
             _movementInhibited = true;
+            SetMoving(false);
 
             if (_body == null) return;
             if (!_body.isKinematic)
@@ -93,9 +98,13 @@ namespace ElectricPalletStackers.PalletStackers
             _currentSpeed = Mathf.MoveTowards(_currentSpeed, _targetSpeed, rate * Time.fixedDeltaTime);
             if (Mathf.Abs(_currentSpeed) < 0.0001f)
             {
+                _currentSpeed = 0f;
+                SetMoving(false);
                 StopBodyMotion();
                 return;
             }
+
+            SetMoving(true);
 
             float deltaTime = Time.fixedDeltaTime;
             Quaternion rotation = GetYawOnlyRotation();
@@ -228,6 +237,13 @@ namespace ElectricPalletStackers.PalletStackers
             }
 
             SnapRotationToYaw();
+        }
+
+        private void SetMoving(bool moving)
+        {
+            if (_isMoving == moving) return;
+            _isMoving = moving;
+            MovementChanged?.Invoke(moving);
         }
 
         private Quaternion GetYawOnlyRotation()

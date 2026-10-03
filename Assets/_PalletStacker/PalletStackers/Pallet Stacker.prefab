@@ -18,6 +18,7 @@ GameObject:
   - component: {fileID: 6482732429717059144}
   - component: {fileID: 8279041802158470694}
   - component: {fileID: 8991475523401287712}
+  - component: {fileID: 910000000000000001}
   m_Layer: 11
   m_Name: Pallet Stacker
   m_TagString: Untagged
@@ -41,6 +42,21 @@ Transform:
   - {fileID: 7444792790634152618}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &910000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 140053820047635898}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f009a1d10b8a4ba4ad01000000000009, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Audio.PalletStackerAudioPresenter
+  _hornOutput: {fileID: 4634689111448651331}
+  _motor: {fileID: 5210768195172812719}
+  _followTarget: {fileID: 550797599305683205}
 --- !u!114 &2066476246416532216
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1982,7 +1998,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d1d9f326b7646909f1ebe70d4c9788d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _audioSource: {fileID: 0}
   _activeIndicator: {fileID: 0}
   _onHornChanged:
     m_PersistentCalls:

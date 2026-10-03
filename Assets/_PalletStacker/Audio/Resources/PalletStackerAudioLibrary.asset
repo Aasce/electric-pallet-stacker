@@ -1,0 +1,135 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f003a1d10b8a4ba4ad01000000000003, type: 3}
+  m_Name: PalletStackerAudioLibrary
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Audio.AudioCueLibrary
+  _entries:
+  - _key: phone.incoming
+    _config:
+      _clip: {fileID: 8300000, guid: bf0ad72e9a032014e80c9b2192773706, type: 3}
+      _output: {fileID: 0}
+      _volume: 0.8
+      _pitchRange: {x: 1, y: 1}
+      _loop: 1
+      _spatialBlend: 1
+      _minDistance: 0.5
+      _maxDistance: 8
+      _rolloffMode: 0
+      _dopplerLevel: 0
+      _spread: 0
+      _spatialize: 0
+      _priority: 80
+  - _key: phone.hangup
+    _config:
+      _clip: {fileID: 8300000, guid: 85b4389c20ce0bb4fa3d33d9c726cd17, type: 3}
+      _output: {fileID: 0}
+      _volume: 0.85
+      _pitchRange: {x: 1, y: 1}
+      _loop: 0
+      _spatialBlend: 1
+      _minDistance: 0.5
+      _maxDistance: 8
+      _rolloffMode: 0
+      _dopplerLevel: 0
+      _spread: 0
+      _spatialize: 0
+      _priority: 80
+  - _key: phone.conversation
+    _config:
+      _clip: {fileID: 8300000, guid: afc5cb00632d4034985981440533f30d, type: 3}
+      _output: {fileID: 0}
+      _volume: 0.75
+      _pitchRange: {x: 1, y: 1}
+      _loop: 0
+      _spatialBlend: 1
+      _minDistance: 0.5
+      _maxDistance: 8
+      _rolloffMode: 0
+      _dopplerLevel: 0
+      _spread: 0
+      _spatialize: 0
+      _priority: 80
+  - _key: vehicle.horn.start
+    _config:
+      _clip: {fileID: 8300000, guid: 127cc44608ca15a478e828401f615574, type: 3}
+      _output: {fileID: 0}
+      _volume: 1
+      _pitchRange: {x: 1, y: 1}
+      _loop: 0
+      _spatialBlend: 1
+      _minDistance: 1
+      _maxDistance: 35
+      _rolloffMode: 0
+      _dopplerLevel: 0
+      _spread: 0
+      _spatialize: 0
+      _priority: 64
+  - _key: vehicle.horn.loop
+    _config:
+      _clip: {fileID: 8300000, guid: f2110b049ced9ee4aa9bc1a20b3005f5, type: 3}
+      _output: {fileID: 0}
+      _volume: 1
+      _pitchRange: {x: 1, y: 1}
+      _loop: 1
+      _spatialBlend: 1
+      _minDistance: 1
+      _maxDistance: 35
+      _rolloffMode: 0
+      _dopplerLevel: 0
+      _spread: 0
+      _spatialize: 0
+      _priority: 64
+  - _key: vehicle.horn.end
+    _config:
+      _clip: {fileID: 8300000, guid: 0124f262f37c4504dac92b01b10a3c88, type: 3}
+      _output: {fileID: 0}
+      _volume: 1
+      _pitchRange: {x: 1, y: 1}
+      _loop: 0
+      _spatialBlend: 1
+      _minDistance: 1
+      _maxDistance: 35
+      _rolloffMode: 0
+      _dopplerLevel: 0
+      _spread: 0
+      _spatialize: 0
+      _priority: 64
+  - _key: vehicle.startup
+    _config:
+      _clip: {fileID: 8300000, guid: 5efa4b8ab74b9c9448b6c6cf9ae6d180, type: 3}
+      _output: {fileID: 0}
+      _volume: 0.8
+      _pitchRange: {x: 1, y: 1}
+      _loop: 0
+      _spatialBlend: 1
+      _minDistance: 1
+      _maxDistance: 25
+      _rolloffMode: 0
+      _dopplerLevel: 0
+      _spread: 0
+      _spatialize: 0
+      _priority: 128
+  - _key: vehicle.loop
+    _config:
+      _clip: {fileID: 8300000, guid: 0c091c99a3286eb44999849717f8a03f, type: 3}
+      _output: {fileID: 0}
+      _volume: 0.6
+      _pitchRange: {x: 1, y: 1}
+      _loop: 1
+      _spatialBlend: 1
+      _minDistance: 1
+      _maxDistance: 25
+      _rolloffMode: 0
+      _dopplerLevel: 0
+      _spread: 0
+      _spatialize: 0
+      _priority: 128
