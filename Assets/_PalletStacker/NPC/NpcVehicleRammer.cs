@@ -9,7 +9,7 @@ namespace ElectricPalletStackers.NPCs
     [DisallowMultipleComponent]
     public sealed class NpcVehicleRammer : MonoBehaviour
     {
-        [SerializeField, Min(0.05f)] private float _impactDistance = 0.25f;
+        [SerializeField, Min(0f)] private float _impactDistance = 0.05f;
         [SerializeField, Min(0f)] private float _frontClearance = 0.15f;
         [SerializeField, Min(0.05f)] private float _destinationRefreshDistance = 0.1f;
 
@@ -18,12 +18,14 @@ namespace ElectricPalletStackers.NPCs
         private Rigidbody _vehicleBody;
         private PalletStackerRigidbodyMotor _vehicleMotor;
         private PalletStackerCollisionReporter _collisionReporter;
+        private Collider[] _npcColliders;
         private Collider[] _vehicleColliders;
         private Action _impactHandler;
         private float _movingSpeedThreshold;
         private float _originalSpeed;
         private float _originalStoppingDistance;
         private ObstacleAvoidanceType _originalAvoidance;
+        private bool _originalAutoBraking;
         private Vector3 _lastDestination;
         private bool _active;
         private bool _hasDestination;
@@ -45,6 +47,7 @@ namespace ElectricPalletStackers.NPCs
             _collisionReporter = collisionReporter;
             _movingSpeedThreshold = Mathf.Max(0f, movingSpeedThreshold);
             _impactHandler = impactHandler;
+            _npcColliders = GetComponentsInChildren<Collider>();
             _vehicleColliders = vehicleBody != null
                 ? vehicleBody.GetComponentsInChildren<Collider>()
                 : null;
@@ -57,11 +60,16 @@ namespace ElectricPalletStackers.NPCs
             _originalSpeed = _agent.speed;
             _originalStoppingDistance = _agent.stoppingDistance;
             _originalAvoidance = _agent.obstacleAvoidanceType;
+            _originalAutoBraking = _agent.autoBraking;
             _hasCachedAgentState = true;
 
             if (_npc != null) _npc.enabled = false;
-            // Keep the NPC's normal movement settings so the approach still looks
-            // like walking rather than an artificial sprint into the vehicle.
+            // Normal navigation deliberately keeps agents away from obstacles and
+            // brakes before the destination. During this scripted accident those
+            // behaviours can leave the NPC permanently hovering beside the vehicle.
+            _agent.stoppingDistance = 0f;
+            _agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
+            _agent.autoBraking = false;
             _agent.isStopped = false;
             _active = true;
         }
@@ -166,15 +174,36 @@ namespace ElectricPalletStackers.NPCs
             float closestDistance = Vector3.Distance(transform.position, _vehicleBody.position);
             if (_vehicleColliders == null) return closestDistance;
 
-            for (int index = 0; index < _vehicleColliders.Length; index++)
+            for (int vehicleIndex = 0; vehicleIndex < _vehicleColliders.Length; vehicleIndex++)
             {
-                Collider vehicleCollider = _vehicleColliders[index];
+                Collider vehicleCollider = _vehicleColliders[vehicleIndex];
                 if (vehicleCollider == null || !vehicleCollider.enabled || vehicleCollider.isTrigger) continue;
 
-                float distance = Vector3.Distance(
-                    transform.position,
-                    vehicleCollider.ClosestPoint(transform.position));
-                closestDistance = Mathf.Min(closestDistance, distance);
+                if (_npcColliders == null || _npcColliders.Length == 0)
+                {
+                    float pivotDistance = Vector3.Distance(
+                        transform.position,
+                        vehicleCollider.ClosestPoint(transform.position));
+                    closestDistance = Mathf.Min(closestDistance, pivotDistance);
+                    continue;
+                }
+
+                for (int npcIndex = 0; npcIndex < _npcColliders.Length; npcIndex++)
+                {
+                    Collider npcCollider = _npcColliders[npcIndex];
+                    if (npcCollider == null || !npcCollider.enabled || npcCollider.isTrigger) continue;
+
+                    // Measure the gap between collider surfaces rather than from the
+                    // NPC pivot. The old pivot distance could never reach its impact
+                    // threshold because the capsule collider stopped about one radius
+                    // away from the vehicle first.
+                    Vector3 vehiclePoint = vehicleCollider.ClosestPoint(npcCollider.bounds.center);
+                    Vector3 npcPoint = npcCollider.ClosestPoint(vehiclePoint);
+                    vehiclePoint = vehicleCollider.ClosestPoint(npcPoint);
+                    closestDistance = Mathf.Min(
+                        closestDistance,
+                        Vector3.Distance(npcPoint, vehiclePoint));
+                }
             }
 
             return closestDistance;
@@ -206,6 +235,7 @@ namespace ElectricPalletStackers.NPCs
                 _agent.speed = _originalSpeed;
                 _agent.stoppingDistance = _originalStoppingDistance;
                 _agent.obstacleAvoidanceType = _originalAvoidance;
+                _agent.autoBraking = _originalAutoBraking;
             }
 
             if (_npc != null)
