@@ -15,88 +15,98 @@ MonoBehaviour:
   _entries:
   - _key: common.confirm
     _english: Press E-Stop to Confirm
-    _vietnamese: Nhấn dừng khẩn cấp để xác nhận
-    _japanese: 非常停止ボタンで決定
+    _vietnamese: "Nh\u1EA5n d\u1EEBng kh\u1EA9n c\u1EA5p \u0111\u1EC3 x\xE1c nh\u1EADn"
+    _japanese: "\u975E\u5E38\u505C\u6B62\u30DC\u30BF\u30F3\u3067\u6C7A\u5B9A"
   - _key: common.continue
     _english: Press E-Stop to Continue
-    _vietnamese: Nhấn dừng khẩn cấp để tiếp tục
-    _japanese: 非常停止ボタンで続行
+    _vietnamese: "Nh\u1EA5n d\u1EEBng kh\u1EA9n c\u1EA5p \u0111\u1EC3 ti\u1EBFp t\u1EE5c"
+    _japanese: "\u975E\u5E38\u505C\u6B62\u30DC\u30BF\u30F3\u3067\u7D9A\u884C"
   - _key: language.english
     _english: English
-    _vietnamese: Tiếng Anh
-    _japanese: 英語
+    _vietnamese: "Ti\u1EBFng Anh"
+    _japanese: "\u82F1\u8A9E"
   - _key: language.vietnamese
     _english: Vietnamese
-    _vietnamese: Tiếng Việt
-    _japanese: ベトナム語
+    _vietnamese: "Ti\u1EBFng Vi\u1EC7t"
+    _japanese: "\u30D9\u30C8\u30CA\u30E0\u8A9E"
   - _key: language.japanese
     _english: Japanese
-    _vietnamese: Tiếng Nhật
-    _japanese: 日本語
+    _vietnamese: "Ti\u1EBFng Nh\u1EADt"
+    _japanese: "\u65E5\u672C\u8A9E"
   - _key: selectLanguage.title
     _english: Select Language
-    _vietnamese: Chọn ngôn ngữ
-    _japanese: 言語を選択
+    _vietnamese: "Ch\u1ECDn ng\xF4n ng\u1EEF"
+    _japanese: "\u8A00\u8A9E\u3092\u9078\u629E"
   - _key: selectLanguage.navigationHint
     _english: Use Travel to select language
-    _vietnamese: Dùng cần di chuyển để chọn ngôn ngữ
-    _japanese: 走行レバーで言語を選択
+    _vietnamese: "D\xF9ng c\u1EA7n di chuy\u1EC3n \u0111\u1EC3 ch\u1ECDn ng\xF4n
+      ng\u1EEF"
+    _japanese: "\u8D70\u884C\u30EC\u30D0\u30FC\u3067\u8A00\u8A9E\u3092\u9078\u629E"
   - _key: welcome.title
     _english: Welcome
-    _vietnamese: Chào mừng
-    _japanese: ようこそ
+    _vietnamese: "Ch\xE0o m\u1EEBng"
+    _japanese: "\u3088\u3046\u3053\u305D"
   - _key: welcome.description
-    _english: This training simulation recreates accident scenarios involving a walkie pallet stacker.
-    _vietnamese: Mô phỏng huấn luyện này tái hiện các tình huống tai nạn liên quan đến xe nâng tay cao chạy điện.
-    _japanese: この訓練シミュレーションでは、歩行操作式パレットスタッカーに関する事故状況を再現します。
+    _english: This training simulation recreates accident scenarios involving a walkie
+      pallet stacker.
+    _vietnamese: "M\xF4 ph\u1ECFng hu\u1EA5n luy\u1EC7n n\xE0y t\xE1i hi\u1EC7n c\xE1c
+      t\xECnh hu\u1ED1ng tai n\u1EA1n li\xEAn quan \u0111\u1EBFn xe n\xE2ng tay cao
+      ch\u1EA1y \u0111i\u1EC7n."
+    _japanese: "\u3053\u306E\u8A13\u7DF4\u30B7\u30DF\u30E5\u30EC\u30FC\u30B7\u30E7\u30F3\u3067\u306F\u3001\u6B69\u884C\u64CD\u4F5C\u5F0F\u30D1\u30EC\u30C3\u30C8\u30B9\u30BF\u30C3\u30AB\u30FC\u306B\u95A2\u3059\u308B\u4E8B\u6545\u72B6\u6CC1\u3092\u518D\u73FE\u3057\u307E\u3059\u3002"
   - _key: guide.title
     _english: Guide
-    _vietnamese: Hướng dẫn
-    _japanese: 操作ガイド
+    _vietnamese: "H\u01B0\u1EDBng d\u1EABn"
+    _japanese: "\u64CD\u4F5C\u30AC\u30A4\u30C9"
   - _key: guide.scrollHint
     _english: Use Travel to scroll
-    _vietnamese: Dùng cần di chuyển để cuộn
-    _japanese: 走行レバーでスクロール
+    _vietnamese: "D\xF9ng c\u1EA7n di chuy\u1EC3n \u0111\u1EC3 cu\u1ED9n"
+    _japanese: "\u8D70\u884C\u30EC\u30D0\u30FC\u3067\u30B9\u30AF\u30ED\u30FC\u30EB"
   - _key: completed.title
     _english: Completed
-    _vietnamese: Hoàn thành
-    _japanese: 完了
+    _vietnamese: "Ho\xE0n th\xE0nh"
+    _japanese: "\u5B8C\u4E86"
   - _key: completed.description
     _english: You have successfully completed the training simulation.
-    _vietnamese: Bạn đã hoàn thành mô phỏng huấn luyện.
-    _japanese: 訓練シミュレーションを完了しました。
+    _vietnamese: "B\u1EA1n \u0111\xE3 ho\xE0n th\xE0nh m\xF4 ph\u1ECFng hu\u1EA5n
+      luy\u1EC7n."
+    _japanese: "\u8A13\u7DF4\u30B7\u30DF\u30E5\u30EC\u30FC\u30B7\u30E7\u30F3\u3092\u5B8C\u4E86\u3057\u307E\u3057\u305F\u3002"
   - _key: failed.title
     _english: Failed
-    _vietnamese: Không đạt
-    _japanese: 失敗
+    _vietnamese: "Kh\xF4ng \u0111\u1EA1t"
+    _japanese: "\u5931\u6557"
   - _key: failed.description
     _english: A collision was detected. The training simulation has failed.
-    _vietnamese: Đã phát hiện va chạm. Mô phỏng huấn luyện không đạt.
-    _japanese: 衝突を検知しました。訓練シミュレーションは失敗です。
+    _vietnamese: "\u0110\xE3 ph\xE1t hi\u1EC7n va ch\u1EA1m. M\xF4 ph\u1ECFng hu\u1EA5n
+      luy\u1EC7n kh\xF4ng \u0111\u1EA1t."
+    _japanese: "\u885D\u7A81\u3092\u691C\u77E5\u3057\u307E\u3057\u305F\u3002\u8A13\u7DF4\u30B7\u30DF\u30E5\u30EC\u30FC\u30B7\u30E7\u30F3\u306F\u5931\u6557\u3067\u3059\u3002"
   - _key: phone.incomingCall
     _english: Incoming call
-    _vietnamese: Cuộc gọi đến
-    _japanese: 着信
+    _vietnamese: "Cu\u1ED9c g\u1ECDi \u0111\u1EBFn"
+    _japanese: "\u7740\u4FE1"
   - _key: phone.inCall
     _english: In call
-    _vietnamese: Đang gọi
-    _japanese: 通話中
+    _vietnamese: "\u0110ang g\u1ECDi"
+    _japanese: "\u901A\u8A71\u4E2D"
   - _key: phone.tapToAnswer
     _english: Tap to answer
-    _vietnamese: Chạm để trả lời
-    _japanese: タップして応答
+    _vietnamese: "Ch\u1EA1m \u0111\u1EC3 tr\u1EA3 l\u1EDDi"
+    _japanese: "\u30BF\u30C3\u30D7\u3057\u3066\u5FDC\u7B54"
   - _key: phone.decline
     _english: Decline
-    _vietnamese: Từ chối
-    _japanese: 拒否
+    _vietnamese: "T\u1EEB ch\u1ED1i"
+    _japanese: "\u62D2\u5426"
   - _key: phone.accept
     _english: Accept
-    _vietnamese: Chấp nhận
-    _japanese: 応答
+    _vietnamese: "Ch\u1EA5p nh\u1EADn"
+    _japanese: "\u5FDC\u7B54"
   - _key: phone.end
     _english: End
-    _vietnamese: Kết thúc
-    _japanese: 終了
+    _vietnamese: "K\u1EBFt th\xFAc"
+    _japanese: "\u7D42\u4E86"
   _languageProfiles:
+  - _language: 0
+    _fontOverride: {fileID: 11400000, guid: e9a1fec3604a5864db7480e450e7c93f, type: 2}
+  - _language: 1
+    _fontOverride: {fileID: 11400000, guid: e9a1fec3604a5864db7480e450e7c93f, type: 2}
   - _language: 2
-    _fontOverride: {fileID: 11400000, guid: aebbc5a4476e71744bf67ff1e2fb85fd, type: 2}
+    _fontOverride: {fileID: 11400000, guid: eb22fb93520ccdf49a801caaff01af78, type: 2}

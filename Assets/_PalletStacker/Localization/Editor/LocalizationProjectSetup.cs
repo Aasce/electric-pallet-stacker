@@ -15,10 +15,14 @@ namespace ElectricPalletStackers.Editor
             "Assets/_PalletStacker/Resources/Localization";
         private const string DatabasePath =
             DatabaseFolder + "/DefaultLocalizationDatabase.asset";
-        private const string SourceFontPath =
-            "Assets/_PalletStacker/Localization/Fonts/NotoSansJP-Variable.ttf";
+        private const string LatinSourceFontPath =
+            "Assets/_PalletStacker/Localization/Fonts/NotoSans-Variable.ttf";
+        private const string LatinFontAssetPath =
+            "Assets/_PalletStacker/Localization/Fonts/NotoSans Dynamic SDF.asset";
+        private const string JapaneseSourceFontPath =
+            "Assets/_PalletStacker/Localization/Fonts/NotoSansJP-Regular.otf";
         private const string JapaneseFontAssetPath =
-            "Assets/_PalletStacker/Localization/Fonts/NotoSansJP Dynamic SDF.asset";
+            "Assets/_PalletStacker/Localization/Fonts/NotoSansJP Regular Dynamic SDF.asset";
 
         private static readonly TranslationDefinition[] DefaultTranslations =
         {
@@ -129,8 +133,15 @@ namespace ElectricPalletStackers.Editor
                 return;
             }
 
-            TMP_FontAsset japaneseFont = CreateOrLoadJapaneseFont();
-            CreateDatabaseIfMissing(japaneseFont);
+            TMP_FontAsset latinFont = CreateOrLoadDynamicFont(
+                LatinSourceFontPath,
+                LatinFontAssetPath,
+                "NotoSans Dynamic SDF");
+            TMP_FontAsset japaneseFont = CreateOrLoadDynamicFont(
+                JapaneseSourceFontPath,
+                JapaneseFontAssetPath,
+                "NotoSansJP Regular Dynamic SDF");
+            CreateOrUpdateDatabase(latinFont, japaneseFont);
 
             for (int index = 0; index < Prefabs.Length; index++)
                 ConfigurePrefab(Prefabs[index]);
@@ -138,16 +149,19 @@ namespace ElectricPalletStackers.Editor
             AssetDatabase.SaveAssets();
         }
 
-        private static TMP_FontAsset CreateOrLoadJapaneseFont()
+        private static TMP_FontAsset CreateOrLoadDynamicFont(
+            string sourceFontPath,
+            string fontAssetPath,
+            string fontAssetName)
         {
             TMP_FontAsset existing = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(
-                JapaneseFontAssetPath);
+                fontAssetPath);
             if (existing != null) return existing;
 
-            Font source = AssetDatabase.LoadAssetAtPath<Font>(SourceFontPath);
+            Font source = AssetDatabase.LoadAssetAtPath<Font>(sourceFontPath);
             if (source == null)
             {
-                Debug.LogError($"Japanese source font is missing: {SourceFontPath}");
+                Debug.LogError($"Source font is missing: {sourceFontPath}");
                 return null;
             }
 
@@ -160,11 +174,11 @@ namespace ElectricPalletStackers.Editor
                 2048,
                 AtlasPopulationMode.Dynamic,
                 true);
-            fontAsset.name = "NotoSansJP Dynamic SDF";
+            fontAsset.name = fontAssetName;
             fontAsset.atlasPopulationMode = AtlasPopulationMode.Dynamic;
             fontAsset.isMultiAtlasTexturesEnabled = true;
 
-            AssetDatabase.CreateAsset(fontAsset, JapaneseFontAssetPath);
+            AssetDatabase.CreateAsset(fontAsset, fontAssetPath);
             if (fontAsset.atlasTextures != null)
             {
                 for (int index = 0; index < fontAsset.atlasTextures.Length; index++)
@@ -177,48 +191,64 @@ namespace ElectricPalletStackers.Editor
             if (fontAsset.material != null && !AssetDatabase.Contains(fontAsset.material))
                 AssetDatabase.AddObjectToAsset(fontAsset.material, fontAsset);
             EditorUtility.SetDirty(fontAsset);
-            AssetDatabase.ImportAsset(JapaneseFontAssetPath);
             return fontAsset;
         }
 
-        private static void CreateDatabaseIfMissing(TMP_FontAsset japaneseFont)
+        private static void CreateOrUpdateDatabase(
+            TMP_FontAsset latinFont,
+            TMP_FontAsset japaneseFont)
         {
-            if (AssetDatabase.LoadAssetAtPath<LocalizationDatabase>(DatabasePath) != null)
-                return;
-
             EnsureFolder("Assets/_PalletStacker/Resources");
             EnsureFolder(DatabaseFolder);
 
-            LocalizationDatabase database = ScriptableObject.CreateInstance<LocalizationDatabase>();
-            AssetDatabase.CreateAsset(database, DatabasePath);
+            LocalizationDatabase database =
+                AssetDatabase.LoadAssetAtPath<LocalizationDatabase>(DatabasePath);
+            bool isNewDatabase = database == null;
+            if (isNewDatabase)
+            {
+                database = ScriptableObject.CreateInstance<LocalizationDatabase>();
+                AssetDatabase.CreateAsset(database, DatabasePath);
+            }
 
             SerializedObject serializedDatabase = new(database);
-            SerializedProperty entries = serializedDatabase.FindProperty("_entries");
-            entries.arraySize = DefaultTranslations.Length;
-
-            for (int index = 0; index < DefaultTranslations.Length; index++)
+            if (isNewDatabase)
             {
-                TranslationDefinition definition = DefaultTranslations[index];
-                SerializedProperty entry = entries.GetArrayElementAtIndex(index);
-                entry.FindPropertyRelative("_key").stringValue = definition.Key;
-                entry.FindPropertyRelative("_english").stringValue = definition.English;
-                entry.FindPropertyRelative("_vietnamese").stringValue = definition.Vietnamese;
-                entry.FindPropertyRelative("_japanese").stringValue = definition.Japanese;
+                SerializedProperty entries = serializedDatabase.FindProperty("_entries");
+                entries.arraySize = DefaultTranslations.Length;
+
+                for (int index = 0; index < DefaultTranslations.Length; index++)
+                {
+                    TranslationDefinition definition = DefaultTranslations[index];
+                    SerializedProperty entry = entries.GetArrayElementAtIndex(index);
+                    entry.FindPropertyRelative("_key").stringValue = definition.Key;
+                    entry.FindPropertyRelative("_english").stringValue = definition.English;
+                    entry.FindPropertyRelative("_vietnamese").stringValue = definition.Vietnamese;
+                    entry.FindPropertyRelative("_japanese").stringValue = definition.Japanese;
+                }
             }
 
             SerializedProperty profiles = serializedDatabase.FindProperty("_languageProfiles");
-            profiles.arraySize = japaneseFont != null ? 1 : 0;
-            if (japaneseFont != null)
-            {
-                SerializedProperty japaneseProfile = profiles.GetArrayElementAtIndex(0);
-                japaneseProfile.FindPropertyRelative("_language").enumValueIndex =
-                    (int)LanguageCode.Ja;
-                japaneseProfile.FindPropertyRelative("_fontOverride").objectReferenceValue =
-                    japaneseFont;
-            }
+            profiles.arraySize = 3;
+            SetLanguageProfile(profiles.GetArrayElementAtIndex(0), LanguageCode.En, latinFont);
+            SetLanguageProfile(profiles.GetArrayElementAtIndex(1), LanguageCode.Vi, latinFont);
+            SetLanguageProfile(profiles.GetArrayElementAtIndex(2), LanguageCode.Ja, japaneseFont);
 
             serializedDatabase.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(database);
+        }
+
+        private static void SetLanguageProfile(
+            SerializedProperty profile,
+            LanguageCode language,
+            TMP_FontAsset font)
+        {
+            profile.FindPropertyRelative("_language").enumValueIndex = (int)language;
+            profile.FindPropertyRelative("_fontOverride").objectReferenceValue = font;
+
+            if (font == null)
+            {
+                Debug.LogError($"No font asset is configured for language '{language}'.");
+            }
         }
 
         private static void ConfigurePrefab(PrefabDefinition definition)
