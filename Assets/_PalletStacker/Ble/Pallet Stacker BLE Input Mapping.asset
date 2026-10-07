@@ -19,7 +19,7 @@ MonoBehaviour:
   _slowModeFlagMask: 16
   _rawSteeringDeg: {x: -90, y: 90}
   _mappedSteeringDeg: {x: -90, y: 90}
-  _clampedSteeringDeg: {x: -40, y: 40}
+  _clampedSteeringDeg: {x: -80, y: 80}
   _rawTillerDeg: {x: -128, y: 127}
   _mappedTillerDeg: {x: -128, y: 127}
   _clampedTillerDeg: {x: 0, y: 100}

@@ -11,6 +11,9 @@ namespace ElectricPalletStackers.PalletStackers
         [SerializeField] private Transform _liftButtonLeft;
         [SerializeField] private Transform _liftButtonRight;
         [SerializeField] private Transform _travelButton;
+        [SerializeField] private Transform _emergencyStopButton;
+        [SerializeField] private Transform _hornButton;
+        [SerializeField] private Transform _slowModeButton;
 
         [Header("Lift button local X angles")]
         [SerializeField] private float _liftUpAngle = 10f;
@@ -21,6 +24,10 @@ namespace ElectricPalletStackers.PalletStackers
         [SerializeField] private float _travelReverseAngle = 45f;
         [SerializeField, Range(0f, 0.25f)] private float _travelDeadZone = 0.01f;
 
+        [Header("Button press depth")]
+        [SerializeField] private Vector3 _pressLocalDirection = Vector3.down;
+        [SerializeField, Min(0f)] private float _pressDistance = 0.008f;
+
         [Header("Animation")]
         [Tooltip("On: animate with DOTween. Off: apply the target rotation instantly.")]
         [SerializeField] private bool _useTween = true;
@@ -30,12 +37,23 @@ namespace ElectricPalletStackers.PalletStackers
         private Quaternion _liftButtonLeftRestRotation;
         private Quaternion _liftButtonRightRestRotation;
         private Quaternion _travelButtonRestRotation;
+        private Vector3 _travelButtonRestPosition;
+        private Vector3 _emergencyStopRestPosition;
+        private Vector3 _hornButtonRestPosition;
+        private Vector3 _slowModeRestPosition;
 
         private Tween _liftButtonLeftTween;
         private Tween _liftButtonRightTween;
         private Tween _travelButtonTween;
+        private Tween _travelButtonPressTween;
+        private Tween _emergencyStopPressTween;
+        private Tween _hornPressTween;
+        private Tween _slowModePressTween;
         private PalletStackerLiftState _lastLiftState = PalletStackerLiftState.Neutral;
         private int _lastTravelDirection;
+        private bool _lastEmergencyStop;
+        private bool _lastHorn;
+        private bool _lastSlowMode;
 
         private void Awake()
         {
@@ -60,6 +78,25 @@ namespace ElectricPalletStackers.PalletStackers
             {
                 _lastTravelDirection = travelDirection;
                 ApplyTravelPose(TravelAngle(travelDirection));
+                ApplyButtonPress(_travelButton, _travelButtonRestPosition, travelDirection != 0, ref _travelButtonPressTween);
+            }
+
+            if (command.EmergencyStop != _lastEmergencyStop)
+            {
+                _lastEmergencyStop = command.EmergencyStop;
+                ApplyButtonPress(_emergencyStopButton, _emergencyStopRestPosition, command.EmergencyStop, ref _emergencyStopPressTween);
+            }
+
+            if (command.Horn != _lastHorn)
+            {
+                _lastHorn = command.Horn;
+                ApplyButtonPress(_hornButton, _hornButtonRestPosition, command.Horn, ref _hornPressTween);
+            }
+
+            if (command.SlowMode != _lastSlowMode)
+            {
+                _lastSlowMode = command.SlowMode;
+                ApplyButtonPress(_slowModeButton, _slowModeRestPosition, command.SlowMode, ref _slowModePressTween);
             }
         }
 
@@ -69,8 +106,15 @@ namespace ElectricPalletStackers.PalletStackers
             SetRotationInstantly(_liftButtonLeft, _liftButtonLeftRestRotation);
             SetRotationInstantly(_liftButtonRight, _liftButtonRightRestRotation);
             SetRotationInstantly(_travelButton, _travelButtonRestRotation);
+            SetPositionInstantly(_travelButton, _travelButtonRestPosition);
+            SetPositionInstantly(_emergencyStopButton, _emergencyStopRestPosition);
+            SetPositionInstantly(_hornButton, _hornButtonRestPosition);
+            SetPositionInstantly(_slowModeButton, _slowModeRestPosition);
             _lastLiftState = PalletStackerLiftState.Neutral;
             _lastTravelDirection = 0;
+            _lastEmergencyStop = false;
+            _lastHorn = false;
+            _lastSlowMode = false;
         }
 
         [ContextMenu("Capture Current Button Pose As Rest Pose")]
@@ -81,7 +125,13 @@ namespace ElectricPalletStackers.PalletStackers
             if (_liftButtonRight != null)
                 _liftButtonRightRestRotation = _liftButtonRight.localRotation;
             if (_travelButton != null)
+            {
                 _travelButtonRestRotation = _travelButton.localRotation;
+                _travelButtonRestPosition = _travelButton.localPosition;
+            }
+            if (_emergencyStopButton != null) _emergencyStopRestPosition = _emergencyStopButton.localPosition;
+            if (_hornButton != null) _hornButtonRestPosition = _hornButton.localPosition;
+            if (_slowModeButton != null) _slowModeRestPosition = _slowModeButton.localPosition;
         }
 
         private void ApplyLiftPose(float angle)
@@ -92,7 +142,7 @@ namespace ElectricPalletStackers.PalletStackers
                 ref _liftButtonLeftTween);
             AnimateRotation(
                 _liftButtonRight,
-                _liftButtonRightRestRotation * Quaternion.AngleAxis(angle, Vector3.right),
+                _liftButtonRightRestRotation * Quaternion.AngleAxis(-angle, Vector3.right),
                 ref _liftButtonRightTween);
         }
 
@@ -102,6 +152,27 @@ namespace ElectricPalletStackers.PalletStackers
                 _travelButton,
                 _travelButtonRestRotation * Quaternion.AngleAxis(angle, Vector3.forward),
                 ref _travelButtonTween);
+        }
+
+        private void ApplyButtonPress(Transform target, Vector3 restPosition, bool pressed, ref Tween tween)
+        {
+            Vector3 direction = _pressLocalDirection.sqrMagnitude > 0.0001f
+                ? _pressLocalDirection.normalized
+                : Vector3.down;
+            Vector3 targetPosition = restPosition + (pressed ? direction * _pressDistance : Vector3.zero);
+            tween?.Kill();
+            tween = null;
+            if (target == null) return;
+            if (!_useTween || _tweenDuration <= 0f)
+            {
+                target.localPosition = targetPosition;
+                return;
+            }
+
+            tween = target
+                .DOLocalMove(targetPosition, _tweenDuration)
+                .SetEase(_ease)
+                .SetLink(gameObject, LinkBehaviour.KillOnDestroy);
         }
 
         private void AnimateRotation(Transform target, Quaternion targetRotation, ref Tween tween)
@@ -127,9 +198,17 @@ namespace ElectricPalletStackers.PalletStackers
             _liftButtonLeftTween?.Kill();
             _liftButtonRightTween?.Kill();
             _travelButtonTween?.Kill();
+            _travelButtonPressTween?.Kill();
+            _emergencyStopPressTween?.Kill();
+            _hornPressTween?.Kill();
+            _slowModePressTween?.Kill();
             _liftButtonLeftTween = null;
             _liftButtonRightTween = null;
             _travelButtonTween = null;
+            _travelButtonPressTween = null;
+            _emergencyStopPressTween = null;
+            _hornPressTween = null;
+            _slowModePressTween = null;
         }
 
         private float LiftAngle(PalletStackerLiftState lift)
@@ -159,6 +238,11 @@ namespace ElectricPalletStackers.PalletStackers
         private static void SetRotationInstantly(Transform target, Quaternion rotation)
         {
             if (target != null) target.localRotation = rotation;
+        }
+
+        private static void SetPositionInstantly(Transform target, Vector3 position)
+        {
+            if (target != null) target.localPosition = position;
         }
     }
 }
