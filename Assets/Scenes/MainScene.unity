@@ -6473,7 +6473,7 @@ MonoBehaviour:
   _uiController: {fileID: 1662881607}
   _stateReceiver: {fileID: 963828116}
   _controlDriver: {fileID: 455976370}
-  _neutralReleaseThreshold: 0.25
+  _neutralReleaseThreshold: 0.05
 --- !u!114 &1662881607
 MonoBehaviour:
   m_ObjectHideFlags: 0

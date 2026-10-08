@@ -10,7 +10,8 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private UIController _uiController;
         [SerializeField] private PalletStackerControlStateReceiver _stateReceiver;
         [SerializeField] private PalletStackerControlDriver _controlDriver;
-        [SerializeField, Range(0f, 1f)] private float _neutralReleaseThreshold = 0.25f;
+        [SerializeField, Range(0f, 1f)] private float _neutralReleaseThreshold =
+            PalletStackerVehicleSettings.DefaultTravelDeadzoneNormalized;
 
         private bool _waitingForNeutral;
 

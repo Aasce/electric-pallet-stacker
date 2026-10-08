@@ -11,6 +11,7 @@ namespace ElectricPalletStackers.PalletStackers
         public const float DefaultMaximumReverseSpeed = 1.5f;
         public const float DefaultAcceleration = 3f;
         public const float DefaultServiceBrakeDeceleration = 6f;
+        public const float DefaultTravelDeadzoneNormalized = 0.05f;
         public const float DefaultMaximumSteeringAngleDegrees = 45f;
         public const float DefaultSlowModeTravelMultiplier = 0.4f;
         public const float DefaultMinimumForkHeight = 0.3f;
@@ -28,6 +29,8 @@ namespace ElectricPalletStackers.PalletStackers
         [SerializeField, Min(0.01f)] private float _serviceBrakeDeceleration = DefaultServiceBrakeDeceleration;
         [Tooltip("Multiplier applied to the travel command while slow mode is active.")]
         [SerializeField, Range(0.05f, 1f)] private float _slowModeTravelMultiplier = DefaultSlowModeTravelMultiplier;
+        [Tooltip("Normalized travel input at or below this magnitude is treated as neutral to prevent hardware drift from moving the vehicle.")]
+        [SerializeField, Range(0f, 0.5f)] private float _travelDeadzoneNormalized = DefaultTravelDeadzoneNormalized;
 
         [Header("Steering")]
         [SerializeField, Range(1f, 80f)] private float _maximumSteeringAngleDegrees = DefaultMaximumSteeringAngleDegrees;
@@ -45,6 +48,7 @@ namespace ElectricPalletStackers.PalletStackers
         public float Acceleration => Mathf.Max(0.01f, _acceleration);
         public float ServiceBrakeDeceleration => Mathf.Max(0.01f, _serviceBrakeDeceleration);
         public float SlowModeTravelMultiplier => Mathf.Clamp(_slowModeTravelMultiplier, 0.05f, 1f);
+        public float TravelDeadzoneNormalized => Mathf.Clamp(_travelDeadzoneNormalized, 0f, 0.5f);
         public float MaximumSteeringAngleDegrees => Mathf.Clamp(_maximumSteeringAngleDegrees, 1f, 80f);
         public float MinimumForkHeight => _minimumForkHeight;
         public float MaximumForkHeight => Mathf.Max(_minimumForkHeight, _maximumForkHeight);

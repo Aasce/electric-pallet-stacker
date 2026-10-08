@@ -26,6 +26,12 @@ namespace ElectricPalletStackers.PalletStackers
         private float _steeringDegrees;
         private bool _movementInhibited = true;
         private bool _isMoving;
+        private RigidbodyConstraints _drivingConstraints;
+
+        private const RigidbodyConstraints PlanarMotionLockConstraints =
+            RigidbodyConstraints.FreezePositionX |
+            RigidbodyConstraints.FreezePositionZ |
+            RigidbodyConstraints.FreezeRotationY;
 
         public float CurrentSpeed => _currentSpeed;
         public float TargetSpeed => _targetSpeed;
@@ -36,6 +42,13 @@ namespace ElectricPalletStackers.PalletStackers
         private void Awake()
         {
             EnforceYawOnlyRotation();
+            // Enter Play Mode can preserve the Rigidbody constraints assigned while the
+            // previous session was idle. Never treat those temporary locks as the driving
+            // constraints, otherwise translation remains frozen while yaw is released.
+            _drivingConstraints = _body != null
+                ? _body.constraints & ~PlanarMotionLockConstraints
+                : RigidbodyConstraints.None;
+            SetPlanarMotionLocked(true);
             SnapRotationToYaw();
         }
 
@@ -81,6 +94,7 @@ namespace ElectricPalletStackers.PalletStackers
             SetMoving(false);
 
             if (_body == null) return;
+            SetPlanarMotionLocked(true);
             if (!_body.isKinematic)
             {
                 _body.linearVelocity = Vector3.zero;
@@ -104,6 +118,7 @@ namespace ElectricPalletStackers.PalletStackers
                 return;
             }
 
+            SetPlanarMotionLocked(false);
             SetMoving(true);
 
             float deltaTime = Time.fixedDeltaTime;
@@ -230,6 +245,7 @@ namespace ElectricPalletStackers.PalletStackers
         private void StopBodyMotion()
         {
             if (_body == null) return;
+            SetPlanarMotionLocked(true);
             if (!_body.isKinematic)
             {
                 _body.linearVelocity = Vector3.zero;
@@ -237,6 +253,21 @@ namespace ElectricPalletStackers.PalletStackers
             }
 
             SnapRotationToYaw();
+        }
+
+        private void SetPlanarMotionLocked(bool locked)
+        {
+            if (_body == null || _body.isKinematic) return;
+
+            // Strip our temporary locks again here as a safeguard for play-mode/domain
+            // reload combinations that preserve component fields between sessions.
+            RigidbodyConstraints constraints =
+                _drivingConstraints & ~PlanarMotionLockConstraints;
+            if (locked)
+            {
+                constraints |= PlanarMotionLockConstraints;
+            }
+            if (_body.constraints != constraints) _body.constraints = constraints;
         }
 
         private void SetMoving(bool moving)

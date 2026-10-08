@@ -168,7 +168,8 @@ namespace ElectricPalletStackers.PalletStackers
                 sequence,
                 SlowModeTravelMultiplier,
                 _collisionInterlock,
-                _gameplayInterlock || _inputCaptureInterlock);
+                _gameplayInterlock || _inputCaptureInterlock,
+                TravelDeadzoneNormalized);
             SetTargetCommand(command);
             ControlUpdated?.Invoke(state, sequence);
         }
@@ -183,6 +184,10 @@ namespace ElectricPalletStackers.PalletStackers
         private float SlowModeTravelMultiplier => _settings != null
             ? _settings.SlowModeTravelMultiplier
             : PalletStackerVehicleSettings.DefaultSlowModeTravelMultiplier;
+
+        private float TravelDeadzoneNormalized => _settings != null
+            ? _settings.TravelDeadzoneNormalized
+            : PalletStackerVehicleSettings.DefaultTravelDeadzoneNormalized;
 
         private void HandleLocalCollision()
         {

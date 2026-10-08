@@ -26,7 +26,7 @@ MonoBehaviour:
   _lowerTillerStopMaximumDeg: 10
   _upperTillerStopMinimumDeg: 90
   _rawTravel: {x: 11, y: 245}
-  _neutralTravelRaw: {x: 117, y: 151}
+  _neutralTravelRaw: {x: 116, y: 151}
   _mappedTravel: {x: 1, y: -1}
   _clampedTravel: {x: -1, y: 1}
   _liftNeutralValue: 0

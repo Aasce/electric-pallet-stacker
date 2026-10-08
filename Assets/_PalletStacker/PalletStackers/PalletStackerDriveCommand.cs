@@ -84,13 +84,16 @@ namespace ElectricPalletStackers.PalletStackers
             ushort sequence,
             float slowModeTravelMultiplier,
             bool localInterlock,
-            bool actionInterlock = false)
+            bool actionInterlock = false,
+            float travelDeadzoneNormalized = PalletStackerVehicleSettings.DefaultTravelDeadzoneNormalized)
         {
             if (state == null) return CreateFailSafe(localInterlock || actionInterlock);
 
             bool movementInhibited = localInterlock || actionInterlock || !state.TravelAllowed;
             bool auxiliaryControlsEnabled = state.Enabled;
-            float travel = movementInhibited ? 0f : state.TravelNormalized;
+            float travel = movementInhibited
+                ? 0f
+                : ApplyTravelDeadzone(state.TravelNormalized, travelDeadzoneNormalized);
             if (state.SlowMode) travel *= slowModeTravelMultiplier;
 
             return new PalletStackerDriveCommand(
@@ -108,6 +111,16 @@ namespace ElectricPalletStackers.PalletStackers
                 localInterlock || actionInterlock,
                 state.TravelNormalized,
                 state.Lift);
+        }
+
+        private static float ApplyTravelDeadzone(float value, float deadzone)
+        {
+            float clampedDeadzone = UnityEngine.Mathf.Clamp(deadzone, 0f, 0.5f);
+            float magnitude = UnityEngine.Mathf.Abs(value);
+            if (magnitude <= clampedDeadzone) return 0f;
+
+            float remappedMagnitude = UnityEngine.Mathf.InverseLerp(clampedDeadzone, 1f, magnitude);
+            return UnityEngine.Mathf.Sign(value) * remappedMagnitude;
         }
 
         public PalletStackerDriveCommand WithAnalogInputs(

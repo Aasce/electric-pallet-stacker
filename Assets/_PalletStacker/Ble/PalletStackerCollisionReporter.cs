@@ -33,7 +33,10 @@ namespace ElectricPalletStackers.Ble
             if ((_collisionLayers.value & layerMask) == 0) return;
 
             float impactSpeed = GetMaximumObstacleImpactSpeed(collision);
-            if (impactSpeed < _minimumRelativeSpeed) return;
+            // A resting/initial overlap can produce OnCollisionEnter with exactly zero
+            // relative speed. It is contact, not an impact, and must not latch the
+            // collision interlock before the vehicle is allowed to drive.
+            if (impactSpeed <= _minimumRelativeSpeed) return;
 
             Debug.LogWarning(
                 $"[PALLET STACKER] Collision interlock triggered by '{collision.gameObject.name}' " +
