@@ -1,5 +1,6 @@
 using System;
 using ElectricPalletStackers.Localization;
+using ElectricPalletStackers.SpatialAnchors;
 using UnityEngine;
 
 namespace ElectricPalletStackers.UI
@@ -10,6 +11,7 @@ namespace ElectricPalletStackers.UI
     {
         [Header("Services")]
         [SerializeField] private LocalizationManager _localizationManager;
+        [SerializeField] private PersistentSpatialAnchorRuntime _spatialAnchorRuntime;
 
         [Header("UI Flow")]
         [SerializeField] private UIInputRouter _inputRouter;
@@ -19,7 +21,7 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private UICompletedPanel _completedPanel;
         [SerializeField] private UIFailedPanel _failedPanel;
 
-        public UIFlowState CurrentState { get; private set; } = UIFlowState.SelectLanguage;
+        public UIFlowState CurrentState { get; private set; } = UIFlowState.SpatialAnchorSetup;
         public bool IsInputCaptured => CurrentState != UIFlowState.Hidden;
         public LanguageCode FocusedLanguage { get; private set; } = LanguageCode.En;
         public LanguageCode SelectedLanguage { get; private set; } = LanguageCode.En;
@@ -41,6 +43,13 @@ namespace ElectricPalletStackers.UI
                 _localizationManager = gameObject.AddComponent<LocalizationManager>();
             _localizationManager.Initialize();
 
+            if (_spatialAnchorRuntime == null)
+                _spatialAnchorRuntime = GetComponent<PersistentSpatialAnchorRuntime>();
+            if (_spatialAnchorRuntime == null)
+                _spatialAnchorRuntime = gameObject.AddComponent<PersistentSpatialAnchorRuntime>();
+            _spatialAnchorRuntime.ReadyForApp += HandleSpatialAnchorReady;
+            _spatialAnchorRuntime.PlacementStarted += HandleSpatialAnchorPlacementStarted;
+
             if (_selectLanguagePanel != null)
                 _selectLanguagePanel.FocusChanged += HandleLanguageFocusChanged;
 
@@ -50,9 +59,8 @@ namespace ElectricPalletStackers.UI
             _completedPanel?.HideImmediate();
             _failedPanel?.HideImmediate();
 
-            CurrentState = UIFlowState.SelectLanguage;
+            CurrentState = UIFlowState.SpatialAnchorSetup;
             _inputRouter?.ResetForPanel();
-            _selectLanguagePanel?.Show();
             if (_selectLanguagePanel != null)
                 FocusedLanguage = _selectLanguagePanel.FocusedLanguage;
         }
@@ -77,6 +85,11 @@ namespace ElectricPalletStackers.UI
         {
             if (_selectLanguagePanel != null)
                 _selectLanguagePanel.FocusChanged -= HandleLanguageFocusChanged;
+            if (_spatialAnchorRuntime != null)
+            {
+                _spatialAnchorRuntime.ReadyForApp -= HandleSpatialAnchorReady;
+                _spatialAnchorRuntime.PlacementStarted -= HandleSpatialAnchorPlacementStarted;
+            }
         }
 
         private void HandleNavigateNext()
@@ -131,6 +144,18 @@ namespace ElectricPalletStackers.UI
             LanguagePreviewChanged?.Invoke(language);
         }
 
+        private void HandleSpatialAnchorReady()
+        {
+            if (CurrentState == UIFlowState.SpatialAnchorSetup)
+                TransitionTo(UIFlowState.SelectLanguage);
+        }
+
+        private void HandleSpatialAnchorPlacementStarted()
+        {
+            if (CurrentState != UIFlowState.SpatialAnchorSetup)
+                TransitionTo(UIFlowState.SpatialAnchorSetup);
+        }
+
         private void TransitionTo(UIFlowState nextState)
         {
             bool capturedBefore = IsInputCaptured;
@@ -143,9 +168,13 @@ namespace ElectricPalletStackers.UI
 
             CurrentState = nextState;
             _inputRouter?.ResetForPanel();
+            _spatialAnchorRuntime?.SetReplacementAllowed(nextState != UIFlowState.Hidden &&
+                                                        nextState != UIFlowState.SpatialAnchorSetup);
 
             switch (nextState)
             {
+                case UIFlowState.SpatialAnchorSetup:
+                    break;
                 case UIFlowState.SelectLanguage:
                     _selectLanguagePanel?.Show();
                     break;
