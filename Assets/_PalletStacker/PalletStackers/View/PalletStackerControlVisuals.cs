@@ -8,7 +8,7 @@ namespace ElectricPalletStackers.PalletStackers
         [Header("Optional model pivots")]
         [SerializeField] private Transform _steeringVisual;
         [SerializeField] private Vector3 _steeringLocalAxis = Vector3.up;
-        [SerializeField] private Transform _steerVisual;
+        [SerializeField] private Transform _steerOffsetVisual;
         [SerializeField] private Vector3 _steerHorizontalLocalAxis = Vector3.up;
         [SerializeField] private Vector3 _steerVerticalLocalAxis = Vector3.forward;
         [SerializeField] private Transform _tillerVisual;
@@ -23,7 +23,7 @@ namespace ElectricPalletStackers.PalletStackers
         [SerializeField] private float _tillerLoweredVisualAngle = 90f;
 
         private Quaternion _steeringRestRotation;
-        private Quaternion _steerRestRotation;
+        private Quaternion _steerOffsetRestRotation;
         private Quaternion _tillerRestRotation;
 
         private void Awake()
@@ -41,7 +41,7 @@ namespace ElectricPalletStackers.PalletStackers
                                                     SafeAxis(_steeringLocalAxis, Vector3.up));
             }
 
-            if (_steerVisual != null)
+            if (_steerOffsetVisual != null)
             {
                 float verticalAngle = command.TillerDegrees - _tillerRaisedInput;
                 Quaternion horizontal = Quaternion.AngleAxis(
@@ -50,7 +50,7 @@ namespace ElectricPalletStackers.PalletStackers
                 Quaternion vertical = Quaternion.AngleAxis(
                     verticalAngle,
                     SafeAxis(_steerVerticalLocalAxis, Vector3.right));
-                _steerVisual.localRotation = _steerRestRotation * horizontal * vertical;
+                _steerOffsetVisual.localRotation = _steerOffsetRestRotation * horizontal * vertical;
             }
 
             if (_tillerVisual != null)
@@ -73,7 +73,7 @@ namespace ElectricPalletStackers.PalletStackers
         public void StopImmediately()
         {
             if (_steeringVisual != null) _steeringVisual.localRotation = _steeringRestRotation;
-            if (_steerVisual != null) _steerVisual.localRotation = _steerRestRotation;
+            if (_steerOffsetVisual != null) _steerOffsetVisual.localRotation = _steerOffsetRestRotation;
             if (_tillerVisual != null) _tillerVisual.localRotation = _tillerRestRotation;
         }
 
@@ -81,7 +81,7 @@ namespace ElectricPalletStackers.PalletStackers
         public void CaptureRestPose()
         {
             if (_steeringVisual != null) _steeringRestRotation = _steeringVisual.localRotation;
-            if (_steerVisual != null) _steerRestRotation = _steerVisual.localRotation;
+            if (_steerOffsetVisual != null) _steerOffsetRestRotation = _steerOffsetVisual.localRotation;
             if (_tillerVisual != null) _tillerRestRotation = _tillerVisual.localRotation;
         }
 
