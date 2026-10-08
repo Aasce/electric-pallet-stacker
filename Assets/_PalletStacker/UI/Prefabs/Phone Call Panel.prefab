@@ -1724,6 +1724,7 @@ GameObject:
   - component: {fileID: 6683771863760199517}
   - component: {fileID: 3467639773829085774}
   - component: {fileID: 910000000000000002}
+  - component: {fileID: 910000000000000003}
   m_Layer: 0
   m_Name: Phone Call Panel
   m_TagString: Untagged
@@ -1947,13 +1948,27 @@ MonoBehaviour:
   _rejectButton: {fileID: 4790753605750756997}
   _acceptButton: {fileID: 5824505706950222127}
   _hangUpButton: {fileID: 8904534756295680208}
+  _panelGrab: {fileID: 910000000000000003}
   _moveCollider: {fileID: 4559866746598061657}
-  _moveInteractable: {fileID: 6683771863760199517}
   _viewer: {fileID: 0}
   _viewerOffset: {x: -0.06, y: -0.03, z: 0.55}
   _defaultCaller: 0123456789
   _transitionDuration: 0.2
   _startHidden: 1
+--- !u!114 &910000000000000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7795039878925138116}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f90ece09b85c4b6d95d8d322f13e1373, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.UI.WorldSpacePanelGrab
+  _grabCollider: {fileID: 4559866746598061657}
+  _grabInteractable: {fileID: 6683771863760199517}
 --- !u!114 &910000000000000002
 MonoBehaviour:
   m_ObjectHideFlags: 0

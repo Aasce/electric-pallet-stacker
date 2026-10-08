@@ -48,7 +48,8 @@ namespace ElectricPalletStackers.Editor
         private static GameObject BuildPrefab()
         {
             GameObject root = new("Phone Call Panel", typeof(Rigidbody),
-                typeof(BoxCollider), typeof(XRGrabInteractable), typeof(PhoneCallPanel),
+                typeof(BoxCollider), typeof(XRGrabInteractable), typeof(WorldSpacePanelGrab),
+                typeof(PhoneCallPanel),
                 typeof(PhoneCallAudioPresenter));
 
             GameObject canvasObject = new("Phone Canvas", typeof(RectTransform), typeof(Canvas),
@@ -172,6 +173,12 @@ namespace ElectricPalletStackers.Editor
             SetRect(hangUpLabel.rectTransform, new Vector2(0f, -137f), new Vector2(80f, 20f));
             activeCallActions.gameObject.SetActive(false);
 
+            WorldSpacePanelGrab panelGrab = root.GetComponent<WorldSpacePanelGrab>();
+            SerializedObject serializedPanelGrab = new(panelGrab);
+            serializedPanelGrab.FindProperty("_grabCollider").objectReferenceValue = moveCollider;
+            serializedPanelGrab.FindProperty("_grabInteractable").objectReferenceValue = grabInteractable;
+            serializedPanelGrab.ApplyModifiedPropertiesWithoutUndo();
+
             SerializedObject panel = new(root.GetComponent<PhoneCallPanel>());
             panel.FindProperty("_canvasGroup").objectReferenceValue = canvasGroup;
             panel.FindProperty("_content").objectReferenceValue = canvasRect;
@@ -183,8 +190,8 @@ namespace ElectricPalletStackers.Editor
             panel.FindProperty("_rejectButton").objectReferenceValue = reject;
             panel.FindProperty("_acceptButton").objectReferenceValue = accept;
             panel.FindProperty("_hangUpButton").objectReferenceValue = hangUp;
+            panel.FindProperty("_panelGrab").objectReferenceValue = panelGrab;
             panel.FindProperty("_moveCollider").objectReferenceValue = moveCollider;
-            panel.FindProperty("_moveInteractable").objectReferenceValue = grabInteractable;
             panel.FindProperty("_defaultCaller").stringValue = "0123456789";
             panel.ApplyModifiedPropertiesWithoutUndo();
 

@@ -1,4 +1,5 @@
 using System;
+using ElectricPalletStackers.Calibration;
 using ElectricPalletStackers.Localization;
 using UnityEngine;
 
@@ -14,12 +15,14 @@ namespace ElectricPalletStackers.UI
         [Header("UI Flow")]
         [SerializeField] private UIInputRouter _inputRouter;
         [SerializeField] private UISelectLanguagePanel _selectLanguagePanel;
+        [SerializeField] private CalibrationInputPanel _calibrationPanel;
+        [SerializeField] private VehicleViewCalibrationSystem _calibrationSystem;
         [SerializeField] private UIWelcomePanel _welcomePanel;
         [SerializeField] private UIGuidePanel _guidePanel;
         [SerializeField] private UICompletedPanel _completedPanel;
         [SerializeField] private UIFailedPanel _failedPanel;
 
-        public UIFlowState CurrentState { get; private set; } = UIFlowState.SelectLanguage;
+        public UIFlowState CurrentState { get; private set; } = UIFlowState.CalibrateVehicleView;
         public bool IsInputCaptured => CurrentState != UIFlowState.Hidden;
         public LanguageCode FocusedLanguage { get; private set; } = LanguageCode.En;
         public LanguageCode SelectedLanguage { get; private set; } = LanguageCode.En;
@@ -40,19 +43,32 @@ namespace ElectricPalletStackers.UI
             if (_localizationManager == null)
                 _localizationManager = gameObject.AddComponent<LocalizationManager>();
             _localizationManager.Initialize();
+            if (_calibrationSystem == null)
+                _calibrationSystem = GetComponent<VehicleViewCalibrationSystem>();
+            if (_calibrationSystem == null)
+                _calibrationSystem = gameObject.AddComponent<VehicleViewCalibrationSystem>();
 
             if (_selectLanguagePanel != null)
                 _selectLanguagePanel.FocusChanged += HandleLanguageFocusChanged;
+            if (_calibrationPanel != null)
+            {
+                _calibrationPanel.AlignRequested += HandleAlignRequested;
+                _calibrationPanel.OffsetAdjustmentRequested += HandleOffsetAdjustmentRequested;
+            }
+            if (_calibrationPanel != null)
+                _calibrationSystem.SetCalibrationPanel(_calibrationPanel.transform);
 
             _selectLanguagePanel?.HideImmediate();
+            _calibrationPanel?.HideImmediate();
             _welcomePanel?.HideImmediate();
             _guidePanel?.HideImmediate();
             _completedPanel?.HideImmediate();
             _failedPanel?.HideImmediate();
 
-            CurrentState = UIFlowState.SelectLanguage;
+            CurrentState = UIFlowState.CalibrateVehicleView;
             _inputRouter?.ResetForPanel();
-            _selectLanguagePanel?.Show();
+            if (CurrentState == UIFlowState.CalibrateVehicleView) _calibrationPanel?.Show();
+            else _selectLanguagePanel?.Show();
             if (_selectLanguagePanel != null)
                 FocusedLanguage = _selectLanguagePanel.FocusedLanguage;
         }
@@ -77,6 +93,11 @@ namespace ElectricPalletStackers.UI
         {
             if (_selectLanguagePanel != null)
                 _selectLanguagePanel.FocusChanged -= HandleLanguageFocusChanged;
+            if (_calibrationPanel != null)
+            {
+                _calibrationPanel.AlignRequested -= HandleAlignRequested;
+                _calibrationPanel.OffsetAdjustmentRequested -= HandleOffsetAdjustmentRequested;
+            }
         }
 
         private void HandleNavigateNext()
@@ -95,6 +116,9 @@ namespace ElectricPalletStackers.UI
         {
             switch (CurrentState)
             {
+                case UIFlowState.CalibrateVehicleView:
+                    TransitionTo(UIFlowState.SelectLanguage);
+                    break;
                 case UIFlowState.SelectLanguage:
                     SelectedLanguage = FocusedLanguage;
                     LanguageConfirmed?.Invoke(SelectedLanguage);
@@ -131,11 +155,14 @@ namespace ElectricPalletStackers.UI
             LanguagePreviewChanged?.Invoke(language);
         }
 
+        private void HandleAlignRequested() => _calibrationSystem?.AlignToVehicle();
+        private void HandleOffsetAdjustmentRequested(Vector2 direction) => _calibrationSystem?.AdjustOffset(direction);
         private void TransitionTo(UIFlowState nextState)
         {
             bool capturedBefore = IsInputCaptured;
 
             _selectLanguagePanel?.Hide();
+            _calibrationPanel?.Hide();
             _welcomePanel?.Hide();
             _guidePanel?.Hide();
             _completedPanel?.Hide();
@@ -146,6 +173,9 @@ namespace ElectricPalletStackers.UI
 
             switch (nextState)
             {
+                case UIFlowState.CalibrateVehicleView:
+                    _calibrationPanel?.Show();
+                    break;
                 case UIFlowState.SelectLanguage:
                     _selectLanguagePanel?.Show();
                     break;

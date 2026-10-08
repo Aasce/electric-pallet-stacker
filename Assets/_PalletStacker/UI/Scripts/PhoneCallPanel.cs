@@ -5,10 +5,6 @@ using ElectricPalletStackers.PalletStackers;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.XR.Interaction.Toolkit.Attachment;
-using UnityEngine.XR.Interaction.Toolkit.Interactables;
-using UnityEngine.XR.Interaction.Toolkit.Interactors;
-using UnityEngine.XR.Interaction.Toolkit.Interactors.Casters;
 
 namespace ElectricPalletStackers.UI
 {
@@ -20,6 +16,7 @@ namespace ElectricPalletStackers.UI
     }
 
     [DisallowMultipleComponent]
+    [RequireComponent(typeof(WorldSpacePanelGrab))]
     public sealed class PhoneCallPanel : MonoBehaviour, ILocalizedView
     {
         [Header("Content")]
@@ -35,8 +32,8 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private Button _hangUpButton;
 
         [Header("Hand Interaction")]
+        [SerializeField] private WorldSpacePanelGrab _panelGrab;
         [SerializeField] private Collider _moveCollider;
-        [SerializeField] private XRGrabInteractable _moveInteractable;
 
         [Header("Placement")]
         [Tooltip("Defaults to the main camera when left empty.")]
@@ -245,13 +242,9 @@ namespace ElectricPalletStackers.UI
                 if (caller != null) _callerLabel = caller.GetComponent<TMP_Text>();
             }
 
+            if (_panelGrab == null) _panelGrab = GetComponent<WorldSpacePanelGrab>();
             if (_moveCollider == null) _moveCollider = GetComponent<Collider>();
-            if (_moveInteractable == null) _moveInteractable = GetComponent<XRGrabInteractable>();
-            if (_moveInteractable != null && _moveCollider != null &&
-                !_moveInteractable.colliders.Contains(_moveCollider))
-            {
-                _moveInteractable.colliders.Add(_moveCollider);
-            }
+            _panelGrab?.Initialize();
 
             Rigidbody moveBody = GetComponent<Rigidbody>();
             if (moveBody != null)
@@ -261,7 +254,6 @@ namespace ElectricPalletStackers.UI
             }
 
             IgnoreGameplayCollisions();
-            ConfigureHandGrabInteractors();
 
             _baseScale = _content != null ? _content.localScale : transform.localScale;
 
@@ -270,34 +262,6 @@ namespace ElectricPalletStackers.UI
             if (_hangUpButton != null) _hangUpButton.onClick.AddListener(HangUpCall);
 
             _isInitialized = true;
-        }
-
-        private static void ConfigureHandGrabInteractors()
-        {
-            NearFarInteractor[] interactors = FindObjectsByType<NearFarInteractor>(
-                FindObjectsInactive.Include,
-                FindObjectsSortMode.None);
-            for (int index = 0; index < interactors.Length; index++)
-            {
-                NearFarInteractor interactor = interactors[index];
-                Transform hand = interactor != null ? interactor.transform.parent : null;
-                if (hand == null || !hand.name.EndsWith("Hand", StringComparison.Ordinal)) continue;
-
-                Transform aimPose = hand.Find("Aim Pose");
-                if (aimPose == null) continue;
-
-                interactor.attachTransform = aimPose;
-
-                SphereInteractionCaster sphereCaster = interactor.GetComponent<SphereInteractionCaster>();
-                if (sphereCaster != null) sphereCaster.castOrigin = aimPose;
-
-                CurveInteractionCaster curveCaster = interactor.GetComponent<CurveInteractionCaster>();
-                if (curveCaster != null) curveCaster.castOrigin = aimPose;
-
-                InteractionAttachController attachController =
-                    interactor.GetComponent<InteractionAttachController>();
-                if (attachController != null) attachController.transformToFollow = aimPose;
-            }
         }
 
         private void IgnoreGameplayCollisions()
@@ -386,8 +350,7 @@ namespace ElectricPalletStackers.UI
 
         private void SetMoveInteractionEnabled(bool enabled)
         {
-            if (_moveCollider != null) _moveCollider.enabled = enabled;
-            if (_moveInteractable != null) _moveInteractable.enabled = enabled;
+            _panelGrab?.SetEnabled(enabled);
         }
 
         private void KillTweens()

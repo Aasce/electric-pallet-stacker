@@ -3745,7 +3745,6 @@ RectTransform:
   m_LocalScale: {x: 0.010000003, y: 0.01, z: 0.010000003}
   m_ConstrainProportionsScale: 1
   m_Children:
-  - {fileID: 1662881608}
   - {fileID: 729986397}
   - {fileID: 1114851440}
   - {fileID: 1362531949}
@@ -4315,6 +4314,7 @@ GameObject:
   - component: {fileID: 1662881606}
   - component: {fileID: 1662881609}
   - component: {fileID: 1662881610}
+  - component: {fileID: 1662881611}
   m_Layer: 0
   m_Name: UI Root
   m_TagString: Untagged
@@ -4369,6 +4369,8 @@ MonoBehaviour:
   _localizationManager: {fileID: 0}
   _inputRouter: {fileID: 1662881605}
   _selectLanguagePanel: {fileID: 1114851439}
+  _calibrationPanel: {fileID: 5035545479161186816}
+  _calibrationSystem: {fileID: 1662881611}
   _welcomePanel: {fileID: 1362531948}
   _guidePanel: {fileID: 310148872}
   _completedPanel: {fileID: 2100000002}
@@ -4381,12 +4383,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1662881604}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1297741382}
+  m_Father: {fileID: 1673396767}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1662881609
 MonoBehaviour:
@@ -4416,6 +4418,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Localization.LocalizationManager
   _database: {fileID: 0}
   _defaultLanguage: 0
+--- !u!114 &1662881611
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1662881604}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c3e8944b5404115b38a833f66ffb511, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Calibration.VehicleViewCalibrationSystem
+  _cameraOffset: {fileID: 0}
+  _headset: {fileID: 0}
+  _vehicleForward: {fileID: 0}
+  _followCamera: 0
+  _positionStep: 0.01
 --- !u!1 &1673396766
 GameObject:
   m_ObjectHideFlags: 0
@@ -4446,8 +4465,10 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1662881608}
   - {fileID: 533318791}
   - {fileID: 1554875646}
+  - {fileID: 5035545479161186817}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
 --- !u!1 &1768029058
@@ -4923,7 +4944,7 @@ MonoBehaviour:
   _vehicleSpawnClearance: 1
   _vehicleTransform: {fileID: 2147000001}
   _vehicleBody: {fileID: 2200000101}
-  _hornOutput: {fileID: 2200000104}
+  _hornOutput: {fileID: 0}
   _hornReactionRadius: 8
   _hornEvadeDistance: 2.5
   _hornEdgeSearchRadius: 4
@@ -6091,17 +6112,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b6ff5df3fe445628bc94fe7bd959b8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &2200000104 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 4634689111448651331, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
-  m_PrefabInstance: {fileID: 3505153867693228158}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9d1d9f326b7646909f1ebe70d4c9788d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &3505153867693228158
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6194,6 +6204,147 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b95edfb39da400781c2cf92481ae94a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1001 &5035545479161186815
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1673396767}
+    m_Modifications:
+    - target: {fileID: 35367756712812755, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4294963384
+      objectReference: {fileID: 0}
+    - target: {fileID: 35367756712812755, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 456570502215487338, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4294963384
+      objectReference: {fileID: 0}
+    - target: {fileID: 456570502215487338, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 2075607682383828258, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 2110311447051156354, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4294956608
+      objectReference: {fileID: 0}
+    - target: {fileID: 2110311447051156354, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 3461928461325647768, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3461928461325647768, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3461928461325647768, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3461928461325647768, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -14.650009
+      objectReference: {fileID: 0}
+    - target: {fileID: 3461928461325647768, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.5600002
+      objectReference: {fileID: 0}
+    - target: {fileID: 3461928461325647768, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 20.000011
+      objectReference: {fileID: 0}
+    - target: {fileID: 3461928461325647768, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 3461928461325647768, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3461928461325647768, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 3461928461325647768, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3461928461325647768, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3461928461325647768, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3461928461325647768, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3820532092813447224, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4294963384
+      objectReference: {fileID: 0}
+    - target: {fileID: 3820532092813447224, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 4066492999958844351, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4294963384
+      objectReference: {fileID: 0}
+    - target: {fileID: 4066492999958844351, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 5105041433461826667, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_AdditionalShaderChannelsFlag
+      value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 5425733621903179188, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_Name
+      value: Calibration Panel
+      objectReference: {fileID: 0}
+    - target: {fileID: 7608295986094966101, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4294963384
+      objectReference: {fileID: 0}
+    - target: {fileID: 7608295986094966101, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+--- !u!114 &5035545479161186816 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2922604502266303521, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+  m_PrefabInstance: {fileID: 5035545479161186815}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce86e471f38246719a4afa40d1a57511, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.UI.CalibrationInputPanel
+--- !u!4 &5035545479161186817 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3461928461325647768, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+  m_PrefabInstance: {fileID: 5035545479161186815}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
