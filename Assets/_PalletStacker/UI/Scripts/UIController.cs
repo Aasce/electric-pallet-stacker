@@ -43,11 +43,6 @@ namespace ElectricPalletStackers.UI
             if (_localizationManager == null)
                 _localizationManager = gameObject.AddComponent<LocalizationManager>();
             _localizationManager.Initialize();
-            if (_calibrationSystem == null)
-                _calibrationSystem = GetComponent<VehicleViewCalibrationSystem>();
-            if (_calibrationSystem == null)
-                _calibrationSystem = gameObject.AddComponent<VehicleViewCalibrationSystem>();
-
             if (_selectLanguagePanel != null)
                 _selectLanguagePanel.FocusChanged += HandleLanguageFocusChanged;
             if (_calibrationPanel != null)
@@ -55,9 +50,6 @@ namespace ElectricPalletStackers.UI
                 _calibrationPanel.AlignRequested += HandleAlignRequested;
                 _calibrationPanel.OffsetAdjustmentRequested += HandleOffsetAdjustmentRequested;
             }
-            if (_calibrationPanel != null)
-                _calibrationSystem.SetCalibrationPanel(_calibrationPanel.transform);
-
             _selectLanguagePanel?.HideImmediate();
             _calibrationPanel?.HideImmediate();
             _welcomePanel?.HideImmediate();

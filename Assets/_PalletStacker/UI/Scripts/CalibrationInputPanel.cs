@@ -10,6 +10,11 @@ namespace ElectricPalletStackers.UI
     public sealed class CalibrationInputPanel : UIPanel
     {
         [SerializeField] private WorldSpacePanelGrab _panelGrab;
+        [SerializeField] private Button _upButton;
+        [SerializeField] private Button _downButton;
+        [SerializeField] private Button _leftButton;
+        [SerializeField] private Button _centerButton;
+        [SerializeField] private Button _rightButton;
         private bool _buttonsBound;
         public event Action AlignRequested;
         public event Action<Vector2> OffsetAdjustmentRequested;
@@ -43,18 +48,16 @@ namespace ElectricPalletStackers.UI
         private void BindButtons()
         {
             if (_buttonsBound) return;
-            BindButton("Up", PressUp);
-            BindButton("Down", PressDown);
-            BindButton("Left", PressLeft);
-            BindButton("Center", PressCenter);
-            BindButton("Right", PressRight);
+            BindButton(_upButton, PressUp);
+            BindButton(_downButton, PressDown);
+            BindButton(_leftButton, PressLeft);
+            BindButton(_centerButton, PressCenter);
+            BindButton(_rightButton, PressRight);
             _buttonsBound = true;
         }
 
-        private void BindButton(string buttonName, UnityEngine.Events.UnityAction action)
+        private static void BindButton(Button button, UnityEngine.Events.UnityAction action)
         {
-            Transform buttonTransform = transform.Find("Calibration Canvas/" + buttonName);
-            Button button = buttonTransform != null ? buttonTransform.GetComponent<Button>() : null;
             if (button != null) button.onClick.AddListener(action);
         }
     }

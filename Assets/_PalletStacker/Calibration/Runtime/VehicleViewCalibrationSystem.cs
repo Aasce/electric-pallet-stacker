@@ -1,43 +1,53 @@
 using UnityEngine;
-using ElectricPalletStackers.PalletStackers;
 
 namespace ElectricPalletStackers.Calibration
 {
     /// <summary>Applies calibration commands to the XR rig. UI components only forward input.</summary>
+    [DefaultExecutionOrder(10000)]
     [DisallowMultipleComponent]
     public sealed class VehicleViewCalibrationSystem : MonoBehaviour
     {
         [SerializeField] private Transform _cameraOffset;
         [SerializeField] private Transform _headset;
         [SerializeField] private Transform _vehicleForward;
+        [SerializeField] private Transform _calibrationPanel;
+        [Header("Vehicle Alignment")]
+        [SerializeField, Min(0f)] private float _cameraHeightAboveGround = 1.5f;
         [Header("Calibration Panel")]
         [Tooltip("Inspector option only. Keeps the calibration panel at the same headset-relative pose.")]
         [SerializeField] private bool _followCamera;
         [SerializeField, Min(0.001f)] private float _positionStep = 0.01f;
-        private Transform _calibrationPanel;
         private bool _panelParentedToHeadset;
+        private bool _needsInitialPanelPlacement;
 
         private void Awake()
         {
-            if (_headset == null && Camera.main != null) _headset = Camera.main.transform;
-            if (_cameraOffset == null && _headset != null) _cameraOffset = _headset.parent;
-            if (_vehicleForward == null)
-            {
-                PalletStacker vehicle = FindFirstObjectByType<PalletStacker>();
-                if (vehicle != null) _vehicleForward = vehicle.transform;
-            }
+            if (_calibrationPanel == null) return;
+            _needsInitialPanelPlacement = true;
+            _calibrationPanel.SetParent(null, true);
+            _panelParentedToHeadset = false;
         }
 
         private void LateUpdate()
         {
-            if (_calibrationPanel == null || _headset == null || _followCamera == _panelParentedToHeadset) return;
-            _calibrationPanel.SetParent(_followCamera ? _headset : null, true);
-            _panelParentedToHeadset = _followCamera;
+            if (_calibrationPanel == null) return;
+            if (_headset == null) return;
+
+            // Wait until LateUpdate so XR origin/follower setup has settled for this frame.
+            if (_needsInitialPanelPlacement)
+            {
+                PlaceCalibrationPanelInReach();
+                _needsInitialPanelPlacement = false;
+            }
+
+            bool shouldParentToHeadset = _followCamera;
+            if (shouldParentToHeadset == _panelParentedToHeadset) return;
+            _calibrationPanel.SetParent(shouldParentToHeadset ? _headset : null, true);
+            _panelParentedToHeadset = shouldParentToHeadset;
         }
 
         public void AlignToVehicle()
         {
-            ResolveReferences();
             if (_headset == null || _cameraOffset == null || _vehicleForward == null) return;
             Vector3 cameraPosition = _headset.position;
             Vector3 headsetForward = Vector3.ProjectOnPlane(_headset.forward, Vector3.up);
@@ -45,13 +55,12 @@ namespace ElectricPalletStackers.Calibration
             if (headsetForward.sqrMagnitude < 0.0001f || vehicleForward.sqrMagnitude < 0.0001f) return;
             float yawDelta = Vector3.SignedAngle(headsetForward, vehicleForward, Vector3.up);
             _cameraOffset.rotation = Quaternion.AngleAxis(yawDelta, Vector3.up) * _cameraOffset.rotation;
-            cameraPosition.y = GetVehicleGroundHeight() + 1.5f;
+            cameraPosition.y = GetVehicleGroundHeight() + _cameraHeightAboveGround;
             _cameraOffset.position += cameraPosition - _headset.position;
         }
 
         public void AdjustOffset(Vector2 localDirection)
         {
-            ResolveReferences();
             if (_cameraOffset == null) return;
             Vector3 position = _cameraOffset.localPosition;
             position.x += localDirection.x * _positionStep;
@@ -59,9 +68,11 @@ namespace ElectricPalletStackers.Calibration
             _cameraOffset.localPosition = position;
         }
 
-        public void SetCalibrationPanel(Transform panel)
+        private void PlaceCalibrationPanelInReach()
         {
-            _calibrationPanel = panel;
+            Quaternion yawRotation = Quaternion.Euler(0f, _headset.eulerAngles.y, 0f);
+            _calibrationPanel.position = _headset.position + yawRotation * new Vector3(-0.06f, -0.03f, 0.55f);
+            _calibrationPanel.rotation = yawRotation;
         }
 
         private float GetVehicleGroundHeight()
@@ -79,17 +90,6 @@ namespace ElectricPalletStackers.Calibration
                 groundHeight = hits[i].point.y;
             }
             return groundHeight;
-        }
-
-        private void ResolveReferences()
-        {
-            if (_headset == null && Camera.main != null) _headset = Camera.main.transform;
-            if (_cameraOffset == null && _headset != null) _cameraOffset = _headset.parent;
-            if (_vehicleForward == null)
-            {
-                PalletStacker vehicle = FindFirstObjectByType<PalletStacker>();
-                if (vehicle != null) _vehicleForward = vehicle.transform;
-            }
         }
     }
 }

@@ -1366,11 +1366,11 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.2, y: 0.025, z: 0.025}
+  m_Size: {x: 0.2, y: 0.04, z: 0.025}
   m_Center: {x: 0, y: -0.12, z: 0}
 --- !u!114 &5217183295078353454
 MonoBehaviour:
@@ -1469,7 +1469,7 @@ MonoBehaviour:
   m_SmoothRotation: 0
   m_SmoothRotationAmount: 8
   m_TightenRotation: 0.1
-  m_TrackScale: 1
+  m_TrackScale: 0
   m_SmoothScale: 0
   m_SmoothScaleAmount: 8
   m_TightenScale: 0.1
@@ -1540,15 +1540,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce86e471f38246719a4afa40d1a57511, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.UI.CalibrationInputPanel
-  _canvasGroup: {fileID: 0}
-  _content: {fileID: 0}
+  _canvasGroup: {fileID: 5956514189153081814}
+  _content: {fileID: 9080170531198748224}
   _enterDelay: 0.1667
   _fadeDuration: 0.1667
   _settleDuration: 0.3334
   _enterScale: 1.2
   _overshootScale: 1.03
   _exitScale: 0.85
-  _panelGrab: {fileID: 0}
+  _panelGrab: {fileID: 7591241513433745616}
+  _upButton: {fileID: 5515713706033197670}
+  _downButton: {fileID: 4463364891203664246}
+  _leftButton: {fileID: 4301573302212989817}
+  _centerButton: {fileID: 8380056617851810634}
+  _rightButton: {fileID: 3796862326791188736}
 --- !u!1 &5426131832259285493
 GameObject:
   m_ObjectHideFlags: 0

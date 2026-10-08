@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using UnityEngine.XR.Interaction.Toolkit.Interactors.Casters;
@@ -13,6 +14,7 @@ namespace ElectricPalletStackers.UI
     {
         [SerializeField] private Collider _grabCollider;
         [SerializeField] private XRGrabInteractable _grabInteractable;
+        private bool _isSubscribed;
 
         public void Initialize()
         {
@@ -20,6 +22,11 @@ namespace ElectricPalletStackers.UI
             if (_grabInteractable == null) _grabInteractable = GetComponent<XRGrabInteractable>();
             if (_grabInteractable != null && _grabCollider != null && !_grabInteractable.colliders.Contains(_grabCollider))
                 _grabInteractable.colliders.Add(_grabCollider);
+            if (_grabInteractable != null && !_isSubscribed)
+            {
+                _grabInteractable.selectEntered.AddListener(HandleGrabStarted);
+                _isSubscribed = true;
+            }
             Rigidbody body = GetComponent<Rigidbody>();
             if (body != null)
             {
@@ -29,10 +36,25 @@ namespace ElectricPalletStackers.UI
             ConfigureHandGrabInteractors();
         }
 
+        private void OnDestroy()
+        {
+            if (_grabInteractable != null && _isSubscribed)
+                _grabInteractable.selectEntered.RemoveListener(HandleGrabStarted);
+        }
+
         public void SetEnabled(bool enabled)
         {
             if (_grabCollider != null) _grabCollider.enabled = enabled;
             if (_grabInteractable != null) _grabInteractable.enabled = enabled;
+        }
+
+        private void HandleGrabStarted(SelectEnterEventArgs _)
+        {
+            // The UI root follows the vehicle. Detach a grabbed panel so its parent cannot
+            // pull it back to the vehicle on the next frame. Headset-follow panels are
+            // parented to the camera instead and keep that relationship.
+            if (transform.parent != null && GetComponentInParent<TargetFollower>() != null)
+                transform.SetParent(null, true);
         }
 
         private static void ConfigureHandGrabInteractors()

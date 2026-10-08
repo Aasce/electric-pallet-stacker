@@ -116,6 +116,9 @@ namespace ElectricPalletStackers.UI
         {
             Initialize();
             SetCallerDisplay(string.IsNullOrWhiteSpace(callerDisplay) ? _defaultCaller : callerDisplay);
+            // The UI hierarchy follows the vehicle. A call panel must be independent so
+            // it stays at the viewer position and can be moved by hand after appearing.
+            transform.SetParent(null, true);
             PlaceInFrontOfViewer();
 
             IsRinging = true;

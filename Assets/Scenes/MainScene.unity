@@ -1185,6 +1185,11 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.18, y: 5.45, z: 0.28}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!4 &419206701 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 657184242161839408, guid: d6878e1999eb4b44a9f5a263af86c185, type: 3}
+  m_PrefabInstance: {fileID: 1856687363}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &455976367 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6482732429717059144, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
@@ -5770,6 +5775,19 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.7121764, y: 1.1679664, z: 0.7121907}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!134 &1403310155
+PhysicsMaterial:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  serializedVersion: 2
+  m_DynamicFriction: 0.6
+  m_StaticFriction: 0.6
+  m_Bounciness: 0
+  m_FrictionCombine: 0
+  m_BounceCombine: 0
 --- !u!1 &1417063135
 GameObject:
   m_ObjectHideFlags: 0
@@ -6550,9 +6568,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c3e8944b5404115b38a833f66ffb511, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Calibration.VehicleViewCalibrationSystem
-  _cameraOffset: {fileID: 0}
-  _headset: {fileID: 0}
-  _vehicleForward: {fileID: 0}
+  _cameraOffset: {fileID: 419206701}
+  _headset: {fileID: 1856687371}
+  _vehicleForward: {fileID: 2147000001}
+  _calibrationPanel: {fileID: 5035545479161186817}
+  _cameraHeightAboveGround: 1.8
   _followCamera: 0
   _positionStep: 0.01
 --- !u!1 &1673396766
@@ -7318,6 +7338,11 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 768
   _groundNormalDotThreshold: 0.7
+--- !u!4 &1856687371 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 657184242118504721, guid: d6878e1999eb4b44a9f5a263af86c185, type: 3}
+  m_PrefabInstance: {fileID: 1856687363}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1875163771
 GameObject:
   m_ObjectHideFlags: 0
@@ -8352,6 +8377,19 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.7122546, y: 1.1679664, z: 0.7121907}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!134 &1997984433
+PhysicsMaterial:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  serializedVersion: 2
+  m_DynamicFriction: 0.6
+  m_StaticFriction: 0.6
+  m_Bounciness: 0
+  m_FrictionCombine: 0
+  m_BounceCombine: 0
 --- !u!1 &2009562646
 GameObject:
   m_ObjectHideFlags: 0
@@ -10598,6 +10636,10 @@ PrefabInstance:
       propertyPath: _stateReceiver
       value: 
       objectReference: {fileID: 963828116}
+    - target: {fileID: 5342792113791399360, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 1997984433}
     - target: {fileID: 6482732429717059144, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
       propertyPath: _collisionSender
       value: 
@@ -10658,6 +10700,10 @@ PrefabInstance:
       propertyPath: m_Center.y
       value: -0.12
       objectReference: {fileID: 0}
+    - target: {fileID: 2547567508565647658, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 1403310155}
     - target: {fileID: 3461928461325647768, guid: ea9c6c6e6a2325b4ead13c02f66e6c00, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.50000006
