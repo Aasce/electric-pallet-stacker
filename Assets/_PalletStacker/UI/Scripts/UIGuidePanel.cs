@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,7 +9,21 @@ namespace ElectricPalletStackers.UI
     {
         [SerializeField] private ScrollRect _scrollRect;
         [SerializeField] private UIInputRouter _inputRouter;
+        [SerializeField] private Button _okButton;
         [SerializeField, Min(0f)] private float _scrollSpeed = 0.65f;
+
+        public event Action Confirmed;
+
+        protected override void Awake()
+        {
+            base.Awake();
+            if (_okButton != null) _okButton.onClick.AddListener(HandleOkClicked);
+        }
+
+        private void OnDestroy()
+        {
+            if (_okButton != null) _okButton.onClick.RemoveListener(HandleOkClicked);
+        }
 
         private void Update()
         {
@@ -23,5 +38,7 @@ namespace ElectricPalletStackers.UI
         {
             if (_scrollRect != null) _scrollRect.verticalNormalizedPosition = 1f;
         }
+
+        private void HandleOkClicked() => Confirmed?.Invoke();
     }
 }

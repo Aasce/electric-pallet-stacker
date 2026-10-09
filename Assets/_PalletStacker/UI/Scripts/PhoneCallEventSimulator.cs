@@ -8,7 +8,7 @@ using UnityEngine;
 namespace ElectricPalletStackers.UI
 {
     [DisallowMultipleComponent]
-    public sealed class PhoneCallEventSimulator : MonoBehaviour
+    public sealed class PhoneCallEventSimulator : MonoBehaviour, IGameResettable
     {
         [Header("References")]
         [SerializeField] private AppManager _appManager;
@@ -16,157 +16,100 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private PalletStackerRigidbodyMotor _vehicleMotor;
         [SerializeField] private Rigidbody _vehicleBody;
         [SerializeField] private PalletStackerCollisionReporter _collisionReporter;
+        [SerializeField] private NpcPopulationController _npcPopulation;
 
-        [Header("Call Timing")]
+        [Header("Call")]
         [SerializeField] private string _callerDisplay = "0123456789";
-        [SerializeField] private Vector2 _initialDelayRange = new(5f, 10f);
-        [SerializeField] private Vector2 _ringDurationRange = new(10f, 15f);
-        [SerializeField] private Vector2 _conversationDurationRange = new(5f, 10f);
-        [SerializeField, Min(0f)] private float _rejectRetryDelay = 5f;
-
-        [Header("Safety Consequence")]
+        [SerializeField, Min(0.1f)] private float _conversationDuration = 10f;
         [SerializeField, Min(0f)] private float _movingSpeedThreshold = 0.1f;
 
         private Coroutine _callRoutine;
         private NpcVehicleRammer _activeNpcApproach;
-        private float _retryAt = -1f;
-        private bool _eventScheduledThisRound;
         private bool _activeConversation;
         private bool _accidentTriggered;
+        private bool _triggeredThisRound;
 
-        private void Awake()
-        {
-            ResolveReferences();
-        }
+        public float ConversationDuration => _conversationDuration;
+        public bool IsRinging => _phoneCallPanel != null && _phoneCallPanel.IsRinging;
+        public bool IsInCall => _activeConversation;
+
+        private void Awake() => ResolveReferences();
 
         private void OnEnable()
         {
             ResolveReferences();
-            if (_phoneCallPanel != null)
+            if (_phoneCallPanel != null) _phoneCallPanel.CallAccepted += HandleCallAccepted;
+            if (_appManager != null)
             {
-                _phoneCallPanel.CallAccepted += HandleCallAccepted;
-                _phoneCallPanel.CallRejected += HandleCallRejected;
-                _phoneCallPanel.CallEndedByUser += HandleCallEndedByUser;
+                _appManager.RoundStarted += HandleRoundStarted;
+                _appManager.StateChanged += HandleGameStateChanged;
             }
-
-            if (_appManager == null) return;
-
-            _appManager.RoundStarted += HandleRoundStarted;
-            _appManager.StateChanged += HandleGameStateChanged;
-            if (_appManager.CurrentState == GameState.Playing) ScheduleInitialCall();
         }
 
         private void OnDisable()
         {
-            if (_phoneCallPanel != null)
-            {
-                _phoneCallPanel.CallAccepted -= HandleCallAccepted;
-                _phoneCallPanel.CallRejected -= HandleCallRejected;
-                _phoneCallPanel.CallEndedByUser -= HandleCallEndedByUser;
-            }
-
+            if (_phoneCallPanel != null) _phoneCallPanel.CallAccepted -= HandleCallAccepted;
             if (_appManager != null)
             {
                 _appManager.RoundStarted -= HandleRoundStarted;
                 _appManager.StateChanged -= HandleGameStateChanged;
             }
-
-            CancelCallRoutine();
-            CancelRetryCall();
-            StopNpcApproach();
-        }
-
-        [ContextMenu("Simulate Call Now")]
-        public void SimulateCallNow()
-        {
-            ResolveReferences();
-            CancelCallRoutine();
-            CancelRetryCall();
-            BeginRinging();
+            ResetCallState();
         }
 
         private void Update()
         {
-            if (_retryAt >= 0f && Time.realtimeSinceStartup >= _retryAt)
-            {
-                _retryAt = -1f;
-                if (_appManager == null || _appManager.CurrentState == GameState.Playing)
-                    BeginRinging();
-            }
-
-            if (!_activeConversation || _accidentTriggered)
-            {
-                StopNpcApproach();
-                return;
-            }
-
-            if (IsVehicleMoving())
-                BeginNpcApproach();
-            else
-                StopNpcApproach();
+            if (!_activeConversation || _accidentTriggered) return;
+            bool moving = IsVehicleMoving();
+            if (moving && _activeNpcApproach == null) BeginNpcApproach();
+            _activeNpcApproach?.SetVehicleMoving(moving);
         }
 
-        private void HandleRoundStarted()
+        public void TriggerIncomingCall()
         {
-            _eventScheduledThisRound = false;
+            ResolveReferences();
+            if (_triggeredThisRound ||
+                (_appManager != null && _appManager.CurrentState != GameState.Playing)) return;
+
+            _triggeredThisRound = true;
+            _activeConversation = false;
             _accidentTriggered = false;
-            StopNpcApproach();
-            ScheduleInitialCall();
+            _phoneCallPanel?.ShowIncomingCall(_callerDisplay);
+            // An unanswered call intentionally rings forever and raises pedestrian pressure.
+            _npcPopulation?.SetCrowdPressure(true);
         }
+
+        public void ResetState()
+        {
+            _triggeredThisRound = false;
+            _accidentTriggered = false;
+            ResetCallState();
+        }
+
+        [ContextMenu("Simulate Call Now")]
+        private void SimulateCallNow()
+        {
+            _triggeredThisRound = false;
+            TriggerIncomingCall();
+        }
+
+        private void HandleRoundStarted() => ResetState();
 
         private void HandleGameStateChanged(GameState previousState, GameState nextState)
         {
-            if (nextState == GameState.Playing) return;
-
-            CancelCallRoutine();
-            CancelRetryCall();
-            _activeConversation = false;
-            StopNpcApproach();
-            _phoneCallPanel?.HideImmediate();
-        }
-
-        private void ScheduleInitialCall()
-        {
-            if (_eventScheduledThisRound) return;
-
-            _eventScheduledThisRound = true;
-            CancelCallRoutine();
-            CancelRetryCall();
-            _phoneCallPanel?.HideImmediate();
-            _callRoutine = StartCoroutine(ShowCallAfterDelay(RandomInRange(_initialDelayRange)));
-        }
-
-        private IEnumerator ShowCallAfterDelay(float delay)
-        {
-            yield return new WaitForSecondsRealtime(delay);
-            _callRoutine = null;
-
-            if (_appManager != null && _appManager.CurrentState != GameState.Playing) yield break;
-            BeginRinging();
-        }
-
-        private void BeginRinging()
-        {
-            _activeConversation = false;
-            _phoneCallPanel?.ShowIncomingCall(_callerDisplay);
-            CancelCallRoutine();
-            _callRoutine = StartCoroutine(HideUnansweredCallAfter(RandomInRange(_ringDurationRange)));
-        }
-
-        private IEnumerator HideUnansweredCallAfter(float duration)
-        {
-            yield return new WaitForSecondsRealtime(duration);
-            _callRoutine = null;
-            _phoneCallPanel?.Hide();
-            ScheduleRetryCall();
+            if (nextState != GameState.Playing) ResetCallState();
         }
 
         private void HandleCallAccepted()
         {
-            CancelCallRoutine();
+            if (_activeConversation) return;
+            _npcPopulation?.SetCrowdPressure(false);
             _activeConversation = true;
-            _callRoutine = StartCoroutine(CompleteConversationAfter(
-                RandomInRange(_conversationDurationRange)));
+            bool moving = IsVehicleMoving();
+            if (moving) BeginNpcApproach();
+            _activeNpcApproach?.SetVehicleMoving(moving);
+            CancelCallRoutine();
+            _callRoutine = StartCoroutine(CompleteConversationAfter(_conversationDuration));
         }
 
         private IEnumerator CompleteConversationAfter(float duration)
@@ -178,32 +121,10 @@ namespace ElectricPalletStackers.UI
             _phoneCallPanel?.FinishCall();
         }
 
-        private void HandleCallRejected()
-        {
-            CancelCallRoutine();
-            _activeConversation = false;
-            StopNpcApproach();
-            ScheduleRetryCall();
-        }
-
-        private void HandleCallEndedByUser()
-        {
-            CancelCallRoutine();
-            _activeConversation = false;
-            StopNpcApproach();
-            ScheduleRetryCall();
-        }
-
-        private void ScheduleRetryCall()
-        {
-            _retryAt = Time.realtimeSinceStartup + _rejectRetryDelay;
-        }
-
         private bool IsVehicleMoving()
         {
             if (_vehicleMotor != null && Mathf.Abs(_vehicleMotor.CurrentSpeed) > _movingSpeedThreshold)
                 return true;
-
             if (_vehicleBody == null) return false;
             Vector3 planarVelocity = Vector3.ProjectOnPlane(_vehicleBody.linearVelocity, Vector3.up);
             return planarVelocity.sqrMagnitude > _movingSpeedThreshold * _movingSpeedThreshold;
@@ -211,12 +132,13 @@ namespace ElectricPalletStackers.UI
 
         private void BeginNpcApproach()
         {
-            if (_activeNpcApproach != null) return;
-
-            NpcAgent closestNpc = FindClosestNpc();
-            if (closestNpc == null || _vehicleBody == null)
+            if (_activeNpcApproach != null || _vehicleBody == null) return;
+            NpcAgent closestNpc = _npcPopulation != null
+                ? _npcPopulation.FindClosestAvailableNpc(_vehicleBody.position)
+                : FindClosestNpc();
+            if (closestNpc == null)
             {
-                Debug.LogWarning("No active NPC was available for the phone-distraction accident.", this);
+                Debug.LogWarning("No active waypoint NPC was available for the phone distraction event.", this);
                 return;
             }
 
@@ -232,6 +154,25 @@ namespace ElectricPalletStackers.UI
                 HandleNpcImpact);
         }
 
+        private NpcAgent FindClosestNpc()
+        {
+            NpcAgent[] npcs = FindObjectsByType<NpcAgent>(
+                FindObjectsInactive.Exclude,
+                FindObjectsSortMode.None);
+            NpcAgent closest = null;
+            float closestSqrDistance = float.PositiveInfinity;
+            for (int index = 0; index < npcs.Length; index++)
+            {
+                NpcAgent npc = npcs[index];
+                if (npc == null || !npc.IsAvailableForPhoneEvent) continue;
+                float sqrDistance = (npc.transform.position - _vehicleBody.position).sqrMagnitude;
+                if (sqrDistance >= closestSqrDistance) continue;
+                closestSqrDistance = sqrDistance;
+                closest = npc;
+            }
+            return closest;
+        }
+
         private void StopNpcApproach()
         {
             if (_activeNpcApproach == null) return;
@@ -245,31 +186,16 @@ namespace ElectricPalletStackers.UI
             _accidentTriggered = true;
             _activeConversation = false;
             CancelCallRoutine();
-            CancelRetryCall();
             _phoneCallPanel?.FinishCall();
         }
 
-        private NpcAgent FindClosestNpc()
+        private void ResetCallState()
         {
-            if (_vehicleBody == null) return null;
-
-            NpcAgent[] npcs = FindObjectsByType<NpcAgent>(
-                FindObjectsInactive.Exclude,
-                FindObjectsSortMode.None);
-            NpcAgent closest = null;
-            float closestSqrDistance = float.PositiveInfinity;
-            for (int index = 0; index < npcs.Length; index++)
-            {
-                NpcAgent npc = npcs[index];
-                if (npc == null || npc.Agent == null || !npc.Agent.isOnNavMesh) continue;
-
-                float sqrDistance = (npc.transform.position - _vehicleBody.position).sqrMagnitude;
-                if (sqrDistance >= closestSqrDistance) continue;
-                closestSqrDistance = sqrDistance;
-                closest = npc;
-            }
-
-            return closest;
+            CancelCallRoutine();
+            _activeConversation = false;
+            StopNpcApproach();
+            _npcPopulation?.SetCrowdPressure(false);
+            _phoneCallPanel?.HideImmediate();
         }
 
         private void ResolveReferences()
@@ -284,6 +210,8 @@ namespace ElectricPalletStackers.UI
                 _vehicleBody = _vehicleMotor.GetComponent<Rigidbody>();
             if (_collisionReporter == null)
                 _collisionReporter = FindFirstObjectByType<PalletStackerCollisionReporter>(FindObjectsInactive.Include);
+            if (_npcPopulation == null)
+                _npcPopulation = FindFirstObjectByType<NpcPopulationController>(FindObjectsInactive.Include);
         }
 
         private void CancelCallRoutine()
@@ -291,16 +219,6 @@ namespace ElectricPalletStackers.UI
             if (_callRoutine == null) return;
             StopCoroutine(_callRoutine);
             _callRoutine = null;
-        }
-
-        private void CancelRetryCall()
-        {
-            _retryAt = -1f;
-        }
-
-        private static float RandomInRange(Vector2 range)
-        {
-            return Random.Range(Mathf.Min(range.x, range.y), Mathf.Max(range.x, range.y));
         }
     }
 }

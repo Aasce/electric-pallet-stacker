@@ -10,6 +10,7 @@ namespace ElectricPalletStackers.Gameplay
         [Tooltip("The single pallet instance placed in the scene.")]
         [SerializeField] private PalletStackerLoad _pallet;
         [SerializeField] private Transform[] _spawnPoints;
+        [SerializeField] private bool _randomizeSpawn;
 
         private Vector3 _initialPosition;
         private Quaternion _initialRotation;
@@ -32,7 +33,9 @@ namespace ElectricPalletStackers.Gameplay
                 return null;
             }
 
-            Transform spawnPoint = GetRandomValidSpawnPoint();
+            Transform spawnPoint = _randomizeSpawn
+                ? GetRandomValidSpawnPoint()
+                : GetFirstValidSpawnPoint();
             if (spawnPoint == null)
             {
                 Debug.LogError("At least one valid pallet spawn point must be assigned.", this);
@@ -102,6 +105,14 @@ namespace ElectricPalletStackers.Gameplay
                 if (selectedValidIndex-- == 0) return candidate;
             }
 
+            return null;
+        }
+
+        private Transform GetFirstValidSpawnPoint()
+        {
+            if (_spawnPoints == null) return null;
+            for (int index = 0; index < _spawnPoints.Length; index++)
+                if (_spawnPoints[index] != null) return _spawnPoints[index];
             return null;
         }
     }

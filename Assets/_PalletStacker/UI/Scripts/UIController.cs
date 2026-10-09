@@ -45,6 +45,8 @@ namespace ElectricPalletStackers.UI
             _localizationManager.Initialize();
             if (_selectLanguagePanel != null)
                 _selectLanguagePanel.FocusChanged += HandleLanguageFocusChanged;
+            if (_guidePanel != null)
+                _guidePanel.Confirmed += ConfirmCurrentPanel;
             if (_calibrationPanel != null)
             {
                 _calibrationPanel.AlignRequested += HandleAlignRequested;
@@ -85,6 +87,8 @@ namespace ElectricPalletStackers.UI
         {
             if (_selectLanguagePanel != null)
                 _selectLanguagePanel.FocusChanged -= HandleLanguageFocusChanged;
+            if (_guidePanel != null)
+                _guidePanel.Confirmed -= ConfirmCurrentPanel;
             if (_calibrationPanel != null)
             {
                 _calibrationPanel.AlignRequested -= HandleAlignRequested;
@@ -106,6 +110,11 @@ namespace ElectricPalletStackers.UI
 
         private void HandleConfirm()
         {
+            ConfirmCurrentPanel();
+        }
+
+        public void ConfirmCurrentPanel()
+        {
             switch (CurrentState)
             {
                 case UIFlowState.CalibrateVehicleView:
@@ -117,9 +126,9 @@ namespace ElectricPalletStackers.UI
                     TransitionTo(UIFlowState.Welcome);
                     break;
                 case UIFlowState.Welcome:
-                    TransitionTo(UIFlowState.Guide);
+                    TransitionTo(UIFlowState.PpePreparation);
                     break;
-                case UIFlowState.Guide:
+                case UIFlowState.PpePreparation:
                     TransitionTo(UIFlowState.Hidden);
                     break;
                 case UIFlowState.Completed:
@@ -174,7 +183,7 @@ namespace ElectricPalletStackers.UI
                 case UIFlowState.Welcome:
                     _welcomePanel?.Show();
                     break;
-                case UIFlowState.Guide:
+                case UIFlowState.PpePreparation:
                     _guidePanel?.Show();
                     break;
                 case UIFlowState.Completed:

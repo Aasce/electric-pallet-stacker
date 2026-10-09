@@ -107,9 +107,7 @@ namespace ElectricPalletStackers.Editor
                 new TextBinding("Description", LocalizationKeys.Failed.Description),
                 new TextBinding("Confirm Hint", LocalizationKeys.Common.Continue)),
             new("Assets/_PalletStacker/UI/Prefabs/Phone Call Panel.prefab",
-                new TextBinding("Reject Label", LocalizationKeys.Phone.Decline),
-                new TextBinding("Accept Label", LocalizationKeys.Phone.Accept),
-                new TextBinding("Hang Up Label", LocalizationKeys.Phone.End))
+                new TextBinding("Accept Label", LocalizationKeys.Phone.Accept))
         };
 
         [InitializeOnLoadMethod]

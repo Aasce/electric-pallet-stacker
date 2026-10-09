@@ -1,6 +1,7 @@
 using ElectricPalletStackers.Ble;
 using ElectricPalletStackers.Audio;
 using ElectricPalletStackers.Gameplay;
+using ElectricPalletStackers.NPCs;
 using ElectricPalletStackers.PalletStackers;
 using ElectricPalletStackers.UI;
 using TMPro;
@@ -145,32 +146,17 @@ namespace ElectricPalletStackers.Editor
             RectTransform incomingActions = CreateContainer("Incoming Call Actions", background.rectTransform);
             Stretch(incomingActions, Vector2.zero, Vector2.zero);
 
-            Button reject = CreateRoundButton(
-                "Reject Button", incomingActions, new Vector2(-44f, -93f),
-                RejectRed, circleSprite, roundedSprite);
             Button accept = CreateRoundButton(
-                "Accept Button", incomingActions, new Vector2(44f, -93f),
+                "Accept Button", incomingActions, new Vector2(0f, -93f),
                 AcceptGreen, circleSprite, roundedSprite);
-
-            TextMeshProUGUI rejectLabel = CreateText(
-                "Reject Label", incomingActions, "Decline", 10f,
-                FontStyles.Normal, new Color(1f, 1f, 1f, 0.9f));
-            SetRect(rejectLabel.rectTransform, new Vector2(-44f, -137f), new Vector2(70f, 20f));
 
             TextMeshProUGUI acceptLabel = CreateText(
                 "Accept Label", incomingActions, "Accept", 10f,
                 FontStyles.Normal, new Color(1f, 1f, 1f, 0.9f));
-            SetRect(acceptLabel.rectTransform, new Vector2(44f, -137f), new Vector2(70f, 20f));
+            SetRect(acceptLabel.rectTransform, new Vector2(0f, -137f), new Vector2(70f, 20f));
 
             RectTransform activeCallActions = CreateContainer("Active Call Actions", background.rectTransform);
             Stretch(activeCallActions, Vector2.zero, Vector2.zero);
-            Button hangUp = CreateRoundButton(
-                "Hang Up Button", activeCallActions, new Vector2(0f, -93f),
-                RejectRed, circleSprite, roundedSprite);
-            TextMeshProUGUI hangUpLabel = CreateText(
-                "Hang Up Label", activeCallActions, "End", 10f,
-                FontStyles.Normal, new Color(1f, 1f, 1f, 0.9f));
-            SetRect(hangUpLabel.rectTransform, new Vector2(0f, -137f), new Vector2(80f, 20f));
             activeCallActions.gameObject.SetActive(false);
 
             WorldSpacePanelGrab panelGrab = root.GetComponent<WorldSpacePanelGrab>();
@@ -187,9 +173,7 @@ namespace ElectricPalletStackers.Editor
             panel.FindProperty("_hintLabel").objectReferenceValue = hint;
             panel.FindProperty("_incomingActions").objectReferenceValue = incomingActions.gameObject;
             panel.FindProperty("_activeCallActions").objectReferenceValue = activeCallActions.gameObject;
-            panel.FindProperty("_rejectButton").objectReferenceValue = reject;
             panel.FindProperty("_acceptButton").objectReferenceValue = accept;
-            panel.FindProperty("_hangUpButton").objectReferenceValue = hangUp;
             panel.FindProperty("_panelGrab").objectReferenceValue = panelGrab;
             panel.FindProperty("_moveCollider").objectReferenceValue = moveCollider;
             panel.FindProperty("_defaultCaller").stringValue = "0123456789";
@@ -235,11 +219,10 @@ namespace ElectricPalletStackers.Editor
             simulator.FindProperty("_vehicleBody").objectReferenceValue =
                 vehicleMotor != null ? vehicleMotor.GetComponent<Rigidbody>() : null;
             simulator.FindProperty("_collisionReporter").objectReferenceValue = collisionReporter;
+            simulator.FindProperty("_npcPopulation").objectReferenceValue =
+                Object.FindFirstObjectByType<NpcPopulationController>(FindObjectsInactive.Include);
             simulator.FindProperty("_callerDisplay").stringValue = "0123456789";
-            simulator.FindProperty("_initialDelayRange").vector2Value = new Vector2(5f, 10f);
-            simulator.FindProperty("_ringDurationRange").vector2Value = new Vector2(10f, 15f);
-            simulator.FindProperty("_conversationDurationRange").vector2Value = new Vector2(5f, 10f);
-            simulator.FindProperty("_rejectRetryDelay").floatValue = 5f;
+            simulator.FindProperty("_conversationDuration").floatValue = 10f;
             simulator.ApplyModifiedPropertiesWithoutUndo();
 
             ConfigureHandGrabInteractors();

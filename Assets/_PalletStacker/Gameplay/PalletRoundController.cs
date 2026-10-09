@@ -12,6 +12,8 @@ namespace ElectricPalletStackers.Gameplay
         [SerializeField] private PalletStackerLoadHandler _loadHandler;
         [Tooltip("Separate scene instances that share the same destination prefab.")]
         [SerializeField] private PalletDestinationZone[] _destinationZones;
+        [SerializeField] private bool _randomizeDestination;
+        [SerializeField] private bool _armDestinationImmediately;
 
         private PalletDestinationZone _activeDestination;
 
@@ -37,15 +39,24 @@ namespace ElectricPalletStackers.Gameplay
                 return;
             }
 
-            _activeDestination = GetRandomValidDestination();
+            _activeDestination = _randomizeDestination
+                ? GetRandomValidDestination()
+                : GetFirstValidDestination();
             if (_activeDestination == null)
             {
                 Debug.LogError("At least one valid destination must be assigned.", this);
                 return;
             }
 
+            if (_armDestinationImmediately) ArmDestination();
+        }
+
+        public void ArmDestination()
+        {
+            if (_activeDestination == null || ActivePallet == null) return;
+            _activeDestination.DestinationConfirmed -= HandleDestinationConfirmed;
             _activeDestination.DestinationConfirmed += HandleDestinationConfirmed;
-            _activeDestination.Arm(pallet, _loadHandler);
+            _activeDestination.Arm(ActivePallet, _loadHandler);
         }
 
         public void FinishRound(GameState result)
@@ -107,6 +118,14 @@ namespace ElectricPalletStackers.Gameplay
                 if (selectedValidIndex-- == 0) return candidate;
             }
 
+            return null;
+        }
+
+        private PalletDestinationZone GetFirstValidDestination()
+        {
+            if (_destinationZones == null) return null;
+            for (int index = 0; index < _destinationZones.Length; index++)
+                if (_destinationZones[index] != null) return _destinationZones[index];
             return null;
         }
     }

@@ -28,9 +28,7 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private TMP_Text _hintLabel;
         [SerializeField] private GameObject _incomingActions;
         [SerializeField] private GameObject _activeCallActions;
-        [SerializeField] private Button _rejectButton;
         [SerializeField] private Button _acceptButton;
-        [SerializeField] private Button _hangUpButton;
 
         [Header("Hand Interaction")]
         [SerializeField] private WorldSpacePanelGrab _panelGrab;
@@ -61,8 +59,6 @@ namespace ElectricPalletStackers.UI
         public string CallerDisplay => _callerLabel != null ? _callerLabel.text : string.Empty;
 
         public event Action CallAccepted;
-        public event Action CallRejected;
-        public event Action CallEndedByUser;
         public event Action<PhoneCallState, PhoneCallState> StateChanged;
 
         public void ApplyLocalization(ILocalizationService localization)
@@ -91,9 +87,7 @@ namespace ElectricPalletStackers.UI
 
         private void OnDestroy()
         {
-            if (_rejectButton != null) _rejectButton.onClick.RemoveListener(RejectCall);
             if (_acceptButton != null) _acceptButton.onClick.RemoveListener(AcceptCall);
-            if (_hangUpButton != null) _hangUpButton.onClick.RemoveListener(HangUpCall);
             KillTweens();
         }
 
@@ -185,23 +179,6 @@ namespace ElectricPalletStackers.UI
             CallAccepted?.Invoke();
         }
 
-        public void RejectCall()
-        {
-            if (!IsRinging) return;
-            IsRinging = false;
-            CallRejected?.Invoke();
-            Hide();
-        }
-
-        public void HangUpCall()
-        {
-            if (!IsInCall) return;
-
-            IsInCall = false;
-            CallEndedByUser?.Invoke();
-            Hide();
-        }
-
         public void FinishCall()
         {
             IsInCall = false;
@@ -282,9 +259,7 @@ namespace ElectricPalletStackers.UI
 
             _baseScale = _content != null ? _content.localScale : transform.localScale;
 
-            if (_rejectButton != null) _rejectButton.onClick.AddListener(RejectCall);
             if (_acceptButton != null) _acceptButton.onClick.AddListener(AcceptCall);
-            if (_hangUpButton != null) _hangUpButton.onClick.AddListener(HangUpCall);
 
             _isInitialized = true;
         }
