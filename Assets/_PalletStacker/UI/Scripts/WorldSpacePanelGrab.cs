@@ -16,6 +16,8 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private XRGrabInteractable _grabInteractable;
         private bool _isSubscribed;
 
+        public bool IsGrabbed => _grabInteractable != null && _grabInteractable.isSelected;
+
         public void Initialize()
         {
             if (_grabCollider == null) _grabCollider = GetComponent<Collider>();

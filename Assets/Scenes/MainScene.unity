@@ -6573,7 +6573,7 @@ MonoBehaviour:
   _vehicleForward: {fileID: 2147000001}
   _calibrationPanel: {fileID: 5035545479161186817}
   _cameraHeightAboveGround: 1.8
-  _followCamera: 0
+  _panelHeadsetOffset: {x: -0.06, y: -0.03, z: 0.55}
   _positionStep: 0.01
 --- !u!1 &1673396766
 GameObject:

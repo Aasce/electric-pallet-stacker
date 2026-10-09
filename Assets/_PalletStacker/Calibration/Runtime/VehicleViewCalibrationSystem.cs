@@ -1,3 +1,4 @@
+using ElectricPalletStackers.UI;
 using UnityEngine;
 
 namespace ElectricPalletStackers.Calibration
@@ -14,10 +15,9 @@ namespace ElectricPalletStackers.Calibration
         [Header("Vehicle Alignment")]
         [SerializeField, Min(0f)] private float _cameraHeightAboveGround = 1.5f;
         [Header("Calibration Panel")]
-        [Tooltip("Inspector option only. Keeps the calibration panel at the same headset-relative pose.")]
-        [SerializeField] private bool _followCamera;
+        [SerializeField] private Vector3 _panelHeadsetOffset = new(-0.06f, -0.03f, 0.55f);
         [SerializeField, Min(0.001f)] private float _positionStep = 0.01f;
-        private bool _panelParentedToHeadset;
+        private WorldSpacePanelGrab _panelGrab;
         private bool _needsInitialPanelPlacement;
 
         private void Awake()
@@ -25,7 +25,7 @@ namespace ElectricPalletStackers.Calibration
             if (_calibrationPanel == null) return;
             _needsInitialPanelPlacement = true;
             _calibrationPanel.SetParent(null, true);
-            _panelParentedToHeadset = false;
+            _panelGrab = _calibrationPanel.GetComponent<WorldSpacePanelGrab>();
         }
 
         private void LateUpdate()
@@ -40,10 +40,15 @@ namespace ElectricPalletStackers.Calibration
                 _needsInitialPanelPlacement = false;
             }
 
-            bool shouldParentToHeadset = _followCamera;
-            if (shouldParentToHeadset == _panelParentedToHeadset) return;
-            _calibrationPanel.SetParent(shouldParentToHeadset ? _headset : null, true);
-            _panelParentedToHeadset = shouldParentToHeadset;
+            // Keep the panel movable while held and retain the new relative position
+            // after release. Its rotation is intentionally never changed here.
+            if (_panelGrab != null && _panelGrab.IsGrabbed)
+            {
+                _panelHeadsetOffset = _headset.InverseTransformPoint(_calibrationPanel.position);
+                return;
+            }
+
+            _calibrationPanel.position = _headset.TransformPoint(_panelHeadsetOffset);
         }
 
         public void AlignToVehicle()
@@ -71,8 +76,9 @@ namespace ElectricPalletStackers.Calibration
         private void PlaceCalibrationPanelInReach()
         {
             Quaternion yawRotation = Quaternion.Euler(0f, _headset.eulerAngles.y, 0f);
-            _calibrationPanel.position = _headset.position + yawRotation * new Vector3(-0.06f, -0.03f, 0.55f);
+            _calibrationPanel.position = _headset.position + yawRotation * _panelHeadsetOffset;
             _calibrationPanel.rotation = yawRotation;
+            _panelHeadsetOffset = _headset.InverseTransformPoint(_calibrationPanel.position);
         }
 
         private float GetVehicleGroundHeight()

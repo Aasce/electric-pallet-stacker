@@ -16,6 +16,7 @@ namespace ElectricPalletStackers.UI
     }
 
     [DisallowMultipleComponent]
+    [DefaultExecutionOrder(10000)]
     [RequireComponent(typeof(WorldSpacePanelGrab))]
     public sealed class PhoneCallPanel : MonoBehaviour, ILocalizedView
     {
@@ -52,6 +53,7 @@ namespace ElectricPalletStackers.UI
         private ILocalizationService _localization;
         private TMP_FontAsset _statusDefaultFont;
         private TMP_FontAsset _hintDefaultFont;
+        private bool _followViewerPosition;
 
         public bool IsRinging { get; private set; }
         public bool IsInCall { get; private set; }
@@ -106,6 +108,23 @@ namespace ElectricPalletStackers.UI
             UpdateCallDuration(elapsedSeconds);
         }
 
+        private void LateUpdate()
+        {
+            if (!_followViewerPosition) return;
+            if (!TryResolveViewer()) return;
+
+            // Let the hand move the panel freely. While it is held, keep the latest
+            // camera-relative offset so releasing it does not snap it back.
+            if (_panelGrab != null && _panelGrab.IsGrabbed)
+            {
+                _viewerOffset = _viewer.InverseTransformPoint(transform.position);
+                return;
+            }
+
+            // Position follows the headset, while the panel keeps its own rotation.
+            transform.position = _viewer.TransformPoint(_viewerOffset);
+        }
+
         [ContextMenu("Simulate Incoming Call")]
         public void ShowDefaultIncomingCall()
         {
@@ -120,6 +139,7 @@ namespace ElectricPalletStackers.UI
             // it stays at the viewer position and can be moved by hand after appearing.
             transform.SetParent(null, true);
             PlaceInFrontOfViewer();
+            _followViewerPosition = true;
 
             IsRinging = true;
             IsInCall = false;
@@ -194,6 +214,7 @@ namespace ElectricPalletStackers.UI
             IsRinging = false;
             IsInCall = false;
             SetState(PhoneCallState.Hidden);
+            _followViewerPosition = false;
             SetMoveInteractionEnabled(false);
             KillTweens();
 
@@ -220,6 +241,7 @@ namespace ElectricPalletStackers.UI
             IsRinging = false;
             IsInCall = false;
             SetState(PhoneCallState.Hidden);
+            _followViewerPosition = false;
             KillTweens();
 
             if (_canvasGroup != null)
@@ -307,12 +329,18 @@ namespace ElectricPalletStackers.UI
 
         private void PlaceInFrontOfViewer()
         {
-            if (_viewer == null && Camera.main != null) _viewer = Camera.main.transform;
-            if (_viewer == null) return;
+            if (!TryResolveViewer()) return;
 
             Quaternion yawRotation = Quaternion.Euler(0f, _viewer.eulerAngles.y, 0f);
             transform.position = _viewer.position + yawRotation * _viewerOffset;
             transform.rotation = yawRotation;
+            _viewerOffset = _viewer.InverseTransformPoint(transform.position);
+        }
+
+        private bool TryResolveViewer()
+        {
+            if (_viewer == null && Camera.main != null) _viewer = Camera.main.transform;
+            return _viewer != null;
         }
 
         private void SetRingingVisual()
