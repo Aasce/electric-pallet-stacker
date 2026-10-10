@@ -107,6 +107,10 @@ namespace ElectricPalletStackers.UI
             if (!_followViewerPosition) return;
             if (!TryResolveViewer()) return;
 
+            // Follow headset yaw only, keeping the panel upright without inheriting
+            // head pitch or roll.
+            transform.rotation = GetViewerYawRotation();
+
             // Let the hand move the panel freely. While it is held, keep the latest
             // camera-relative offset so releasing it does not snap it back.
             if (_panelGrab != null && _panelGrab.IsGrabbed)
@@ -306,10 +310,15 @@ namespace ElectricPalletStackers.UI
         {
             if (!TryResolveViewer()) return;
 
-            Quaternion yawRotation = Quaternion.Euler(0f, _viewer.eulerAngles.y, 0f);
+            Quaternion yawRotation = GetViewerYawRotation();
             transform.position = _viewer.position + yawRotation * _viewerOffset;
             transform.rotation = yawRotation;
             _viewerOffset = _viewer.InverseTransformPoint(transform.position);
+        }
+
+        private Quaternion GetViewerYawRotation()
+        {
+            return Quaternion.Euler(0f, _viewer.eulerAngles.y, 0f);
         }
 
         private bool TryResolveViewer()

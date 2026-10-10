@@ -40,8 +40,12 @@ namespace ElectricPalletStackers.Calibration
                 _needsInitialPanelPlacement = false;
             }
 
+            // Follow headset yaw only so the panel faces the user while remaining
+            // upright and independent from headset pitch/roll.
+            _calibrationPanel.rotation = GetHeadsetYawRotation();
+
             // Keep the panel movable while held and retain the new relative position
-            // after release. Its rotation is intentionally never changed here.
+            // after release.
             if (_panelGrab != null && _panelGrab.IsGrabbed)
             {
                 _panelHeadsetOffset = _headset.InverseTransformPoint(_calibrationPanel.position);
@@ -75,10 +79,15 @@ namespace ElectricPalletStackers.Calibration
 
         private void PlaceCalibrationPanelInReach()
         {
-            Quaternion yawRotation = Quaternion.Euler(0f, _headset.eulerAngles.y, 0f);
+            Quaternion yawRotation = GetHeadsetYawRotation();
             _calibrationPanel.position = _headset.position + yawRotation * _panelHeadsetOffset;
             _calibrationPanel.rotation = yawRotation;
             _panelHeadsetOffset = _headset.InverseTransformPoint(_calibrationPanel.position);
+        }
+
+        private Quaternion GetHeadsetYawRotation()
+        {
+            return Quaternion.Euler(0f, _headset.eulerAngles.y, 0f);
         }
 
         private float GetVehicleGroundHeight()
