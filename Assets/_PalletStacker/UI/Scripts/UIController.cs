@@ -170,7 +170,7 @@ namespace ElectricPalletStackers.UI
         }
 
         private void HandleAlignRequested() => _calibrationSystem?.AlignToVehicle();
-        private void HandleOffsetAdjustmentRequested(Vector2 direction) => _calibrationSystem?.AdjustOffset(direction);
+        private void HandleOffsetAdjustmentRequested(Vector3 direction) => _calibrationSystem?.AdjustOffset(direction);
         private void TransitionTo(UIFlowState nextState)
         {
             bool capturedBefore = IsInputCaptured;

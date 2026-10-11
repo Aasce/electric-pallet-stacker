@@ -15,14 +15,15 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private Button _leftButton;
         [SerializeField] private Button _centerButton;
         [SerializeField] private Button _rightButton;
+        [SerializeField] private Button _forwardButton;
+        [SerializeField] private Button _backButton;
         private bool _buttonsBound;
         public event Action AlignRequested;
-        public event Action<Vector2> OffsetAdjustmentRequested;
+        public event Action<Vector3> OffsetAdjustmentRequested;
 
         protected override void Awake()
         {
             base.Awake();
-            if (_panelGrab == null) _panelGrab = GetComponent<WorldSpacePanelGrab>();
             _panelGrab?.Initialize();
         }
 
@@ -40,10 +41,12 @@ namespace ElectricPalletStackers.UI
         }
 
         public void PressCenter() => AlignRequested?.Invoke();
-        public void PressUp() => OffsetAdjustmentRequested?.Invoke(Vector2.up);
-        public void PressDown() => OffsetAdjustmentRequested?.Invoke(Vector2.down);
-        public void PressLeft() => OffsetAdjustmentRequested?.Invoke(Vector2.left);
-        public void PressRight() => OffsetAdjustmentRequested?.Invoke(Vector2.right);
+        public void PressUp() => OffsetAdjustmentRequested?.Invoke(Vector3.up);
+        public void PressDown() => OffsetAdjustmentRequested?.Invoke(Vector3.down);
+        public void PressLeft() => OffsetAdjustmentRequested?.Invoke(Vector3.left);
+        public void PressRight() => OffsetAdjustmentRequested?.Invoke(Vector3.right);
+        public void PressForward() => OffsetAdjustmentRequested?.Invoke(Vector3.forward);
+        public void PressBack() => OffsetAdjustmentRequested?.Invoke(Vector3.back);
 
         private void BindButtons()
         {
@@ -53,6 +56,8 @@ namespace ElectricPalletStackers.UI
             BindButton(_leftButton, PressLeft);
             BindButton(_centerButton, PressCenter);
             BindButton(_rightButton, PressRight);
+            BindButton(_forwardButton, PressForward);
+            BindButton(_backButton, PressBack);
             _buttonsBound = true;
         }
 
