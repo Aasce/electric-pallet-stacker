@@ -7,8 +7,6 @@ namespace ElectricPalletStackers.Audio
     [DisallowMultipleComponent]
     public sealed class AudioManager : MonoBehaviour
     {
-        private const string DefaultLibraryResourcePath = "PalletStackerAudioLibrary";
-
         [SerializeField] private AudioCueLibrary _library;
         [SerializeField, Min(0)] private int _prewarmCount = 12;
         [SerializeField, Min(1)] private int _maxPoolSize = 64;
@@ -22,23 +20,6 @@ namespace ElectricPalletStackers.Audio
 
         public static AudioManager Instance { get; private set; }
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void Bootstrap()
-        {
-            if (Instance != null) return;
-
-            AudioManager existing = FindFirstObjectByType<AudioManager>(FindObjectsInactive.Include);
-            if (existing != null)
-            {
-                Instance = existing;
-                return;
-            }
-
-            GameObject root = new("[Audio Manager]");
-            AudioManager manager = root.AddComponent<AudioManager>();
-            manager._library = Resources.Load<AudioCueLibrary>(DefaultLibraryResourcePath);
-        }
-
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -49,7 +30,7 @@ namespace ElectricPalletStackers.Audio
 
             Instance = this;
             if (_library == null)
-                _library = Resources.Load<AudioCueLibrary>(DefaultLibraryResourcePath);
+                Debug.LogError("AudioManager requires an AudioCueLibrary assigned in the Inspector.", this);
             if (_persistAcrossScenes) DontDestroyOnLoad(gameObject);
 
             _maxPoolSize = Mathf.Max(1, _maxPoolSize);

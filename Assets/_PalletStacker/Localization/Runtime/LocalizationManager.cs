@@ -8,9 +8,6 @@ namespace ElectricPalletStackers.Localization
     [DisallowMultipleComponent]
     public sealed class LocalizationManager : MonoBehaviour, ILocalizedViewRegistry
     {
-        private const string DefaultDatabaseResourcePath =
-            "Localization/DefaultLocalizationDatabase";
-
         [SerializeField] private LocalizationDatabase _database;
         [SerializeField] private LanguageCode _defaultLanguage = LanguageCode.En;
 
@@ -39,13 +36,8 @@ namespace ElectricPalletStackers.Localization
             if (_initialized) return;
 
             if (_database == null)
-                _database = Resources.Load<LocalizationDatabase>(DefaultDatabaseResourcePath);
-
-            if (_database == null)
             {
-                Debug.LogError(
-                    $"Localization database was not found at Resources/{DefaultDatabaseResourcePath}.",
-                    this);
+                Debug.LogError("LocalizationManager requires a LocalizationDatabase assigned in the Inspector.", this);
                 return;
             }
 
