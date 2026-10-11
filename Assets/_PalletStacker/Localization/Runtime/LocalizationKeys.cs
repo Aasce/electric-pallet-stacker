@@ -33,6 +33,12 @@ namespace ElectricPalletStackers.Localization
             public const string ScrollHint = "guide.scrollHint";
         }
 
+        public static class Ppe
+        {
+            public const string Title = "ppe.title";
+            public const string Description = "ppe.description";
+        }
+
         public static class Completed
         {
             public const string Title = "completed.title";

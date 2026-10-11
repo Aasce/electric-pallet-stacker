@@ -20,6 +20,7 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private VehicleViewCalibrationSystem _calibrationSystem;
         [SerializeField] private UIWelcomePanel _welcomePanel;
         [SerializeField] private UIGuidePanel _guidePanel;
+        [SerializeField] private UIPpePanel _ppePanel;
         [SerializeField] private PpeEquipmentPhase _ppeEquipmentPhase;
         [SerializeField] private UICompletedPanel _completedPanel;
         [SerializeField] private UIFailedPanel _failedPanel;
@@ -47,8 +48,6 @@ namespace ElectricPalletStackers.UI
             _localizationManager.Initialize();
             if (_selectLanguagePanel != null)
                 _selectLanguagePanel.FocusChanged += HandleLanguageFocusChanged;
-            if (_guidePanel != null)
-                _guidePanel.Confirmed += ConfirmCurrentPanel;
             if (_ppeEquipmentPhase != null)
                 _ppeEquipmentPhase.Equipped += HandlePpeEquipped;
             if (_calibrationPanel != null)
@@ -60,6 +59,7 @@ namespace ElectricPalletStackers.UI
             _calibrationPanel?.HideImmediate();
             _welcomePanel?.HideImmediate();
             _guidePanel?.HideImmediate();
+            _ppePanel?.HideImmediate();
             _ppeEquipmentPhase?.EndPhase();
             _completedPanel?.HideImmediate();
             _failedPanel?.HideImmediate();
@@ -92,8 +92,6 @@ namespace ElectricPalletStackers.UI
         {
             if (_selectLanguagePanel != null)
                 _selectLanguagePanel.FocusChanged -= HandleLanguageFocusChanged;
-            if (_guidePanel != null)
-                _guidePanel.Confirmed -= ConfirmCurrentPanel;
             if (_ppeEquipmentPhase != null)
                 _ppeEquipmentPhase.Equipped -= HandlePpeEquipped;
             if (_calibrationPanel != null)
@@ -179,6 +177,7 @@ namespace ElectricPalletStackers.UI
             _calibrationPanel?.Hide();
             _welcomePanel?.Hide();
             _guidePanel?.Hide();
+            _ppePanel?.Hide();
             _ppeEquipmentPhase?.EndPhase();
             _completedPanel?.Hide();
             _failedPanel?.Hide();
@@ -201,6 +200,7 @@ namespace ElectricPalletStackers.UI
                     _guidePanel?.Show();
                     break;
                 case UIFlowState.PpeEquipment:
+                    _ppePanel?.Show();
                     _ppeEquipmentPhase?.BeginPhase();
                     break;
                 case UIFlowState.Completed:

@@ -103,6 +103,16 @@ MonoBehaviour:
     _english: End
     _vietnamese: "K\u1EBFt th\xFAc"
     _japanese: "\u7D42\u4E86"
+  - _key: ppe.title
+    _english: Wear Safety Equipment
+    _vietnamese: "Trang b\u1ECB b\u1EA3o h\u1ED9"
+    _japanese: "\u4FDD\u8B77\u5177\u3092\u7740\u7528"
+  - _key: ppe.description
+    _english: Touch the safety helmet floating to your left before operating the
+      vehicle.
+    _vietnamese: "Ch\u1EA1m v\xE0o n\xF3n b\u1EA3o h\u1ED9 \u0111ang l\u01A1 l\u1EEDng
+      b\xEAn tr\xE1i tr\u01B0\u1EDBc khi v\u1EADn h\xE0nh xe."
+    _japanese: "\u8ECA\u4E21\u3092\u64CD\u4F5C\u3059\u308B\u524D\u306B\u3001\u5DE6\u5074\u306B\u6D6E\u304B\u3093\u3067\u3044\u308B\u5B89\u5168\u30D8\u30EB\u30E1\u30C3\u30C8\u306B\u89E6\u308C\u3066\u304F\u3060\u3055\u3044\u3002"
   _languageProfiles:
   - _language: 0
     _fontOverride: {fileID: 11400000, guid: e9a1fec3604a5864db7480e450e7c93f, type: 2}
