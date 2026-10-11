@@ -46,7 +46,7 @@ namespace ElectricPalletStackers.UI
             if (_selectLanguagePanel != null)
                 _selectLanguagePanel.FocusChanged += HandleLanguageFocusChanged;
             if (_guidePanel != null)
-                _guidePanel.Confirmed += ConfirmCurrentPanel;
+                _guidePanel.Confirmed += HandlePpeEquipped;
             if (_calibrationPanel != null)
             {
                 _calibrationPanel.AlignRequested += HandleAlignRequested;
@@ -88,7 +88,7 @@ namespace ElectricPalletStackers.UI
             if (_selectLanguagePanel != null)
                 _selectLanguagePanel.FocusChanged -= HandleLanguageFocusChanged;
             if (_guidePanel != null)
-                _guidePanel.Confirmed -= ConfirmCurrentPanel;
+                _guidePanel.Confirmed -= HandlePpeEquipped;
             if (_calibrationPanel != null)
             {
                 _calibrationPanel.AlignRequested -= HandleAlignRequested;
@@ -129,7 +129,8 @@ namespace ElectricPalletStackers.UI
                     TransitionTo(UIFlowState.PpePreparation);
                     break;
                 case UIFlowState.PpePreparation:
-                    TransitionTo(UIFlowState.Hidden);
+                    if (_guidePanel != null) _guidePanel.Equip();
+                    else TransitionTo(UIFlowState.Hidden);
                     break;
                 case UIFlowState.Completed:
                 case UIFlowState.Failed:
@@ -154,6 +155,13 @@ namespace ElectricPalletStackers.UI
             FocusedLanguage = language;
             _localizationManager?.SetLanguage(language);
             LanguagePreviewChanged?.Invoke(language);
+        }
+
+        private void HandlePpeEquipped()
+        {
+            if (CurrentState == UIFlowState.PpePreparation &&
+                (_guidePanel == null || _guidePanel.IsEquipped))
+                TransitionTo(UIFlowState.Hidden);
         }
 
         private void HandleAlignRequested() => _calibrationSystem?.AlignToVehicle();

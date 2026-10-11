@@ -20,6 +20,8 @@ namespace ElectricPalletStackers.Editor
         private const string ScenePath = "Assets/Scenes/MainScene.unity";
         private const string NpcPrefabPath = "Assets/_PalletStacker/NPC/NPC.prefab";
         private const string PhonePrefabPath = "Assets/_PalletStacker/UI/Prefabs/Phone Call Panel.prefab";
+        private const string SafetyHelmetPrefabPath =
+            "Assets/_PalletStacker/SafetyHelmet/Safety Helmet.prefab";
         private const string MaterialFolder = "Assets/_PalletStacker/Environment/Materials";
         private const string RootName = "Training Experience Route";
         private const string TemplateRootName = "Template";
@@ -92,7 +94,7 @@ namespace ElectricPalletStackers.Editor
             EditorSceneManager.SaveScene(scene);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log("[TrainingExperience] MainScene rebuilt from Template markers: warehouse paths preserved, waypoint NPCs, yield vehicle, phone event and PPE placeholder installed.");
+            Debug.Log("[TrainingExperience] MainScene rebuilt from Template markers: warehouse paths preserved, waypoint NPCs, yield vehicle, phone event and PPE equipment step installed.");
         }
 
         private static CrossingVehicleController BuildCrossingVehicle(
@@ -348,12 +350,13 @@ namespace ElectricPalletStackers.Editor
             if (hint != null)
             {
                 RemoveLocalization(hint.gameObject);
-                hint.text = "POKE OK TO CONTINUE";
+                hint.text = "SELECT EQUIP TO CONTINUE";
             }
 
-            Transform existing = FindChildRecursive(panel.transform, "PPE OK Button");
+            Transform existing = FindChildRecursive(panel.transform, "PPE Equip Button") ??
+                                 FindChildRecursive(panel.transform, "PPE OK Button");
             if (existing != null) UnityEngine.Object.DestroyImmediate(existing.gameObject);
-            GameObject buttonObject = new("PPE OK Button", typeof(RectTransform),
+            GameObject buttonObject = new("PPE Equip Button", typeof(RectTransform),
                 typeof(CanvasRenderer), typeof(Image), typeof(Button));
             RectTransform rect = buttonObject.GetComponent<RectTransform>();
             rect.SetParent(panel.transform, false);
@@ -372,7 +375,7 @@ namespace ElectricPalletStackers.Editor
             labelRect.offsetMin = Vector2.zero;
             labelRect.offsetMax = Vector2.zero;
             TextMeshProUGUI label = labelObject.GetComponent<TextMeshProUGUI>();
-            label.text = "OK";
+            label.text = "Equip";
             label.alignment = TextAlignmentOptions.Center;
             label.fontSize = 34f;
             label.fontStyle = FontStyles.Bold;
@@ -382,6 +385,8 @@ namespace ElectricPalletStackers.Editor
 
             SerializedObject serialized = new(panel);
             serialized.FindProperty("_okButton").objectReferenceValue = buttonObject.GetComponent<Button>();
+            serialized.FindProperty("_equipmentPrefab").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<GameObject>(SafetyHelmetPrefabPath);
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 

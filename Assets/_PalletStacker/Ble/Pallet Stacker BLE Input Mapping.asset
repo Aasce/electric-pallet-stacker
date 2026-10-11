@@ -23,8 +23,8 @@ MonoBehaviour:
   _rawTillerDeg: {x: -128, y: 127}
   _mappedTillerDeg: {x: -128, y: 127}
   _clampedTillerDeg: {x: 0, y: 100}
-  _lowerTillerStopMaximumDeg: 10
-  _upperTillerStopMinimumDeg: 90
+  _lowerTillerStopMaximumDeg: 20
+  _upperTillerStopMinimumDeg: 70
   _rawTravel: {x: 11, y: 245}
   _neutralTravelRaw: {x: 116, y: 151}
   _mappedTravel: {x: 1, y: -1}

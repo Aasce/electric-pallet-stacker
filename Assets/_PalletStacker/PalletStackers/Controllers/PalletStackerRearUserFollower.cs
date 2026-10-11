@@ -101,8 +101,21 @@ namespace ElectricPalletStackers.PalletStackers
             if (_followPosition) _userRig.position = operatorPosition;
 
             float vehicleYaw = GetVehicleFacingYaw();
-            if (_followRotation && _rotationMode != RearUserRotationMode.WorldLocked)
-                RotateRigAroundHead(vehicleYaw);
+            if (_followRotation)
+            {
+                switch (_rotationMode)
+                {
+                    case RearUserRotationMode.ComfortFollow:
+                        RotateRigAroundHead(vehicleYaw);
+                        break;
+                    case RearUserRotationMode.VehicleLocked:
+                        // The XR origin is the vehicle-space anchor. Rotating around the
+                        // tracked head would leave its non-zero room-scale offset behind
+                        // when the vehicle turns, which appears as drift in a headset.
+                        RotateRigAroundPivot(vehicleYaw, _userRig.position);
+                        break;
+                }
+            }
 
             _lastOperatorPosition = operatorPosition;
             _lastVehicleYaw = vehicleYaw;
@@ -138,32 +151,50 @@ namespace ElectricPalletStackers.PalletStackers
             EnsureVignette();
 
             Vector3 operatorPosition = GetOperatorPosition();
-            if (_followPosition)
-                _userRig.position += operatorPosition - _lastOperatorPosition;
+            float vehicleYaw = GetVehicleFacingYaw();
+            Vector3 operatorDelta = operatorPosition - _lastOperatorPosition;
+            float vehicleYawDelta = Mathf.DeltaAngle(_lastVehicleYaw, vehicleYaw);
+            float rigYawBeforeRotation = _userRig.eulerAngles.y;
+            float deltaTime = Mathf.Max(Time.deltaTime, 0.0001f);
+
+            if (_rotationMode == RearUserRotationMode.VehicleLocked)
+            {
+                ApplyVehicleLockedMotion(operatorDelta, vehicleYawDelta);
+            }
+            else
+            {
+                if (_followPosition)
+                    _userRig.position += operatorDelta;
+
+                if (_followRotation && _rotationMode == RearUserRotationMode.ComfortFollow)
+                    ApplyComfortRotation(vehicleYaw, deltaTime);
+            }
+
             _lastOperatorPosition = operatorPosition;
 
-            float vehicleYaw = GetVehicleFacingYaw();
-            float deltaTime = Mathf.Max(Time.deltaTime, 0.0001f);
             float vehicleYawSpeed = Mathf.Abs(Mathf.DeltaAngle(_lastVehicleYaw, vehicleYaw)) / deltaTime;
             _lastVehicleYaw = vehicleYaw;
-            float rigYawBeforeRotation = _userRig.eulerAngles.y;
-
-            if (_followRotation)
-            {
-                switch (_rotationMode)
-                {
-                    case RearUserRotationMode.ComfortFollow:
-                        ApplyComfortRotation(vehicleYaw, deltaTime);
-                        break;
-                    case RearUserRotationMode.VehicleLocked:
-                        RotateRigAroundHead(vehicleYaw);
-                        break;
-                }
-            }
 
             float appliedYawSpeed = Mathf.Abs(
                 Mathf.DeltaAngle(rigYawBeforeRotation, _userRig.eulerAngles.y)) / deltaTime;
             UpdateTurnVignette(Mathf.Max(vehicleYawSpeed, appliedYawSpeed), deltaTime);
+        }
+
+        private void ApplyVehicleLockedMotion(Vector3 operatorDelta, float vehicleYawDelta)
+        {
+            if (_followRotation && Mathf.Abs(vehicleYawDelta) >= 0.001f)
+            {
+                // Apply the same rigid transform as the vehicle/operator frame. This
+                // rotates the HMD's tracked positional offset with the vehicle instead
+                // of pinning the HMD in world space while the XR origin turns beneath it.
+                Vector3 pivot = _followPosition ? _lastOperatorPosition : _userRig.position;
+                Quaternion yawRotation = Quaternion.AngleAxis(vehicleYawDelta, Vector3.up);
+                _userRig.position = pivot + yawRotation * (_userRig.position - pivot);
+                _userRig.rotation = yawRotation * _userRig.rotation;
+            }
+
+            if (_followPosition)
+                _userRig.position += operatorDelta;
         }
 
         private void ApplyComfortRotation(float targetYaw, float deltaTime)
@@ -204,10 +235,15 @@ namespace ElectricPalletStackers.PalletStackers
 
         private void RotateRigAroundHead(float targetYaw)
         {
+            Vector3 pivot = _head != null ? _head.position : _userRig.position;
+            RotateRigAroundPivot(targetYaw, pivot);
+        }
+
+        private void RotateRigAroundPivot(float targetYaw, Vector3 pivot)
+        {
             float yawDelta = Mathf.DeltaAngle(_userRig.eulerAngles.y, targetYaw);
             if (Mathf.Abs(yawDelta) < 0.001f) return;
 
-            Vector3 pivot = _head != null ? _head.position : _userRig.position;
             Quaternion yawRotation = Quaternion.AngleAxis(yawDelta, Vector3.up);
             _userRig.position = pivot + yawRotation * (_userRig.position - pivot);
             _userRig.rotation = yawRotation * _userRig.rotation;

@@ -37,9 +37,9 @@ namespace ElectricPalletStackers.Ble
 
         [Header("Tiller stop (mapped degrees)")]
         [Tooltip("The tiller engages the travel stop at or below this mapped angle.")]
-        [SerializeField] private float _lowerTillerStopMaximumDeg = 10f;
+        [SerializeField] private float _lowerTillerStopMaximumDeg = 20f;
         [Tooltip("The tiller engages the travel stop at or above this mapped angle.")]
-        [SerializeField] private float _upperTillerStopMinimumDeg = 90f;
+        [SerializeField] private float _upperTillerStopMinimumDeg = 70f;
 
         [Header("Travel (normalized)")]
         [Tooltip("Raw endpoints mapped to the minimum and maximum travel values. Values outside this range are clamped by the final output range.")]
