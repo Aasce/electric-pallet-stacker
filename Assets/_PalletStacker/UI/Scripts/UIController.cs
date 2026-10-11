@@ -1,5 +1,6 @@
 using System;
 using ElectricPalletStackers.Calibration;
+using ElectricPalletStackers.Gameplay;
 using ElectricPalletStackers.Localization;
 using UnityEngine;
 
@@ -19,6 +20,7 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private VehicleViewCalibrationSystem _calibrationSystem;
         [SerializeField] private UIWelcomePanel _welcomePanel;
         [SerializeField] private UIGuidePanel _guidePanel;
+        [SerializeField] private PpeEquipmentPhase _ppeEquipmentPhase;
         [SerializeField] private UICompletedPanel _completedPanel;
         [SerializeField] private UIFailedPanel _failedPanel;
 
@@ -46,7 +48,9 @@ namespace ElectricPalletStackers.UI
             if (_selectLanguagePanel != null)
                 _selectLanguagePanel.FocusChanged += HandleLanguageFocusChanged;
             if (_guidePanel != null)
-                _guidePanel.Confirmed += HandlePpeEquipped;
+                _guidePanel.Confirmed += ConfirmCurrentPanel;
+            if (_ppeEquipmentPhase != null)
+                _ppeEquipmentPhase.Equipped += HandlePpeEquipped;
             if (_calibrationPanel != null)
             {
                 _calibrationPanel.AlignRequested += HandleAlignRequested;
@@ -56,6 +60,7 @@ namespace ElectricPalletStackers.UI
             _calibrationPanel?.HideImmediate();
             _welcomePanel?.HideImmediate();
             _guidePanel?.HideImmediate();
+            _ppeEquipmentPhase?.EndPhase();
             _completedPanel?.HideImmediate();
             _failedPanel?.HideImmediate();
 
@@ -88,7 +93,9 @@ namespace ElectricPalletStackers.UI
             if (_selectLanguagePanel != null)
                 _selectLanguagePanel.FocusChanged -= HandleLanguageFocusChanged;
             if (_guidePanel != null)
-                _guidePanel.Confirmed -= HandlePpeEquipped;
+                _guidePanel.Confirmed -= ConfirmCurrentPanel;
+            if (_ppeEquipmentPhase != null)
+                _ppeEquipmentPhase.Equipped -= HandlePpeEquipped;
             if (_calibrationPanel != null)
             {
                 _calibrationPanel.AlignRequested -= HandleAlignRequested;
@@ -126,11 +133,10 @@ namespace ElectricPalletStackers.UI
                     TransitionTo(UIFlowState.Welcome);
                     break;
                 case UIFlowState.Welcome:
-                    TransitionTo(UIFlowState.PpePreparation);
+                    TransitionTo(UIFlowState.Guide);
                     break;
-                case UIFlowState.PpePreparation:
-                    if (_guidePanel != null) _guidePanel.Equip();
-                    else TransitionTo(UIFlowState.Hidden);
+                case UIFlowState.Guide:
+                    TransitionTo(UIFlowState.PpeEquipment);
                     break;
                 case UIFlowState.Completed:
                 case UIFlowState.Failed:
@@ -159,8 +165,7 @@ namespace ElectricPalletStackers.UI
 
         private void HandlePpeEquipped()
         {
-            if (CurrentState == UIFlowState.PpePreparation &&
-                (_guidePanel == null || _guidePanel.IsEquipped))
+            if (CurrentState == UIFlowState.PpeEquipment)
                 TransitionTo(UIFlowState.Hidden);
         }
 
@@ -174,6 +179,7 @@ namespace ElectricPalletStackers.UI
             _calibrationPanel?.Hide();
             _welcomePanel?.Hide();
             _guidePanel?.Hide();
+            _ppeEquipmentPhase?.EndPhase();
             _completedPanel?.Hide();
             _failedPanel?.Hide();
 
@@ -191,8 +197,11 @@ namespace ElectricPalletStackers.UI
                 case UIFlowState.Welcome:
                     _welcomePanel?.Show();
                     break;
-                case UIFlowState.PpePreparation:
+                case UIFlowState.Guide:
                     _guidePanel?.Show();
+                    break;
+                case UIFlowState.PpeEquipment:
+                    _ppeEquipmentPhase?.BeginPhase();
                     break;
                 case UIFlowState.Completed:
                     _completedPanel?.Show();

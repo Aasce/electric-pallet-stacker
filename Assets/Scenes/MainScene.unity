@@ -747,10 +747,6 @@ PrefabInstance:
       propertyPath: _inputRouter
       value:
       objectReference: {fileID: 1662881605}
-    - target: {fileID: 835843395758534760, guid: bd53fa57ce1a7514b9624706064953f8, type: 3}
-      propertyPath: _previewCamera
-      value:
-      objectReference: {fileID: 1856687365}
     - target: {fileID: 1356982593807856753, guid: bd53fa57ce1a7514b9624706064953f8, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -833,7 +829,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2446822163827099491, guid: bd53fa57ce1a7514b9624706064953f8, type: 3}
       propertyPath: m_Name
-      value: PPE Preparation Panel
+      value: Guide Panel
       objectReference: {fileID: 0}
     - target: {fileID: 2446822163827099491, guid: bd53fa57ce1a7514b9624706064953f8, type: 3}
       propertyPath: m_IsActive
@@ -6324,8 +6320,20 @@ MonoBehaviour:
   _calibrationSystem: {fileID: 1662881611}
   _welcomePanel: {fileID: 1362531948}
   _guidePanel: {fileID: 310148872}
+  _ppeEquipmentPhase: {fileID: 790000000000000014}
   _completedPanel: {fileID: 2100000002}
   _failedPanel: {fileID: 2100000012}
+--- !u!114 &790000000000000014 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 790000000000000013, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+  m_PrefabInstance: {fileID: 3505153867693228158}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50cdb1480b6f4cc4860b7d63ac72920a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Gameplay.PpeEquipmentPhase
 --- !u!4 &1662881608
 Transform:
   m_ObjectHideFlags: 0

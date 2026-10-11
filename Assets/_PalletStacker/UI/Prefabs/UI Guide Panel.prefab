@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 7880190693897597739}
   - component: {fileID: 4158386079127244220}
   - component: {fileID: 5792562391008375361}
+  - component: {fileID: 900000000000000001}
   m_Layer: 0
   m_Name: Title
   m_TagString: Untagged
@@ -65,7 +66,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: PERSONAL PROTECTIVE EQUIPMENT
+  m_text: Guide
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f89ce2922ef89ae46adc711adf2e04ef, type: 2}
   m_sharedMaterial: {fileID: 4749908933887385871, guid: f89ce2922ef89ae46adc711adf2e04ef, type: 2}
@@ -244,6 +245,7 @@ GameObject:
   - component: {fileID: 5050016680502352832}
   - component: {fileID: 6682983520774149205}
   - component: {fileID: 5182055879874601659}
+  - component: {fileID: 900000000000000002}
   m_Layer: 0
   m_Name: Confirm Hint
   m_TagString: Untagged
@@ -298,7 +300,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Select Equip to Continue
+  m_text: Press E-Stop to Continue
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8322a83c36dbf604db8a075474b12c47, type: 2}
   m_sharedMaterial: {fileID: 3055816025143138274, guid: 8322a83c36dbf604db8a075474b12c47, type: 2}
@@ -750,7 +752,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &5909932603623982458
 RectTransform:
   m_ObjectHideFlags: 0
@@ -886,7 +888,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2139187705013491564
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1080,12 +1082,6 @@ MonoBehaviour:
   _inputRouter: {fileID: 0}
   _okButton: {fileID: 1829590859}
   _scrollSpeed: 0.65
-  _equipmentPrefab: {fileID: 8678447777624500543, guid: 24fbaf479cdaf9b4abb895ea313fb776, type: 3}
-  _previewCamera: {fileID: 0}
-  _previewLocalPosition: {x: 0.3, y: -0.08, z: 0.8}
-  _previewLocalEulerAngles: {x: 10, y: -25, z: 0}
-  _previewSize: 0.3
-  _previewRotationSpeed: 24
 --- !u!224 &5778543281813175767 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 1103657270217214109, guid: f4ca324795e6bad4287d975e6f184641, type: 3}
@@ -1155,7 +1151,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Equip
+  m_text: Continue
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1250,7 +1246,7 @@ GameObject:
   - component: {fileID: 1829590860}
   - component: {fileID: 1829590859}
   m_Layer: 0
-  m_Name: PPE Equip Button
+  m_Name: Guide Continue Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1362,6 +1358,34 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1829590857}
   m_CullTransparentMesh: 1
+--- !u!114 &900000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 57183075234890379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 169af1aa369d4ea385a747138f2d801a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Localization.LocalizedText
+  _target: {fileID: 5792562391008375361}
+  _key: guide.title
+--- !u!114 &900000000000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1026726382021039212}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 169af1aa369d4ea385a747138f2d801a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Localization.LocalizedText
+  _target: {fileID: 5182055879874601659}
+  _key: common.continue
 --- !u!114 &900000000000000003
 MonoBehaviour:
   m_ObjectHideFlags: 0
