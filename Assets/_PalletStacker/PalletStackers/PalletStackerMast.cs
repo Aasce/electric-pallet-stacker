@@ -82,6 +82,15 @@ namespace ElectricPalletStackers.PalletStackers
             OnHeightChanged?.Invoke(position.y);
         }
 
+        public void RestoreHeight(float currentHeight, float targetHeight)
+        {
+            _targetHeightNormalized = Mathf.InverseLerp(MinHeight, MaxHeight, targetHeight);
+            Vector3 position = forks.localPosition;
+            position.y = Mathf.Clamp(currentHeight, MinHeight, MaxHeight);
+            forks.localPosition = position;
+            OnHeightChanged?.Invoke(position.y);
+        }
+
         private bool IsMotionBlocked(float localHeightDelta)
         {
             if (Mathf.Approximately(localHeightDelta, 0f)) return false;

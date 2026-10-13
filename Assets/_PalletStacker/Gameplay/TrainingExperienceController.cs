@@ -19,6 +19,7 @@ namespace ElectricPalletStackers.Gameplay
     [DisallowMultipleComponent]
     public sealed class TrainingExperienceController : MonoBehaviour,
         IGameRoundParticipant,
+        IGameRoundResumable,
         IGameVictorySource,
         IGameResettable
     {
@@ -59,6 +60,20 @@ namespace ElectricPalletStackers.Gameplay
             TransitionTo(TrainingExperienceStage.CollectPallet);
         }
 
+        public void ResumeRound()
+        {
+            switch (CurrentStage)
+            {
+                case TrainingExperienceStage.PhoneIntersection:
+                    _crossingVehicle.BeginCrossing();
+                    break;
+                case TrainingExperienceStage.DeliverPallet:
+                    _phoneCallEvent.TriggerIncomingCall();
+                    _palletRoundController.ArmDestination();
+                    break;
+            }
+        }
+
         public void FinishRound(GameState result)
         {
             if (result == GameState.Won) TransitionTo(TrainingExperienceStage.Completed);
@@ -70,6 +85,13 @@ namespace ElectricPalletStackers.Gameplay
             _crossingVehicle?.ResetVehicle();
             _phoneCallEvent?.ResetState();
             TransitionTo(TrainingExperienceStage.WaitingToStart);
+        }
+
+        public void RestoreStage(TrainingExperienceStage stage)
+        {
+            _crossingVehicle.ResetVehicle();
+            _phoneCallEvent.ResetState();
+            TransitionTo(stage);
         }
 
         public bool ReachCheckpoint(ExperienceCheckpoint checkpoint)

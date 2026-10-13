@@ -8,6 +8,11 @@ namespace ElectricPalletStackers.Gameplay
         void FinishRound(GameState result);
     }
 
+    public interface IGameRoundResumable
+    {
+        void ResumeRound();
+    }
+
     public interface IGameVictorySource
     {
         event Action VictoryRequested;
@@ -15,7 +20,7 @@ namespace ElectricPalletStackers.Gameplay
 
     public interface IGameFailureSource
     {
-        event Action FailureRequested;
+        event Action<GameFailureReason> FailureRequested;
     }
 
     public interface IGameResettable

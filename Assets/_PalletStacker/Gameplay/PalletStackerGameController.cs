@@ -6,12 +6,12 @@ using UnityEngine;
 namespace ElectricPalletStackers.Gameplay
 {
     [DisallowMultipleComponent]
-    public sealed class PalletStackerGameController : MonoBehaviour, IGameRoundParticipant, IGameFailureSource
+    public sealed class PalletStackerGameController : MonoBehaviour, IGameRoundParticipant, IGameRoundResumable, IGameFailureSource
     {
         [SerializeField] private PalletStackerCollisionReporter _collisionReporter;
         [SerializeField] private PalletStackerControlDriver _controlDriver;
 
-        public event Action FailureRequested;
+        public event Action<GameFailureReason> FailureRequested;
 
         private void OnEnable()
         {
@@ -27,8 +27,11 @@ namespace ElectricPalletStackers.Gameplay
 
         public void PrepareRound()
         {
-            if (_controlDriver == null) return;
+            ResumeRound();
+        }
 
+        public void ResumeRound()
+        {
             _controlDriver.ClearCollisionInterlock();
             _controlDriver.SetGameplayInterlock(false);
         }
@@ -42,7 +45,7 @@ namespace ElectricPalletStackers.Gameplay
         {
             // Stop locally before the AppManager broadcasts the result.
             _controlDriver?.SetGameplayInterlock(true);
-            FailureRequested?.Invoke();
+            FailureRequested?.Invoke(GameFailureReason.VehicleCollision);
         }
     }
 }

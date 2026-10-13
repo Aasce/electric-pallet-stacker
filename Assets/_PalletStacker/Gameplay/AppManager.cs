@@ -23,17 +23,19 @@ namespace ElectricPalletStackers.Gameplay
         [SerializeField] private bool _autoStart;
 
         private readonly List<IGameRoundParticipant> _roundParticipants = new();
+        private readonly List<IGameRoundResumable> _roundResumables = new();
         private readonly List<IGameVictorySource> _victorySources = new();
         private readonly List<IGameFailureSource> _failureSources = new();
         private readonly List<IGameResettable> _resettables = new();
         private bool _sourcesSubscribed;
 
         public GameState CurrentState { get; private set; } = GameState.Initializing;
+        public GameFailureReason LastFailureReason { get; private set; } = GameFailureReason.Unknown;
 
         public event Action<GameState, GameState> StateChanged;
         public event Action RoundStarted;
         public event Action GameWon;
-        public event Action GameLost;
+        public event Action<GameFailureReason> GameLost;
 
         private void Awake()
         {
@@ -60,6 +62,7 @@ namespace ElectricPalletStackers.Gameplay
         {
             if (CurrentState == GameState.Playing) return;
 
+            LastFailureReason = GameFailureReason.Unknown;
             for (int index = 0; index < _roundParticipants.Count; index++)
                 _roundParticipants[index].PrepareRound();
 
@@ -70,6 +73,16 @@ namespace ElectricPalletStackers.Gameplay
         public void RestartRound()
         {
             StartRound();
+        }
+
+        public void ResumeRound()
+        {
+            if (CurrentState != GameState.Lost) return;
+
+            LastFailureReason = GameFailureReason.Unknown;
+            TransitionTo(GameState.Playing);
+            for (int index = 0; index < _roundResumables.Count; index++)
+                _roundResumables[index].ResumeRound();
         }
 
         public void ResetToWaitingState()
@@ -83,6 +96,7 @@ namespace ElectricPalletStackers.Gameplay
             for (int index = 0; index < _resettables.Count; index++)
                 _resettables[index].ResetState();
 
+            LastFailureReason = GameFailureReason.Unknown;
             TransitionTo(GameState.WaitingToStart);
         }
 
@@ -101,7 +115,7 @@ namespace ElectricPalletStackers.Gameplay
         [ContextMenu("Simulate Loss")]
         private void SimulateLoss()
         {
-            HandleFailureRequested();
+            HandleFailureRequested(GameFailureReason.Unknown);
         }
 
         private void HandleVictoryRequested()
@@ -109,8 +123,9 @@ namespace ElectricPalletStackers.Gameplay
             CompleteRound(GameState.Won);
         }
 
-        private void HandleFailureRequested()
+        private void HandleFailureRequested(GameFailureReason reason)
         {
+            LastFailureReason = reason;
             CompleteRound(GameState.Lost);
         }
 
@@ -125,7 +140,7 @@ namespace ElectricPalletStackers.Gameplay
 
             TransitionTo(result);
             if (result == GameState.Won) GameWon?.Invoke();
-            else GameLost?.Invoke();
+            else GameLost?.Invoke(LastFailureReason);
         }
 
         private void TransitionTo(GameState nextState)
@@ -143,6 +158,13 @@ namespace ElectricPalletStackers.Gameplay
             CacheInterfaces(_victorySourceComponents, _victorySources, nameof(_victorySourceComponents));
             CacheInterfaces(_failureSourceComponents, _failureSources, nameof(_failureSourceComponents));
             CacheInterfaces(_resettableComponents, _resettables, nameof(_resettableComponents));
+
+            _roundResumables.Clear();
+            for (int index = 0; index < _roundParticipants.Count; index++)
+            {
+                if (_roundParticipants[index] is IGameRoundResumable resumable)
+                    _roundResumables.Add(resumable);
+            }
         }
 
         private void CacheInterfaces<T>(MonoBehaviour[] components, List<T> targets, string fieldName)

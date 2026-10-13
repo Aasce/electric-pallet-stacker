@@ -23,6 +23,8 @@ namespace ElectricPalletStackers.PalletStackers
 
         [Header("Rig")]
         [SerializeField] private Transform _userRig;
+        [Tooltip("Optional vehicle child that defines the exact player follow pose. When assigned, it replaces the numeric position and facing offsets below.")]
+        [SerializeField] private Transform _followAnchor;
         [Tooltip("Vehicle-local operator position. The vehicle travels along local +Z, so -Z is behind it.")]
         [SerializeField] private Vector3 _localOperatorOffset = new Vector3(0f, 0f, -2.2f);
         [Tooltip("Rotates the rig's local +Z forward axis toward the vehicle's local +Z travel direction.")]
@@ -69,6 +71,7 @@ namespace ElectricPalletStackers.PalletStackers
         private bool _isVignetteEngaged;
 
         public Transform UserRig => _userRig;
+        public Transform FollowAnchor => _followAnchor;
         public Vector3 LocalOperatorOffset => _localOperatorOffset;
         public bool TurnVignetteEnabled => _useTurnVignette;
 
@@ -251,11 +254,16 @@ namespace ElectricPalletStackers.PalletStackers
 
         private Vector3 GetOperatorPosition()
         {
-            return transform.TransformPoint(_localOperatorOffset);
+            return _followAnchor != null
+                ? _followAnchor.position
+                : transform.TransformPoint(_localOperatorOffset);
         }
 
         private float GetVehicleFacingYaw()
         {
+            if (_followAnchor != null)
+                return _followAnchor.eulerAngles.y;
+
             Quaternion localFacing = Quaternion.Euler(_localFacingEuler);
             return (transform.rotation * localFacing).eulerAngles.y;
         }

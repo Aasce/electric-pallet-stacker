@@ -5,7 +5,7 @@ using UnityEngine;
 namespace ElectricPalletStackers.Gameplay
 {
     [DisallowMultipleComponent]
-    public sealed class PalletLoadFailureSource : MonoBehaviour, IGameFailureSource, IGameRoundParticipant
+    public sealed class PalletLoadFailureSource : MonoBehaviour, IGameFailureSource, IGameRoundParticipant, IGameRoundResumable
     {
         [SerializeField] private PalletStackerLoad _load;
         [SerializeField] private PalletStackerLoadHandler _loadHandler;
@@ -19,7 +19,7 @@ namespace ElectricPalletStackers.Gameplay
 
         private bool _roundActive;
 
-        public event Action FailureRequested;
+        public event Action<GameFailureReason> FailureRequested;
 
         private void OnEnable()
         {
@@ -35,6 +35,11 @@ namespace ElectricPalletStackers.Gameplay
         }
 
         public void PrepareRound()
+        {
+            ResumeRound();
+        }
+
+        public void ResumeRound()
         {
             _roundActive = true;
         }
@@ -56,13 +61,14 @@ namespace ElectricPalletStackers.Gameplay
             if (impactSpeed < _minimumRelativeSpeed) return;
 
             ReportFailure(
+                GameFailureReason.LoadCollision,
                 $"unsafe collision with '{collision.gameObject.name}' at {impactSpeed:0.00} m/s");
         }
 
         private void HandleLoadJointBroken(PalletStackerLoad brokenLoad)
         {
             if (!_roundActive || brokenLoad != _load) return;
-            ReportFailure("load joint broke unexpectedly");
+            ReportFailure(GameFailureReason.LoadDropped, "load joint broke unexpectedly");
         }
 
         private bool IsHeldLoad()
@@ -113,15 +119,15 @@ namespace ElectricPalletStackers.Gameplay
                    collider.GetComponentInParent<PalletStacker>() != null;
         }
 
-        private void ReportFailure(string reason)
+        private void ReportFailure(GameFailureReason failureReason, string diagnostic)
         {
             if (!_roundActive) return;
             _roundActive = false;
 
-            Debug.LogWarning($"[PALLET LOAD] Training failed: {reason}.", this);
+            Debug.LogWarning($"[PALLET LOAD] Training failed: {diagnostic}.", this);
             if (_releaseLoadOnFailure && IsHeldLoad())
                 _loadHandler.ReleaseLoad();
-            FailureRequested?.Invoke();
+            FailureRequested?.Invoke(failureReason);
         }
     }
 }

@@ -6,7 +6,7 @@ using UnityEngine;
 namespace ElectricPalletStackers.NPCs
 {
     [DisallowMultipleComponent]
-    public sealed class NpcPopulationController : MonoBehaviour, IGameRoundParticipant, IGameResettable
+    public sealed class NpcPopulationController : MonoBehaviour, IGameRoundParticipant, IGameRoundResumable, IGameResettable
     {
         [Header("Population")]
         [SerializeField] private NpcAgent _npcPrefab;
@@ -62,6 +62,16 @@ namespace ElectricPalletStackers.NPCs
                 bool active = index < _normalNpcCount;
                 npc.gameObject.SetActive(active);
                 if (active) npc.ResetForRound(true);
+            }
+        }
+
+        public void ResumeRound()
+        {
+            _roundActive = true;
+            for (int index = 0; index < _npcs.Count; index++)
+            {
+                NpcAgent npc = _npcs[index];
+                if (npc != null && npc.isActiveAndEnabled) npc.SetRoundActive(true);
             }
         }
 

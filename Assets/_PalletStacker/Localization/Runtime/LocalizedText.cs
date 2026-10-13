@@ -25,6 +25,12 @@ namespace ElectricPalletStackers.Localization
             _target.font = overrideFont != null ? overrideFont : _defaultFont;
         }
 
+        public void SetKey(string key, ILocalizationService localization)
+        {
+            _key = key;
+            ApplyLocalization(localization);
+        }
+
         private void Reset()
         {
             ResolveTarget();

@@ -61,7 +61,8 @@ namespace ElectricPalletStackers.Gameplay
 
         public void FinishRound(GameState result)
         {
-            DeactivateDestinations();
+            if (result == GameState.Lost) DisarmDestinations();
+            else DeactivateDestinations();
         }
 
         public void ResetState()
@@ -86,15 +87,7 @@ namespace ElectricPalletStackers.Gameplay
 
         private void DeactivateDestinations()
         {
-            if (_activeDestination != null)
-                _activeDestination.DestinationConfirmed -= HandleDestinationConfirmed;
-
-            if (_destinationZones != null)
-            {
-                for (int index = 0; index < _destinationZones.Length; index++)
-                    _destinationZones[index]?.Disarm();
-            }
-
+            DisarmDestinations();
             _activeDestination = null;
         }
 
@@ -127,6 +120,16 @@ namespace ElectricPalletStackers.Gameplay
             for (int index = 0; index < _destinationZones.Length; index++)
                 if (_destinationZones[index] != null) return _destinationZones[index];
             return null;
+        }
+
+        private void DisarmDestinations()
+        {
+            if (_activeDestination != null)
+                _activeDestination.DestinationConfirmed -= HandleDestinationConfirmed;
+
+            if (_destinationZones == null) return;
+            for (int index = 0; index < _destinationZones.Length; index++)
+                _destinationZones[index]?.Disarm();
         }
     }
 }

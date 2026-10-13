@@ -6,7 +6,7 @@ namespace ElectricPalletStackers.Gameplay
 {
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CharacterController))]
-    public sealed class PlayerCollisionFailureSource : MonoBehaviour, IGameFailureSource, IGameRoundParticipant
+    public sealed class PlayerCollisionFailureSource : MonoBehaviour, IGameFailureSource, IGameRoundParticipant, IGameRoundResumable
     {
         [SerializeField] private LayerMask _collisionLayers = ~0;
         [Tooltip("Contacts this aligned with world up are treated as floor/support contacts.")]
@@ -14,9 +14,14 @@ namespace ElectricPalletStackers.Gameplay
 
         private bool _roundActive;
 
-        public event Action FailureRequested;
+        public event Action<GameFailureReason> FailureRequested;
 
         public void PrepareRound()
+        {
+            ResumeRound();
+        }
+
+        public void ResumeRound()
         {
             _roundActive = true;
         }
@@ -43,7 +48,7 @@ namespace ElectricPalletStackers.Gameplay
                 $"[PLAYER] Collision failure triggered by '{hit.collider.name}' " +
                 $"on layer {LayerMask.LayerToName(hit.collider.gameObject.layer)}.",
                 this);
-            FailureRequested?.Invoke();
+            FailureRequested?.Invoke(GameFailureReason.OperatorCollision);
         }
     }
 }

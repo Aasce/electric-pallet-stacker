@@ -38,6 +38,7 @@ namespace ElectricPalletStackers.UI
         /// Placeholder hook for systems that need to reset transient state before a new run.
         /// </summary>
         public event Action ResetRequested;
+        public event Action ContinueRequested;
 
         private void Awake()
         {
@@ -55,6 +56,8 @@ namespace ElectricPalletStackers.UI
                 _calibrationPanel.AlignRequested += HandleAlignRequested;
                 _calibrationPanel.OffsetAdjustmentRequested += HandleOffsetAdjustmentRequested;
             }
+            _failedPanel.ActionConfirmed += HandleFailureActionConfirmed;
+
             _selectLanguagePanel?.HideImmediate();
             _calibrationPanel?.HideImmediate();
             _welcomePanel?.HideImmediate();
@@ -62,7 +65,7 @@ namespace ElectricPalletStackers.UI
             _ppePanel?.HideImmediate();
             _ppeEquipmentPhase?.EndPhase();
             _completedPanel?.HideImmediate();
-            _failedPanel?.HideImmediate();
+            _failedPanel.HideImmediate();
 
             CurrentState = UIFlowState.CalibrateVehicleView;
             _inputRouter?.ResetForPanel();
@@ -99,18 +102,23 @@ namespace ElectricPalletStackers.UI
                 _calibrationPanel.AlignRequested -= HandleAlignRequested;
                 _calibrationPanel.OffsetAdjustmentRequested -= HandleOffsetAdjustmentRequested;
             }
+            _failedPanel.ActionConfirmed -= HandleFailureActionConfirmed;
         }
 
         private void HandleNavigateNext()
         {
             if (CurrentState == UIFlowState.SelectLanguage)
-                _selectLanguagePanel?.NavigateNext();
+                _selectLanguagePanel.NavigateNext();
+            else if (CurrentState == UIFlowState.Failed)
+                _failedPanel.NavigateNext();
         }
 
         private void HandleNavigatePrevious()
         {
             if (CurrentState == UIFlowState.SelectLanguage)
-                _selectLanguagePanel?.NavigatePrevious();
+                _selectLanguagePanel.NavigatePrevious();
+            else if (CurrentState == UIFlowState.Failed)
+                _failedPanel.NavigatePrevious();
         }
 
         private void HandleConfirm()
@@ -137,9 +145,11 @@ namespace ElectricPalletStackers.UI
                     TransitionTo(UIFlowState.PpeEquipment);
                     break;
                 case UIFlowState.Completed:
-                case UIFlowState.Failed:
                     ResetRequested?.Invoke();
                     TransitionTo(UIFlowState.Welcome);
+                    break;
+                case UIFlowState.Failed:
+                    _failedPanel.ConfirmSelection();
                     break;
             }
         }
@@ -149,8 +159,11 @@ namespace ElectricPalletStackers.UI
             TransitionTo(UIFlowState.Completed);
         }
 
-        public void ShowFailed()
+        public void ShowFailed(GameFailureReason reason)
         {
+            _failedPanel.SetFailureReason(
+                ResolveFailureReasonKey(reason),
+                _localizationManager.Service);
             TransitionTo(UIFlowState.Failed);
         }
 
@@ -214,6 +227,35 @@ namespace ElectricPalletStackers.UI
             PanelChanged?.Invoke(nextState);
             if (capturedBefore != IsInputCaptured)
                 InputCaptureChanged?.Invoke(IsInputCaptured);
+        }
+
+        private void HandleFailureActionConfirmed(FailedPanelAction action)
+        {
+            if (action == FailedPanelAction.ContinueFromCheckpoint)
+            {
+                ContinueRequested?.Invoke();
+                TransitionTo(UIFlowState.Hidden);
+                return;
+            }
+
+            ResetRequested?.Invoke();
+            TransitionTo(UIFlowState.Welcome);
+        }
+
+        private static string ResolveFailureReasonKey(GameFailureReason reason)
+        {
+            return reason switch
+            {
+                GameFailureReason.VehicleCollision =>
+                    LocalizationKeys.Failed.VehicleCollisionReason,
+                GameFailureReason.OperatorCollision =>
+                    LocalizationKeys.Failed.OperatorCollisionReason,
+                GameFailureReason.LoadCollision =>
+                    LocalizationKeys.Failed.LoadCollisionReason,
+                GameFailureReason.LoadDropped =>
+                    LocalizationKeys.Failed.LoadDroppedReason,
+                _ => LocalizationKeys.Failed.UnknownReason
+            };
         }
     }
 }

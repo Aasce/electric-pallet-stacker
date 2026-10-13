@@ -12,6 +12,7 @@ namespace ElectricPalletStackers.UI
     {
         [SerializeField] private UIController _uiController;
         [SerializeField] private AppManager _appManager;
+        [SerializeField] private TrainingCheckpointController _checkpointController;
 
         private bool _hasStarted;
 
@@ -21,6 +22,7 @@ namespace ElectricPalletStackers.UI
             {
                 _uiController.PanelChanged += HandlePanelChanged;
                 _uiController.ResetRequested += HandleResetRequested;
+                _uiController.ContinueRequested += HandleContinueRequested;
             }
 
             if (_appManager != null)
@@ -38,6 +40,7 @@ namespace ElectricPalletStackers.UI
             {
                 _uiController.PanelChanged -= HandlePanelChanged;
                 _uiController.ResetRequested -= HandleResetRequested;
+                _uiController.ContinueRequested -= HandleContinueRequested;
             }
 
             if (_appManager != null)
@@ -71,15 +74,22 @@ namespace ElectricPalletStackers.UI
             _uiController?.ShowCompleted();
         }
 
-        private void HandleGameLost()
+        private void HandleGameLost(GameFailureReason reason)
         {
-            _uiController?.ShowFailed();
+            _uiController.ShowFailed(reason);
         }
 
         private void HandleResetRequested()
         {
             _hasStarted = false;
             _appManager?.ResetToWaitingState();
+        }
+
+        private void HandleContinueRequested()
+        {
+            _checkpointController.RestoreLatest();
+            _appManager.ResumeRound();
+            _hasStarted = true;
         }
     }
 }
