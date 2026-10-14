@@ -17,17 +17,37 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private Rigidbody _vehicleBody;
         [SerializeField] private PalletStackerCollisionReporter _collisionReporter;
         [SerializeField] private NpcPopulationController _npcPopulation;
+        [SerializeField] private PalletStackerForkCollisionSensor _forkCollisionSensor;
+        [Tooltip("Defaults to the main camera and represents the player's head position.")]
+        [SerializeField] private Transform _playerView;
 
         [Header("Call")]
         [SerializeField] private string _callerDisplay = "0123456789";
         [SerializeField, Min(0.1f)] private float _conversationDuration = 10f;
-        [SerializeField, Min(0f)] private float _movingSpeedThreshold = 0.1f;
+
+        [Header("Phone distraction NPC")]
+        [Tooltip("Falls back to the population controller's NPC prefab when empty.")]
+        [SerializeField] private NpcAgent _phoneNpcPrefab;
+        [SerializeField, Min(0f)] private float _npcFrontClearance = 1.25f;
+        [SerializeField, Min(0f)] private float _npcBehindPlayerClearance = 1.25f;
+        [SerializeField, Min(0f)] private float _minimumCollisionGrace = 1f;
+        [SerializeField, Min(0f)] private float _maximumCollisionGrace = 3f;
+        [SerializeField, Min(0f)] private float _travelDirectionThreshold = 0.05f;
+        [SerializeField, Min(0.1f)] private float _groundProbeHeight = 3f;
+        [SerializeField, Min(0.1f)] private float _groundProbeDistance = 8f;
+        [SerializeField, Min(0f)] private float _maximumGroundHeightDifference = 0.75f;
+        [SerializeField] private LayerMask _groundLayers = ~0;
 
         private Coroutine _callRoutine;
-        private NpcVehicleRammer _activeNpcApproach;
+        private Coroutine _collisionGraceRoutine;
+        private NpcAgent _activePhoneNpc;
+        private Transform _ringingTargetAnchor;
+        private Vector3 _plannedNpcPosition;
         private bool _activeConversation;
-        private bool _accidentTriggered;
+        private bool _hasPlannedNpcPosition;
+        private bool _phoneNpcImpactOccurred;
         private bool _triggeredThisRound;
+        private float _callTravelSign = 1f;
 
         public float ConversationDuration => _conversationDuration;
         public bool IsRinging => _phoneCallPanel != null && _phoneCallPanel.IsRinging;
@@ -57,14 +77,6 @@ namespace ElectricPalletStackers.UI
             ResetCallState();
         }
 
-        private void Update()
-        {
-            if (!_activeConversation || _accidentTriggered) return;
-            bool moving = IsVehicleMoving();
-            if (moving && _activeNpcApproach == null) BeginNpcApproach();
-            _activeNpcApproach?.SetVehicleMoving(moving);
-        }
-
         public void TriggerIncomingCall()
         {
             ResolveReferences();
@@ -73,8 +85,11 @@ namespace ElectricPalletStackers.UI
 
             _triggeredThisRound = true;
             _activeConversation = false;
-            _accidentTriggered = false;
+            _phoneNpcImpactOccurred = false;
+            _callTravelSign = ResolveTravelSign();
+            PreparePlannedNpcPosition();
             _phoneCallPanel?.ShowIncomingCall(_callerDisplay);
+            _phoneCallPanel?.SetOcclusionTarget(_ringingTargetAnchor);
             // An unanswered call intentionally rings forever and raises pedestrian pressure.
             _npcPopulation?.SetCrowdPressure(true);
         }
@@ -82,7 +97,6 @@ namespace ElectricPalletStackers.UI
         public void ResetState()
         {
             _triggeredThisRound = false;
-            _accidentTriggered = false;
             ResetCallState();
         }
 
@@ -97,7 +111,20 @@ namespace ElectricPalletStackers.UI
 
         private void HandleGameStateChanged(GameState previousState, GameState nextState)
         {
-            if (nextState != GameState.Playing) ResetCallState();
+            if (nextState == GameState.Lost && _phoneNpcImpactOccurred)
+            {
+                StopCallKeepingImpactedNpc();
+                return;
+            }
+
+            if (nextState != GameState.Playing)
+            {
+                ResetCallState();
+                return;
+            }
+
+            if (previousState == GameState.Lost && _activePhoneNpc != null)
+                ResetState();
         }
 
         private void HandleCallAccepted()
@@ -105,9 +132,11 @@ namespace ElectricPalletStackers.UI
             if (_activeConversation) return;
             _npcPopulation?.SetCrowdPressure(false);
             _activeConversation = true;
-            bool moving = IsVehicleMoving();
-            if (moving) BeginNpcApproach();
-            _activeNpcApproach?.SetVehicleMoving(moving);
+            SpawnPhoneNpc();
+            _phoneCallPanel?.SetOcclusionTarget(_activePhoneNpc != null
+                ? _activePhoneNpc.transform
+                : null);
+            ClearRingingTargetAnchor();
             CancelCallRoutine();
             _callRoutine = StartCoroutine(CompleteConversationAfter(_conversationDuration));
         }
@@ -117,83 +146,248 @@ namespace ElectricPalletStackers.UI
             yield return new WaitForSecondsRealtime(duration);
             _callRoutine = null;
             _activeConversation = false;
-            StopNpcApproach();
+            ClearRingingTargetAnchor();
+            DespawnPhoneNpc();
             _phoneCallPanel?.FinishCall();
         }
 
-        private bool IsVehicleMoving()
+        private void SpawnPhoneNpc()
         {
-            if (_vehicleMotor != null && Mathf.Abs(_vehicleMotor.CurrentSpeed) > _movingSpeedThreshold)
-                return true;
-            if (_vehicleBody == null) return false;
-            Vector3 planarVelocity = Vector3.ProjectOnPlane(_vehicleBody.linearVelocity, Vector3.up);
-            return planarVelocity.sqrMagnitude > _movingSpeedThreshold * _movingSpeedThreshold;
-        }
+            DespawnPhoneNpc();
+            if (_vehicleBody == null) return;
 
-        private void BeginNpcApproach()
-        {
-            if (_activeNpcApproach != null || _vehicleBody == null) return;
-            NpcAgent closestNpc = _npcPopulation != null
-                ? _npcPopulation.FindClosestAvailableNpc(_vehicleBody.position)
-                : FindClosestNpc();
-            if (closestNpc == null)
+            NpcAgent prefab = _phoneNpcPrefab != null
+                ? _phoneNpcPrefab
+                : _npcPopulation != null ? _npcPopulation.NpcPrefab : null;
+            if (prefab == null)
             {
-                Debug.LogWarning("No active waypoint NPC was available for the phone distraction event.", this);
+                Debug.LogWarning("No NPC prefab is configured for the phone distraction event.", this);
                 return;
             }
 
-            _activeNpcApproach = closestNpc.GetComponent<NpcVehicleRammer>();
-            if (_activeNpcApproach == null)
-                _activeNpcApproach = closestNpc.gameObject.AddComponent<NpcVehicleRammer>();
-            _activeNpcApproach.BeginApproach(
-                closestNpc,
-                _vehicleBody,
-                _vehicleMotor,
-                _collisionReporter,
-                _movingSpeedThreshold,
-                HandleNpcImpact);
+            Vector3 travelDirection = GetVehicleForward() * _callTravelSign;
+            Vector3 spawnPosition = _hasPlannedNpcPosition
+                ? _plannedNpcPosition
+                : CalculateNpcPosition();
+            Quaternion spawnRotation = Quaternion.LookRotation(-travelDirection, Vector3.up);
+
+            _activePhoneNpc = Instantiate(prefab, spawnPosition, spawnRotation, transform);
+            _activePhoneNpc.name = "Phone Call Hazard NPC";
+            _activePhoneNpc.VehicleCollisionStarted += HandlePhoneNpcCollisionStarted;
+            _activePhoneNpc.Initialize(
+                null,
+                _npcPopulation != null ? _npcPopulation.VehicleTarget : null,
+                null,
+                0);
+            _activePhoneNpc.SetRoundActive(true);
+            _activePhoneNpc.BeginScriptedMovement();
+            _activePhoneNpc.SetVehicleCollisionEnabled(false);
+
+            float minimumGrace = Mathf.Min(_minimumCollisionGrace, _maximumCollisionGrace);
+            float maximumGrace = Mathf.Max(_minimumCollisionGrace, _maximumCollisionGrace);
+            float graceDuration = Random.Range(minimumGrace, maximumGrace);
+            _collisionGraceRoutine = StartCoroutine(EnableNpcCollisionAfter(
+                graceDuration,
+                _activePhoneNpc));
         }
 
-        private NpcAgent FindClosestNpc()
+        private void PreparePlannedNpcPosition()
         {
-            NpcAgent[] npcs = FindObjectsByType<NpcAgent>(
-                FindObjectsInactive.Exclude,
-                FindObjectsSortMode.None);
-            NpcAgent closest = null;
-            float closestSqrDistance = float.PositiveInfinity;
-            for (int index = 0; index < npcs.Length; index++)
+            _plannedNpcPosition = CalculateNpcPosition();
+            _hasPlannedNpcPosition = true;
+
+            if (_ringingTargetAnchor == null)
             {
-                NpcAgent npc = npcs[index];
-                if (npc == null || !npc.IsAvailableForPhoneEvent) continue;
-                float sqrDistance = (npc.transform.position - _vehicleBody.position).sqrMagnitude;
-                if (sqrDistance >= closestSqrDistance) continue;
-                closestSqrDistance = sqrDistance;
-                closest = npc;
+                GameObject anchorObject = new("Phone Call NPC Target");
+                _ringingTargetAnchor = anchorObject.transform;
+                _ringingTargetAnchor.SetParent(transform, true);
             }
-            return closest;
+            _ringingTargetAnchor.position = _plannedNpcPosition;
         }
 
-        private void StopNpcApproach()
+        private Vector3 CalculateNpcPosition()
         {
-            if (_activeNpcApproach == null) return;
-            _activeNpcApproach.CancelApproach();
-            _activeNpcApproach = null;
+            Vector3 vehicleForward = GetVehicleForward();
+            Vector3 position = _callTravelSign >= 0f
+                ? GetPointInFrontOfForks(vehicleForward)
+                : GetPointBehindPlayer(vehicleForward);
+            SnapToGround(ref position);
+            return position;
         }
 
-        private void HandleNpcImpact()
+        private IEnumerator EnableNpcCollisionAfter(float delay, NpcAgent expectedNpc)
         {
-            _activeNpcApproach = null;
-            _accidentTriggered = true;
-            _activeConversation = false;
+            yield return new WaitForSecondsRealtime(delay);
+            _collisionGraceRoutine = null;
+            if (!_activeConversation || expectedNpc == null || expectedNpc != _activePhoneNpc)
+                yield break;
+            expectedNpc.SetVehicleCollisionEnabled(true);
+        }
+
+        private float ResolveTravelSign()
+        {
+            if (_vehicleMotor != null)
+            {
+                float signedSpeed = Mathf.Abs(_vehicleMotor.CurrentSpeed) > _travelDirectionThreshold
+                    ? _vehicleMotor.CurrentSpeed
+                    : _vehicleMotor.TargetSpeed;
+                if (Mathf.Abs(signedSpeed) > _travelDirectionThreshold)
+                    return Mathf.Sign(signedSpeed);
+            }
+
+            if (_vehicleBody != null)
+            {
+                Vector3 planarVelocity = Vector3.ProjectOnPlane(
+                    _vehicleBody.linearVelocity,
+                    Vector3.up);
+                float signedVelocity = Vector3.Dot(planarVelocity, GetVehicleForward());
+                if (Mathf.Abs(signedVelocity) > _travelDirectionThreshold)
+                    return Mathf.Sign(signedVelocity);
+            }
+
+            return 1f;
+        }
+
+        private Vector3 GetVehicleForward()
+        {
+            Vector3 forward = _vehicleMotor != null
+                ? Vector3.ProjectOnPlane(_vehicleMotor.WorldForward, Vector3.up)
+                : Vector3.ProjectOnPlane(_vehicleBody.transform.forward, Vector3.up);
+            if (forward.sqrMagnitude < 0.001f) forward = Vector3.forward;
+            return forward.normalized;
+        }
+
+        private Vector3 GetPointInFrontOfForks(Vector3 vehicleForward)
+        {
+            if (_forkCollisionSensor != null)
+            {
+                Collider forkCollider = _forkCollisionSensor.GetComponent<Collider>();
+                if (forkCollider != null && forkCollider.enabled)
+                {
+                    Bounds bounds = forkCollider.bounds;
+                    float projectedExtent = Mathf.Abs(vehicleForward.x) * bounds.extents.x +
+                                            Mathf.Abs(vehicleForward.z) * bounds.extents.z;
+                    Vector3 forkTip = bounds.center + vehicleForward * projectedExtent;
+                    forkTip.y = GetExpectedGroundHeight();
+                    return forkTip + vehicleForward * _npcFrontClearance;
+                }
+
+                Vector3 forkPosition = _forkCollisionSensor.transform.position;
+                forkPosition.y = GetExpectedGroundHeight();
+                return forkPosition + vehicleForward * _npcFrontClearance;
+            }
+
+            Debug.LogWarning("Fork collision sensor is missing; using vehicle origin for phone NPC placement.", this);
+            Vector3 fallback = _vehicleBody.position;
+            fallback.y = GetExpectedGroundHeight();
+            return fallback + vehicleForward * _npcFrontClearance;
+        }
+
+        private Vector3 GetPointBehindPlayer(Vector3 vehicleForward)
+        {
+            if (_playerView == null && Camera.main != null) _playerView = Camera.main.transform;
+            Vector3 playerPosition = _playerView != null
+                ? _playerView.position
+                : _vehicleBody.position;
+            playerPosition.y = GetExpectedGroundHeight();
+            return playerPosition - vehicleForward * _npcBehindPlayerClearance;
+        }
+
+        private void SnapToGround(ref Vector3 position)
+        {
+            float expectedGroundHeight = GetExpectedGroundHeight();
+            position.y = expectedGroundHeight;
+            Vector3 origin = new(
+                position.x,
+                expectedGroundHeight + _groundProbeHeight,
+                position.z);
+            RaycastHit[] hits = Physics.RaycastAll(
+                origin,
+                Vector3.down,
+                _groundProbeHeight + _groundProbeDistance,
+                _groundLayers,
+                QueryTriggerInteraction.Ignore);
+            float closestHeightDifference = float.PositiveInfinity;
+            for (int index = 0; index < hits.Length; index++)
+            {
+                RaycastHit hit = hits[index];
+                if (hit.collider == null || IsVehicleCollider(hit.collider)) continue;
+                float heightDifference = Mathf.Abs(hit.point.y - expectedGroundHeight);
+                if (heightDifference > _maximumGroundHeightDifference ||
+                    heightDifference >= closestHeightDifference) continue;
+                closestHeightDifference = heightDifference;
+                position.y = hit.point.y;
+            }
+        }
+
+        private float GetExpectedGroundHeight()
+        {
+            return _vehicleBody != null ? _vehicleBody.transform.position.y : 0f;
+        }
+
+        private bool IsVehicleCollider(Collider collider)
+        {
+            if (collider == null || _vehicleBody == null) return false;
+            if (collider.attachedRigidbody == _vehicleBody) return true;
+            Transform vehicleRoot = _vehicleBody.transform;
+            return collider.transform == vehicleRoot || collider.transform.IsChildOf(vehicleRoot);
+        }
+
+        private void DespawnPhoneNpc()
+        {
+            CancelCollisionGraceRoutine();
+            _phoneCallPanel?.SetOcclusionTarget(null);
+            if (_activePhoneNpc == null) return;
+
+            GameObject npcObject = _activePhoneNpc.gameObject;
+            _activePhoneNpc.VehicleCollisionStarted -= HandlePhoneNpcCollisionStarted;
+            _activePhoneNpc = null;
+            npcObject.SetActive(false);
+            Destroy(npcObject);
+        }
+
+        private void HandlePhoneNpcCollisionStarted()
+        {
+            _phoneNpcImpactOccurred = true;
+            StopCallKeepingImpactedNpc();
+        }
+
+        private void StopCallKeepingImpactedNpc()
+        {
             CancelCallRoutine();
+            CancelCollisionGraceRoutine();
+            _activeConversation = false;
+            ClearRingingTargetAnchor();
+            _activePhoneNpc?.SetVehicleCollisionEnabled(false);
+            _phoneCallPanel?.SetOcclusionTarget(null);
             _phoneCallPanel?.FinishCall();
+        }
+
+        private void ClearRingingTargetAnchor()
+        {
+            _hasPlannedNpcPosition = false;
+            if (_ringingTargetAnchor == null) return;
+
+            GameObject anchorObject = _ringingTargetAnchor.gameObject;
+            _ringingTargetAnchor = null;
+            anchorObject.SetActive(false);
+            Destroy(anchorObject);
+        }
+
+        private void CancelCollisionGraceRoutine()
+        {
+            if (_collisionGraceRoutine == null) return;
+            StopCoroutine(_collisionGraceRoutine);
+            _collisionGraceRoutine = null;
         }
 
         private void ResetCallState()
         {
             CancelCallRoutine();
             _activeConversation = false;
-            StopNpcApproach();
+            _phoneNpcImpactOccurred = false;
+            ClearRingingTargetAnchor();
+            DespawnPhoneNpc();
             _npcPopulation?.SetCrowdPressure(false);
             _phoneCallPanel?.HideImmediate();
         }
@@ -212,6 +406,10 @@ namespace ElectricPalletStackers.UI
                 _collisionReporter = FindFirstObjectByType<PalletStackerCollisionReporter>(FindObjectsInactive.Include);
             if (_npcPopulation == null)
                 _npcPopulation = FindFirstObjectByType<NpcPopulationController>(FindObjectsInactive.Include);
+            if (_forkCollisionSensor == null && _vehicleBody != null)
+                _forkCollisionSensor = _vehicleBody.GetComponentInChildren<PalletStackerForkCollisionSensor>(true);
+            if (_playerView == null && Camera.main != null)
+                _playerView = Camera.main.transform;
         }
 
         private void CancelCallRoutine()

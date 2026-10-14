@@ -16,8 +16,7 @@ namespace ElectricPalletStackers.NPCs
         [SerializeField] private NpcWaypointRoute[] _routes;
 
         [Header("Vehicle")]
-        [SerializeField] private Transform _vehicleTransform;
-        [SerializeField] private Rigidbody _vehicleBody;
+        [SerializeField] private NpcVehicleCollisionTarget _vehicleTarget;
 
         [Header("Horn response")]
         [SerializeField] private PalletStackerHornOutput _hornOutput;
@@ -31,6 +30,8 @@ namespace ElectricPalletStackers.NPCs
         private bool _roundActive;
 
         public bool IsCrowdPressureActive { get; private set; }
+        public NpcAgent NpcPrefab => _npcPrefab;
+        public NpcVehicleCollisionTarget VehicleTarget => _vehicleTarget;
         public IReadOnlyList<NpcAgent> ActiveNpcs => _npcs;
 
         private void OnEnable()
@@ -126,14 +127,14 @@ namespace ElectricPalletStackers.NPCs
 
         private void HandleHornChanged(bool active)
         {
-            if (!active || !_roundActive || _vehicleTransform == null) return;
+            if (!active || !_roundActive || _vehicleTarget == null) return;
             float radiusSqr = _hornReactionRadius * _hornReactionRadius;
             for (int index = 0; index < _npcs.Count; index++)
             {
                 NpcAgent npc = _npcs[index];
                 if (npc == null || !npc.isActiveAndEnabled) continue;
                 Vector3 offset = Vector3.ProjectOnPlane(
-                    npc.transform.position - _vehicleTransform.position,
+                    npc.transform.position - _vehicleTarget.transform.position,
                     Vector3.up);
                 if (offset.sqrMagnitude <= radiusSqr)
                     npc.ReactToHorn(_hornMinimumStopDuration);
@@ -152,7 +153,11 @@ namespace ElectricPalletStackers.NPCs
                 if (route == null || route.Count == 0) break;
                 NpcAgent npc = Instantiate(_npcPrefab, parent);
                 npc.name = $"Waypoint NPC {index + 1:00}";
-                npc.Initialize(this, _vehicleTransform, _vehicleBody, route, index / _routes.Length);
+                npc.Initialize(
+                    this,
+                    _vehicleTarget,
+                    route,
+                    index / _routes.Length);
                 _npcs.Add(npc);
             }
         }

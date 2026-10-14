@@ -38,6 +38,11 @@ namespace ElectricPalletStackers.UI
         [Tooltip("Defaults to the main camera when left empty.")]
         [SerializeField] private Transform _viewer;
         [SerializeField] private Vector3 _viewerOffset = new(-0.06f, -0.03f, 0.55f);
+        [SerializeField, Range(0.1f, 0.9f)] private float _occlusionLineRatio = 0.35f;
+        [SerializeField, Min(0.1f)] private float _maximumOcclusionDistance = 0.65f;
+        [SerializeField, Min(0f)] private float _occlusionTargetHeight = 1.35f;
+        [Tooltip("Vertical offset used while the panel is locked between the viewer and the phone NPC.")]
+        [SerializeField] private float _inCallVerticalOffset = -0.16f;
 
         [Header("Presentation")]
         [SerializeField] private string _defaultCaller = "0123456789";
@@ -52,6 +57,7 @@ namespace ElectricPalletStackers.UI
         private TMP_FontAsset _statusDefaultFont;
         private TMP_FontAsset _hintDefaultFont;
         private bool _followViewerPosition;
+        private Transform _occlusionTarget;
 
         public bool IsRinging { get; private set; }
         public bool IsInCall { get; private set; }
@@ -107,6 +113,12 @@ namespace ElectricPalletStackers.UI
             if (!_followViewerPosition) return;
             if (!TryResolveViewer()) return;
 
+            if (_occlusionTarget != null)
+            {
+                PlaceBetweenViewerAndTarget();
+                return;
+            }
+
             // Follow headset yaw only, keeping the panel upright without inheriting
             // head pitch or roll.
             transform.rotation = GetViewerYawRotation();
@@ -136,6 +148,7 @@ namespace ElectricPalletStackers.UI
             // The UI hierarchy follows the vehicle. A call panel must be independent so
             // it stays at the viewer position and can be moved by hand after appearing.
             transform.SetParent(null, true);
+            _occlusionTarget = null;
             PlaceInFrontOfViewer();
             _followViewerPosition = true;
 
@@ -180,7 +193,18 @@ namespace ElectricPalletStackers.UI
             _callStartedAt = Time.realtimeSinceStartup;
             _lastDisplayedCallSecond = -1;
             SetActiveCallVisual();
+            SetMoveInteractionEnabled(false);
             CallAccepted?.Invoke();
+        }
+
+        public void SetOcclusionTarget(Transform target)
+        {
+            _occlusionTarget = target;
+            if (target == null) return;
+
+            _followViewerPosition = true;
+            SetMoveInteractionEnabled(false);
+            if (TryResolveViewer()) PlaceBetweenViewerAndTarget();
         }
 
         public void FinishCall()
@@ -196,6 +220,7 @@ namespace ElectricPalletStackers.UI
             IsInCall = false;
             SetState(PhoneCallState.Hidden);
             _followViewerPosition = false;
+            _occlusionTarget = null;
             SetMoveInteractionEnabled(false);
             KillTweens();
 
@@ -223,6 +248,7 @@ namespace ElectricPalletStackers.UI
             IsInCall = false;
             SetState(PhoneCallState.Hidden);
             _followViewerPosition = false;
+            _occlusionTarget = null;
             KillTweens();
 
             if (_canvasGroup != null)
@@ -314,6 +340,30 @@ namespace ElectricPalletStackers.UI
             transform.position = _viewer.position + yawRotation * _viewerOffset;
             transform.rotation = yawRotation;
             _viewerOffset = _viewer.InverseTransformPoint(transform.position);
+        }
+
+        private void PlaceBetweenViewerAndTarget()
+        {
+            if (_viewer == null || _occlusionTarget == null) return;
+
+            Vector3 targetPoint = _occlusionTarget.position + Vector3.up * _occlusionTargetHeight;
+            Vector3 toTarget = targetPoint - _viewer.position;
+            float targetDistance = toTarget.magnitude;
+            if (targetDistance < 0.01f) return;
+
+            Vector3 direction = toTarget / targetDistance;
+            float distance = Mathf.Min(
+                _maximumOcclusionDistance,
+                targetDistance * _occlusionLineRatio);
+            // Use the same lowered position while ringing and while in-call so
+            // accepting the call never makes the panel jump vertically.
+            transform.position = _viewer.position + direction * distance +
+                                 Vector3.up * _inCallVerticalOffset;
+
+            Vector3 planarDirection = Vector3.ProjectOnPlane(direction, Vector3.up);
+            transform.rotation = planarDirection.sqrMagnitude > 0.001f
+                ? Quaternion.LookRotation(planarDirection.normalized, Vector3.up)
+                : GetViewerYawRotation();
         }
 
         private Quaternion GetViewerYawRotation()

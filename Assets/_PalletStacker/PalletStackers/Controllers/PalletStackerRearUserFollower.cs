@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace ElectricPalletStackers.PalletStackers
@@ -69,6 +70,7 @@ namespace ElectricPalletStackers.PalletStackers
         private float _currentVignetteAperture = 1f;
         private float _smoothedVignetteYawSpeed;
         private bool _isVignetteEngaged;
+        private readonly List<IgnoredCollisionPair> _ignoredPlayerVehicleCollisions = new();
 
         public Transform UserRig => _userRig;
         public Transform FollowAnchor => _followAnchor;
@@ -77,6 +79,7 @@ namespace ElectricPalletStackers.PalletStackers
 
         private void OnEnable()
         {
+            IgnorePlayerVehicleCollisions();
             ResolveHead();
             EnsureVignette();
             FollowVehicle();
@@ -84,6 +87,7 @@ namespace ElectricPalletStackers.PalletStackers
 
         private void OnDisable()
         {
+            RestorePlayerVehicleCollisions();
             _hasFollowState = false;
             _comfortYawVelocity = 0f;
             ResetVignetteState(true);
@@ -98,6 +102,9 @@ namespace ElectricPalletStackers.PalletStackers
         public void FollowVehicle()
         {
             if (_userRig == null) return;
+
+            if (_ignoredPlayerVehicleCollisions.Count == 0)
+                IgnorePlayerVehicleCollisions();
 
             ResolveHead();
             Vector3 operatorPosition = GetOperatorPosition();
@@ -268,6 +275,45 @@ namespace ElectricPalletStackers.PalletStackers
             return (transform.rotation * localFacing).eulerAngles.y;
         }
 
+        private void IgnorePlayerVehicleCollisions()
+        {
+            RestorePlayerVehicleCollisions();
+            if (_userRig == null) return;
+
+            CharacterController[] playerControllers =
+                _userRig.GetComponentsInChildren<CharacterController>(true);
+            Collider[] vehicleColliders = GetComponentsInChildren<Collider>(true);
+
+            for (int playerIndex = 0; playerIndex < playerControllers.Length; playerIndex++)
+            {
+                CharacterController playerController = playerControllers[playerIndex];
+                if (playerController == null) continue;
+
+                for (int vehicleIndex = 0; vehicleIndex < vehicleColliders.Length; vehicleIndex++)
+                {
+                    Collider vehicleCollider = vehicleColliders[vehicleIndex];
+                    if (vehicleCollider == null || vehicleCollider == playerController) continue;
+                    if (Physics.GetIgnoreCollision(playerController, vehicleCollider)) continue;
+
+                    Physics.IgnoreCollision(playerController, vehicleCollider, true);
+                    _ignoredPlayerVehicleCollisions.Add(
+                        new IgnoredCollisionPair(playerController, vehicleCollider));
+                }
+            }
+        }
+
+        private void RestorePlayerVehicleCollisions()
+        {
+            for (int index = 0; index < _ignoredPlayerVehicleCollisions.Count; index++)
+            {
+                IgnoredCollisionPair pair = _ignoredPlayerVehicleCollisions[index];
+                if (pair.PlayerController != null && pair.VehicleCollider != null)
+                    Physics.IgnoreCollision(pair.PlayerController, pair.VehicleCollider, false);
+            }
+
+            _ignoredPlayerVehicleCollisions.Clear();
+        }
+
         private void ResolveHead()
         {
             if (_head != null || _userRig == null) return;
@@ -384,6 +430,20 @@ namespace ElectricPalletStackers.PalletStackers
             _snapAlignmentThresholdDegrees = Mathf.Max(
                 _rotationDeadZoneDegrees,
                 _snapAlignmentThresholdDegrees);
+        }
+
+        private readonly struct IgnoredCollisionPair
+        {
+            public IgnoredCollisionPair(
+                CharacterController playerController,
+                Collider vehicleCollider)
+            {
+                PlayerController = playerController;
+                VehicleCollider = vehicleCollider;
+            }
+
+            public CharacterController PlayerController { get; }
+            public Collider VehicleCollider { get; }
         }
     }
 }

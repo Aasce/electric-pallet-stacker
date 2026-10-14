@@ -72,7 +72,7 @@ MonoBehaviour:
   _speed: 1.35
   _turnSpeed: 540
   _arrivalDistance: 0.2
-  _vehiclePathHalfWidth: 1.5
+  _pathCollisionPadding: 0.05
   _vehicleClearance: 2.5
   _animator: {fileID: 7550747424511999183}
   _walkingBool: Walking

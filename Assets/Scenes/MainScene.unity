@@ -128,7 +128,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e62f83922c48306459e5f887b373693b, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.NPCs.NpcWaypointRoute
 --- !u!1 &65851872
 GameObject:
@@ -7172,8 +7172,7 @@ MonoBehaviour:
   - {fileID: 19889697}
   - {fileID: 257448203}
   - {fileID: 1892776833}
-  _vehicleTransform: {fileID: 2147000001}
-  _vehicleBody: {fileID: 2200000101}
+  _vehicleTarget: {fileID: 2200000104}
   _hornOutput: {fileID: 3505153867693228160}
   _hornReactionRadius: 8
   _hornMinimumStopDuration: 2.5
@@ -9250,6 +9249,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b6ff5df3fe445628bc94fe7bd959b8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &2200000104 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 930000000000000001, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+  m_PrefabInstance: {fileID: 3505153867693228158}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d0f4d8a71544d748da60e38961526aa, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.NPCs.NpcVehicleCollisionTarget
 --- !u!1001 &6000000001
 PrefabInstance:
   m_ObjectHideFlags: 0

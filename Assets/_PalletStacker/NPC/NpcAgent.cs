@@ -1,4 +1,3 @@
-using ElectricPalletStackers.Ble;
 using UnityEngine;
 
 namespace ElectricPalletStackers.NPCs
@@ -14,7 +13,7 @@ namespace ElectricPalletStackers.NPCs
         [SerializeField, Min(1f)] private float _turnSpeed = 540f;
         [SerializeField, Min(0.01f)] private float _arrivalDistance = 0.12f;
         [Header("Vehicle awareness")]
-        [SerializeField, Min(0.25f)] private float _vehiclePathHalfWidth = 1.5f;
+        [SerializeField, Min(0f)] private float _pathCollisionPadding = 0.05f;
         [SerializeField, Min(0.25f)] private float _vehicleClearance = 2.5f;
         [Header("Optional animation parameter")]
         [SerializeField] private Animator _animator;
@@ -22,9 +21,8 @@ namespace ElectricPalletStackers.NPCs
 
         private NpcPopulationController _population;
         private NpcWaypointRoute _route;
-        private Transform _vehicleTransform;
-        private Rigidbody _vehicleBody;
-        private PalletStackerCollisionReporter _collisionReporter;
+        private NpcVehicleCollisionTarget _vehicleTarget;
+        private CapsuleCollider _bodyCollider;
         private MovementState _state = MovementState.Paused;
         private int _waypointIndex;
         private int _direction = 1;
@@ -35,10 +33,12 @@ namespace ElectricPalletStackers.NPCs
         private int _walkingHash;
         private bool _hasWalkingParameter;
         private bool _vehicleCollisionReported;
+        private bool _vehicleCollisionEnabled = true;
 
         public bool IsAvailableForPhoneEvent =>
             isActiveAndEnabled && _roundActive && _state != MovementState.Scripted;
         public NpcWaypointRoute Route => _route;
+        public event System.Action VehicleCollisionStarted;
 
         private void Reset() => _animator = GetComponentInChildren<Animator>();
 
@@ -46,8 +46,8 @@ namespace ElectricPalletStackers.NPCs
         {
             // NPC locomotion is transform-driven. A solid collider can inject large
             // impulses into the controlled vehicle, while a trigger still detects contact.
-            CapsuleCollider bodyCollider = GetComponent<CapsuleCollider>();
-            if (bodyCollider != null) bodyCollider.isTrigger = true;
+            _bodyCollider = GetComponent<CapsuleCollider>();
+            if (_bodyCollider != null) _bodyCollider.isTrigger = true;
 
             if (_animator == null) _animator = GetComponentInChildren<Animator>();
             _walkingHash = Animator.StringToHash(_walkingBool);
@@ -81,17 +81,12 @@ namespace ElectricPalletStackers.NPCs
 
         public void Initialize(
             NpcPopulationController population,
-            Transform vehicleTransform,
-            Rigidbody vehicleBody,
+            NpcVehicleCollisionTarget vehicleTarget,
             NpcWaypointRoute route,
             int startingWaypoint)
         {
             _population = population;
-            _vehicleTransform = vehicleTransform;
-            _vehicleBody = vehicleBody;
-            _collisionReporter = vehicleBody != null
-                ? vehicleBody.GetComponentInChildren<PalletStackerCollisionReporter>(true)
-                : null;
+            _vehicleTarget = vehicleTarget;
             _route = route;
             _waypointIndex = route != null && route.Count > 0
                 ? Mathf.Abs(startingWaypoint) % route.Count
@@ -103,6 +98,7 @@ namespace ElectricPalletStackers.NPCs
         {
             _roundActive = roundActive;
             _vehicleCollisionReported = false;
+            _vehicleCollisionEnabled = true;
             _hornMinimumWaitUntil = 0f;
             _state = roundActive ? MovementState.Moving : MovementState.Paused;
             _direction = 1;
@@ -145,6 +141,12 @@ namespace ElectricPalletStackers.NPCs
         {
             _state = MovementState.Scripted;
             UpdateAnimation();
+        }
+
+        public void SetVehicleCollisionEnabled(bool enabled)
+        {
+            _vehicleCollisionEnabled = enabled;
+            if (enabled) _vehicleCollisionReported = false;
         }
 
         public void ResumeNormalBehaviour()
@@ -200,27 +202,28 @@ namespace ElectricPalletStackers.NPCs
 
         private bool IsVehicleBlockingCurrentEdge()
         {
-            if (_vehicleTransform == null || _route == null ||
+            if (_vehicleTarget == null || _route == null ||
                 !_route.TryGetWaypoint(_waypointIndex, out Vector3 destination)) return false;
-            Vector3 segment = Vector3.ProjectOnPlane(destination - transform.position, Vector3.up);
-            float length = segment.magnitude;
-            if (length < 0.01f) return false;
-            Vector3 direction = segment / length;
-            Vector3 toVehicle = Vector3.ProjectOnPlane(
-                _vehicleTransform.position - transform.position,
+            float radius = _bodyCollider != null
+                ? Mathf.Max(_bodyCollider.bounds.extents.x, _bodyCollider.bounds.extents.z)
+                  + _pathCollisionPadding
+                : _pathCollisionPadding;
+            if (!_vehicleTarget.TryGetFirstPathCollision(
+                    transform.position,
+                    destination,
+                    radius,
+                    out Vector3 collisionPoint)) return false;
+
+            Vector3 toCollision = Vector3.ProjectOnPlane(
+                collisionPoint - transform.position,
                 Vector3.up);
-            float along = Vector3.Dot(toVehicle, direction);
-            // Only react to the vehicle in front of the NPC, on the remaining part of
-            // the current waypoint edge, and close enough to actually block movement.
-            if (along <= 0f || along > length || along > _vehicleClearance) return false;
-            float lateral = (toVehicle - direction * along).magnitude;
-            return lateral <= _vehiclePathHalfWidth;
+            return toCollision.magnitude <= _vehicleClearance;
         }
 
         private void FaceVehicle()
         {
-            if (_vehicleTransform == null) return;
-            Face(_vehicleTransform.position - transform.position, false);
+            if (_vehicleTarget == null) return;
+            Face(_vehicleTarget.transform.position - transform.position, false);
         }
 
         private void OnTriggerEnter(Collider other)
@@ -235,32 +238,28 @@ namespace ElectricPalletStackers.NPCs
 
         private void HandleVehicleTrigger(Collider other)
         {
-            if (!_roundActive || !IsVehicleCollider(other)) return;
+            if (!_roundActive || !_vehicleCollisionEnabled || !IsVehicleCollider(other)) return;
             TryReportVehicleCollision();
         }
 
         private bool IsVehicleCollider(Collider other)
         {
-            if (other == null || _vehicleBody == null) return false;
-            if (other.attachedRigidbody == _vehicleBody) return true;
-
-            Transform otherTransform = other.transform;
-            Transform vehicleRoot = _vehicleBody.transform;
-            return otherTransform == vehicleRoot || otherTransform.IsChildOf(vehicleRoot);
+            return _vehicleTarget != null && _vehicleTarget.ContainsContactCollider(other);
         }
 
-        internal bool TryReportVehicleCollision(PalletStackerCollisionReporter fallback = null)
+        internal bool TryReportVehicleCollision()
         {
             if (_vehicleCollisionReported) return true;
             if (!_roundActive) return false;
-
-            PalletStackerCollisionReporter reporter = _collisionReporter != null
-                ? _collisionReporter
-                : fallback;
-            if (reporter == null) return false;
+            if (_vehicleTarget == null) return false;
 
             _vehicleCollisionReported = true;
-            reporter.ReportCollision();
+            VehicleCollisionStarted?.Invoke();
+            if (!_vehicleTarget.ReportNpcCollision())
+            {
+                _vehicleCollisionReported = false;
+                return false;
+            }
             return true;
         }
 

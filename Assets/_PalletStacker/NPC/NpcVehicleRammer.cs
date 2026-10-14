@@ -161,7 +161,7 @@ namespace ElectricPalletStackers.NPCs
         {
             if (!_active) return;
             _active = false;
-            if (_npc == null || !_npc.TryReportVehicleCollision(_collisionReporter))
+            if (_npc == null || !_npc.TryReportVehicleCollision())
                 _collisionReporter?.ReportCollision();
             _impactHandler?.Invoke();
             RestoreNpc();
