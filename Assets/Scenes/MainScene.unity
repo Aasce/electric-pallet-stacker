@@ -128,7 +128,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e62f83922c48306459e5f887b373693b, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.NPCs.NpcWaypointRoute
 --- !u!1 &65851872
 GameObject:
@@ -4976,9 +4976,22 @@ MonoBehaviour:
   _vehicleBody: {fileID: 2200000101}
   _collisionReporter: {fileID: 455976367}
   _npcPopulation: {fileID: 1900000006}
+  _forkCollisionSensor: {fileID: 0}
+  _playerView: {fileID: 0}
   _callerDisplay: 0123456789
   _conversationDuration: 10
-  _movingSpeedThreshold: 0.1
+  _phoneNpcPrefab: {fileID: 0}
+  _npcFrontClearance: 1.25
+  _npcBehindPlayerClearance: 1.25
+  _minimumCollisionGrace: 1
+  _maximumCollisionGrace: 3
+  _travelDirectionThreshold: 0.05
+  _groundProbeHeight: 3
+  _groundProbeDistance: 8
+  _maximumGroundHeightDifference: 0.75
+  _groundLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
 --- !u!1 &1234203899
 GameObject:
   m_ObjectHideFlags: 0
@@ -9258,7 +9271,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4d0f4d8a71544d748da60e38961526aa, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.NPCs.NpcVehicleCollisionTarget
 --- !u!1001 &6000000001
 PrefabInstance:
