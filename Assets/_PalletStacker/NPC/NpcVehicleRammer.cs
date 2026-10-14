@@ -145,7 +145,7 @@ namespace ElectricPalletStackers.NPCs
                 for (int npcIndex = 0; npcIndex < _npcColliders.Length; npcIndex++)
                 {
                     Collider npcCollider = _npcColliders[npcIndex];
-                    if (npcCollider == null || !npcCollider.enabled || npcCollider.isTrigger) continue;
+                    if (npcCollider == null || !npcCollider.enabled) continue;
                     Vector3 vehiclePoint = vehicleCollider.ClosestPoint(npcCollider.bounds.center);
                     Vector3 npcPoint = npcCollider.ClosestPoint(vehiclePoint);
                     vehiclePoint = vehicleCollider.ClosestPoint(npcPoint);
@@ -161,7 +161,8 @@ namespace ElectricPalletStackers.NPCs
         {
             if (!_active) return;
             _active = false;
-            _collisionReporter?.ReportCollision();
+            if (_npc == null || !_npc.TryReportVehicleCollision(_collisionReporter))
+                _collisionReporter?.ReportCollision();
             _impactHandler?.Invoke();
             RestoreNpc();
             Destroy(this);

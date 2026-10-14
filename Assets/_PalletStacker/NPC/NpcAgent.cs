@@ -1,3 +1,4 @@
+using ElectricPalletStackers.Ble;
 using UnityEngine;
 
 namespace ElectricPalletStackers.NPCs
@@ -6,7 +7,7 @@ namespace ElectricPalletStackers.NPCs
     [RequireComponent(typeof(CapsuleCollider))]
     public sealed class NpcAgent : MonoBehaviour
     {
-        private enum MovementState { Paused, Moving, Waiting, YieldingToHorn, Scripted }
+        private enum MovementState { Paused, Moving, Waiting, YieldingToVehicle, Scripted }
 
         [Header("Waypoint movement")]
         [SerializeField, Min(0.1f)] private float _speed = 1.35f;
@@ -23,6 +24,7 @@ namespace ElectricPalletStackers.NPCs
         private NpcWaypointRoute _route;
         private Transform _vehicleTransform;
         private Rigidbody _vehicleBody;
+        private PalletStackerCollisionReporter _collisionReporter;
         private MovementState _state = MovementState.Paused;
         private int _waypointIndex;
         private int _direction = 1;
@@ -32,6 +34,7 @@ namespace ElectricPalletStackers.NPCs
         private bool _roundActive;
         private int _walkingHash;
         private bool _hasWalkingParameter;
+        private bool _vehicleCollisionReported;
 
         public bool IsAvailableForPhoneEvent =>
             isActiveAndEnabled && _roundActive && _state != MovementState.Scripted;
@@ -41,6 +44,11 @@ namespace ElectricPalletStackers.NPCs
 
         private void Awake()
         {
+            // NPC locomotion is transform-driven. A solid collider can inject large
+            // impulses into the controlled vehicle, while a trigger still detects contact.
+            CapsuleCollider bodyCollider = GetComponent<CapsuleCollider>();
+            if (bodyCollider != null) bodyCollider.isTrigger = true;
+
             if (_animator == null) _animator = GetComponentInChildren<Animator>();
             _walkingHash = Animator.StringToHash(_walkingBool);
             if (_animator == null) return;
@@ -64,8 +72,8 @@ namespace ElectricPalletStackers.NPCs
                 case MovementState.Waiting:
                     if (Time.time >= _waitUntil) _state = MovementState.Moving;
                     break;
-                case MovementState.YieldingToHorn:
-                    UpdateHornYield();
+                case MovementState.YieldingToVehicle:
+                    UpdateVehicleYield();
                     break;
             }
             UpdateAnimation();
@@ -81,6 +89,9 @@ namespace ElectricPalletStackers.NPCs
             _population = population;
             _vehicleTransform = vehicleTransform;
             _vehicleBody = vehicleBody;
+            _collisionReporter = vehicleBody != null
+                ? vehicleBody.GetComponentInChildren<PalletStackerCollisionReporter>(true)
+                : null;
             _route = route;
             _waypointIndex = route != null && route.Count > 0
                 ? Mathf.Abs(startingWaypoint) % route.Count
@@ -91,6 +102,8 @@ namespace ElectricPalletStackers.NPCs
         public void ResetForRound(bool roundActive)
         {
             _roundActive = roundActive;
+            _vehicleCollisionReported = false;
+            _hornMinimumWaitUntil = 0f;
             _state = roundActive ? MovementState.Moving : MovementState.Paused;
             _direction = 1;
             if (_route != null && _route.TryGetWaypoint(_waypointIndex, out Vector3 position))
@@ -104,6 +117,7 @@ namespace ElectricPalletStackers.NPCs
 
         public void SetRoundActive(bool active)
         {
+            if (active && !_roundActive) _vehicleCollisionReported = false;
             _roundActive = active;
             if (!active) _state = MovementState.Paused;
             else if (_state == MovementState.Paused) _state = MovementState.Moving;
@@ -118,11 +132,12 @@ namespace ElectricPalletStackers.NPCs
 
         public void ReactToHorn(float minimumStopDuration)
         {
-            if (!_roundActive || _state == MovementState.Scripted) return;
+            if (!_roundActive || _state == MovementState.Scripted ||
+                !IsVehicleBlockingCurrentEdge()) return;
             _hornMinimumWaitUntil = Mathf.Max(
                 _hornMinimumWaitUntil,
                 Time.time + Mathf.Max(0f, minimumStopDuration));
-            _state = MovementState.YieldingToHorn;
+            _state = MovementState.YieldingToVehicle;
             UpdateAnimation();
         }
 
@@ -135,7 +150,6 @@ namespace ElectricPalletStackers.NPCs
         public void ResumeNormalBehaviour()
         {
             if (!_roundActive) return;
-            SelectSafeWaypoint();
             _state = MovementState.Moving;
             UpdateAnimation();
         }
@@ -143,6 +157,13 @@ namespace ElectricPalletStackers.NPCs
         private void UpdateMovement()
         {
             if (!_route.TryGetWaypoint(_waypointIndex, out Vector3 destination)) return;
+            if (IsVehicleBlockingCurrentEdge())
+            {
+                _state = MovementState.YieldingToVehicle;
+                FaceVehicle();
+                return;
+            }
+
             Vector3 delta = Vector3.ProjectOnPlane(destination - transform.position, Vector3.up);
             if (delta.sqrMagnitude <= _arrivalDistance * _arrivalDistance)
             {
@@ -166,14 +187,18 @@ namespace ElectricPalletStackers.NPCs
             Face(delta, false);
         }
 
-        private void UpdateHornYield()
+        private void UpdateVehicleYield()
         {
-            if (Time.time < _hornMinimumWaitUntil || IsVehicleBlockingNextPath()) return;
-            SelectSafeWaypoint();
+            if (IsVehicleBlockingCurrentEdge())
+            {
+                FaceVehicle();
+                return;
+            }
+            if (Time.time < _hornMinimumWaitUntil) return;
             _state = MovementState.Moving;
         }
 
-        private bool IsVehicleBlockingNextPath()
+        private bool IsVehicleBlockingCurrentEdge()
         {
             if (_vehicleTransform == null || _route == null ||
                 !_route.TryGetWaypoint(_waypointIndex, out Vector3 destination)) return false;
@@ -185,19 +210,58 @@ namespace ElectricPalletStackers.NPCs
                 _vehicleTransform.position - transform.position,
                 Vector3.up);
             float along = Vector3.Dot(toVehicle, direction);
-            if (along < -_vehicleClearance || along > length + _vehicleClearance) return false;
+            // Only react to the vehicle in front of the NPC, on the remaining part of
+            // the current waypoint edge, and close enough to actually block movement.
+            if (along <= 0f || along > length || along > _vehicleClearance) return false;
             float lateral = (toVehicle - direction * along).magnitude;
-            return lateral <= _vehiclePathHalfWidth + _vehicleClearance;
+            return lateral <= _vehiclePathHalfWidth;
         }
 
-        private void SelectSafeWaypoint()
+        private void FaceVehicle()
         {
-            if (_route == null || _vehicleTransform == null) return;
-            int safe = _route.FindSafestIndex(
-                transform.position,
-                _vehicleTransform.position,
-                _vehicleBody != null ? _vehicleBody.transform.forward : _vehicleTransform.forward);
-            if (safe >= 0) _waypointIndex = safe;
+            if (_vehicleTransform == null) return;
+            Face(_vehicleTransform.position - transform.position, false);
+        }
+
+        private void OnTriggerEnter(Collider other)
+        {
+            HandleVehicleTrigger(other);
+        }
+
+        private void OnTriggerStay(Collider other)
+        {
+            HandleVehicleTrigger(other);
+        }
+
+        private void HandleVehicleTrigger(Collider other)
+        {
+            if (!_roundActive || !IsVehicleCollider(other)) return;
+            TryReportVehicleCollision();
+        }
+
+        private bool IsVehicleCollider(Collider other)
+        {
+            if (other == null || _vehicleBody == null) return false;
+            if (other.attachedRigidbody == _vehicleBody) return true;
+
+            Transform otherTransform = other.transform;
+            Transform vehicleRoot = _vehicleBody.transform;
+            return otherTransform == vehicleRoot || otherTransform.IsChildOf(vehicleRoot);
+        }
+
+        internal bool TryReportVehicleCollision(PalletStackerCollisionReporter fallback = null)
+        {
+            if (_vehicleCollisionReported) return true;
+            if (!_roundActive) return false;
+
+            PalletStackerCollisionReporter reporter = _collisionReporter != null
+                ? _collisionReporter
+                : fallback;
+            if (reporter == null) return false;
+
+            _vehicleCollisionReported = true;
+            reporter.ReportCollision();
+            return true;
         }
 
         private void Face(Vector3 direction, bool immediate)
