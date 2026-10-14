@@ -111,6 +111,34 @@ namespace ElectricPalletStackers.NPCs
             UpdateAnimation();
         }
 
+        internal CheckpointPose CaptureCheckpointPose()
+        {
+            return new CheckpointPose(
+                transform.position,
+                transform.rotation,
+                _waypointIndex,
+                _direction,
+                _speedMultiplier);
+        }
+
+        internal void RestoreCheckpointPose(CheckpointPose checkpoint)
+        {
+            NpcVehicleRammer rammer = GetComponent<NpcVehicleRammer>();
+            if (rammer != null) rammer.CancelApproach();
+
+            _roundActive = false;
+            _vehicleCollisionReported = false;
+            _vehicleCollisionEnabled = false;
+            _hornMinimumWaitUntil = 0f;
+            _waitUntil = 0f;
+            _state = MovementState.Paused;
+            _waypointIndex = checkpoint.WaypointIndex;
+            _direction = checkpoint.Direction;
+            _speedMultiplier = checkpoint.SpeedMultiplier;
+            transform.SetPositionAndRotation(checkpoint.Position, checkpoint.Rotation);
+            UpdateAnimation();
+        }
+
         public void SetRoundActive(bool active)
         {
             if (active && !_roundActive) _vehicleCollisionReported = false;
@@ -277,6 +305,29 @@ namespace ElectricPalletStackers.NPCs
         {
             if (_animator != null && _hasWalkingParameter)
                 _animator.SetBool(_walkingHash, _roundActive && _state == MovementState.Moving);
+        }
+
+        internal readonly struct CheckpointPose
+        {
+            public CheckpointPose(
+                Vector3 position,
+                Quaternion rotation,
+                int waypointIndex,
+                int direction,
+                float speedMultiplier)
+            {
+                Position = position;
+                Rotation = rotation;
+                WaypointIndex = waypointIndex;
+                Direction = direction;
+                SpeedMultiplier = speedMultiplier;
+            }
+
+            public Vector3 Position { get; }
+            public Quaternion Rotation { get; }
+            public int WaypointIndex { get; }
+            public int Direction { get; }
+            public float SpeedMultiplier { get; }
         }
     }
 }

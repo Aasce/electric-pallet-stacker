@@ -96,6 +96,10 @@ namespace ElectricPalletStackers.Gameplay
             for (int index = 0; index < _resettables.Count; index++)
                 _resettables[index].ResetState();
 
+            // Publish every restored pose together before the waiting state or a new
+            // round can observe stale collider transforms from the failed round.
+            Physics.SyncTransforms();
+
             LastFailureReason = GameFailureReason.Unknown;
             TransitionTo(GameState.WaitingToStart);
         }

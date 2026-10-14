@@ -9209,6 +9209,7 @@ MonoBehaviour:
   _loadHandler: {fileID: 1900000100}
   _pallet: {fileID: 1900000122}
   _playerFollower: {fileID: 2200000103}
+  _npcPopulation: {fileID: 1900000006}
 --- !u!1 &2200000030 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2085204513769715176, guid: 2ca9f3075f53a0d469a2c74b4cf984c0, type: 3}

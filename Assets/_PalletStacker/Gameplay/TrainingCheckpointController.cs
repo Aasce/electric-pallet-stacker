@@ -1,4 +1,5 @@
 using System;
+using ElectricPalletStackers.NPCs;
 using ElectricPalletStackers.PalletStackers;
 using UnityEngine;
 
@@ -17,6 +18,7 @@ namespace ElectricPalletStackers.Gameplay
         [SerializeField] private PalletStackerLoadHandler _loadHandler;
         [SerializeField] private PalletStackerLoad _pallet;
         [SerializeField] private PalletStackerRearUserFollower _playerFollower;
+        [SerializeField] private NpcPopulationController _npcPopulation;
 
         private CheckpointSnapshot _latest;
         private bool _hasCheckpoint;
@@ -49,24 +51,34 @@ namespace ElectricPalletStackers.Gameplay
             _isRestoring = true;
             _loadHandler.ReleaseLoad();
 
-            _vehicleBody.linearVelocity = Vector3.zero;
-            _vehicleBody.angularVelocity = Vector3.zero;
-            _vehicleBody.position = _latest.VehiclePosition;
-            _vehicleBody.rotation = _latest.VehicleRotation;
+            RigidbodyPoseUtility.Restore(
+                _vehicleBody,
+                _latest.VehiclePosition,
+                _latest.VehicleRotation,
+                true);
 
             _mast.RestoreHeight(_latest.MastHeight, _latest.MastTargetHeight);
 
             Rigidbody palletBody = _pallet.Body;
-            palletBody.linearVelocity = Vector3.zero;
-            palletBody.angularVelocity = Vector3.zero;
-            palletBody.position = _latest.PalletPosition;
-            palletBody.rotation = _latest.PalletRotation;
+            Vector3 palletPosition = _latest.PalletPoseIsForkRelative
+                ? _mast.Forks.TransformPoint(_latest.PalletPosition)
+                : _latest.PalletPosition;
+            Quaternion palletRotation = _latest.PalletPoseIsForkRelative
+                ? _mast.Forks.rotation * _latest.PalletRotation
+                : _latest.PalletRotation;
+            RigidbodyPoseUtility.Restore(
+                palletBody,
+                palletPosition,
+                palletRotation,
+                false);
             _pallet.ResetSupportTracking();
 
             Physics.SyncTransforms();
-            if (_latest.HadAttachedLoad) _loadHandler.AttachLoad(_pallet);
+            if (_latest.HadAttachedLoad && !_loadHandler.AttachLoad(_pallet))
+                Debug.LogError("Failed to restore the checkpoint pallet attachment.", this);
 
             _experience.RestoreStage(_latest.Stage);
+            _npcPopulation?.RestoreCheckpoint();
             _playerFollower.FollowVehicle();
             Physics.SyncTransforms();
 
@@ -96,15 +108,26 @@ namespace ElectricPalletStackers.Gameplay
         private void Capture(TrainingExperienceStage stage)
         {
             Rigidbody palletBody = _pallet.Body;
+            bool hadAttachedLoad = _loadHandler.HeldLoad == _pallet;
+            Transform forks = _mast.Forks;
+            bool palletPoseIsForkRelative = hadAttachedLoad && forks != null;
+            Vector3 palletPosition = palletPoseIsForkRelative
+                ? forks.InverseTransformPoint(palletBody.position)
+                : palletBody.position;
+            Quaternion palletRotation = palletPoseIsForkRelative
+                ? Quaternion.Inverse(forks.rotation) * palletBody.rotation
+                : palletBody.rotation;
             _latest = new CheckpointSnapshot(
                 stage,
                 _vehicleBody.position,
                 _vehicleBody.rotation,
                 _mast.CurrentHeight,
                 _mast.TargetHeight,
-                palletBody.position,
-                palletBody.rotation,
-                _loadHandler.HeldLoad == _pallet);
+                palletPosition,
+                palletRotation,
+                hadAttachedLoad,
+                palletPoseIsForkRelative);
+            _npcPopulation?.CaptureCheckpoint();
             _hasCheckpoint = true;
             CheckpointSaved?.Invoke(stage);
         }
@@ -119,7 +142,8 @@ namespace ElectricPalletStackers.Gameplay
                 float mastTargetHeight,
                 Vector3 palletPosition,
                 Quaternion palletRotation,
-                bool hadAttachedLoad)
+                bool hadAttachedLoad,
+                bool palletPoseIsForkRelative)
             {
                 Stage = stage;
                 VehiclePosition = vehiclePosition;
@@ -129,6 +153,7 @@ namespace ElectricPalletStackers.Gameplay
                 PalletPosition = palletPosition;
                 PalletRotation = palletRotation;
                 HadAttachedLoad = hadAttachedLoad;
+                PalletPoseIsForkRelative = palletPoseIsForkRelative;
             }
 
             public TrainingExperienceStage Stage { get; }
@@ -139,6 +164,7 @@ namespace ElectricPalletStackers.Gameplay
             public Vector3 PalletPosition { get; }
             public Quaternion PalletRotation { get; }
             public bool HadAttachedLoad { get; }
+            public bool PalletPoseIsForkRelative { get; }
         }
     }
 }

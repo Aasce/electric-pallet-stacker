@@ -26,11 +26,11 @@ namespace ElectricPalletStackers.Gameplay
 
             if (_vehicleBody != null)
             {
-                _vehicleBody.linearVelocity = Vector3.zero;
-                _vehicleBody.angularVelocity = Vector3.zero;
-                _vehicleBody.position = _initialVehiclePosition;
-                _vehicleBody.rotation = _initialVehicleRotation;
-                _vehicleBody.Sleep();
+                RigidbodyPoseUtility.Restore(
+                    _vehicleBody,
+                    _initialVehiclePosition,
+                    _initialVehicleRotation,
+                    true);
             }
 
             // The player/camera rig is owned by this follower, so snapping it after the
@@ -39,5 +39,44 @@ namespace ElectricPalletStackers.Gameplay
             Physics.SyncTransforms();
         }
 
+    }
+
+    /// <summary>
+    /// Performs an authoritative Rigidbody teleport without leaving interpolation or
+    /// velocity state from the previous round to overwrite the restored pose.
+    /// </summary>
+    internal static class RigidbodyPoseUtility
+    {
+        public static void Restore(
+            Rigidbody body,
+            Vector3 position,
+            Quaternion rotation,
+            bool sleep)
+        {
+            if (body == null) return;
+
+            RigidbodyInterpolation interpolation = body.interpolation;
+            body.interpolation = RigidbodyInterpolation.None;
+
+            if (!body.isKinematic)
+            {
+                body.linearVelocity = Vector3.zero;
+                body.angularVelocity = Vector3.zero;
+            }
+
+            body.position = position;
+            body.rotation = rotation;
+            body.transform.SetPositionAndRotation(position, rotation);
+
+            if (!body.isKinematic)
+            {
+                body.linearVelocity = Vector3.zero;
+                body.angularVelocity = Vector3.zero;
+                if (sleep) body.Sleep();
+                else body.WakeUp();
+            }
+
+            body.interpolation = interpolation;
+        }
     }
 }

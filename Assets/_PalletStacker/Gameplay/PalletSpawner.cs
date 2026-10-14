@@ -47,11 +47,11 @@ namespace ElectricPalletStackers.Gameplay
             Rigidbody body = _pallet.Body;
             if (body != null)
             {
-                body.linearVelocity = Vector3.zero;
-                body.angularVelocity = Vector3.zero;
-                body.position = spawnPoint.position;
-                body.rotation = spawnPoint.rotation;
-                body.WakeUp();
+                RigidbodyPoseUtility.Restore(
+                    body,
+                    spawnPoint.position,
+                    spawnPoint.rotation,
+                    false);
             }
             else
             {
@@ -71,11 +71,11 @@ namespace ElectricPalletStackers.Gameplay
             Rigidbody body = _pallet.Body;
             if (body != null)
             {
-                body.linearVelocity = Vector3.zero;
-                body.angularVelocity = Vector3.zero;
-                body.position = _initialPosition;
-                body.rotation = _initialRotation;
-                body.Sleep();
+                RigidbodyPoseUtility.Restore(
+                    body,
+                    _initialPosition,
+                    _initialRotation,
+                    true);
             }
             else
             {
@@ -83,6 +83,7 @@ namespace ElectricPalletStackers.Gameplay
             }
 
             _pallet.ResetSupportTracking();
+            Physics.SyncTransforms();
         }
 
         private Transform GetRandomValidSpawnPoint()

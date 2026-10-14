@@ -28,6 +28,8 @@ namespace ElectricPalletStackers.NPCs
 
         private readonly List<NpcAgent> _npcs = new();
         private bool _roundActive;
+        private PopulationCheckpoint _checkpoint;
+        private bool _hasCheckpoint;
 
         public bool IsCrowdPressureActive { get; private set; }
         public NpcAgent NpcPrefab => _npcPrefab;
@@ -72,7 +74,9 @@ namespace ElectricPalletStackers.NPCs
             for (int index = 0; index < _npcs.Count; index++)
             {
                 NpcAgent npc = _npcs[index];
-                if (npc != null && npc.isActiveAndEnabled) npc.SetRoundActive(true);
+                if (npc == null || !npc.isActiveAndEnabled) continue;
+                npc.SetRoundActive(true);
+                npc.SetVehicleCollisionEnabled(true);
             }
         }
 
@@ -86,8 +90,53 @@ namespace ElectricPalletStackers.NPCs
         public void ResetState()
         {
             _roundActive = false;
+            _hasCheckpoint = false;
             SetCrowdPressure(false);
             ApplyPopulationState();
+        }
+
+        public void CaptureCheckpoint()
+        {
+            RebuildPopulationCache();
+            NpcAgent.CheckpointPose[] poses = new NpcAgent.CheckpointPose[_npcs.Count];
+            bool[] activeStates = new bool[_npcs.Count];
+            for (int index = 0; index < _npcs.Count; index++)
+            {
+                NpcAgent npc = _npcs[index];
+                if (npc == null) continue;
+                poses[index] = npc.CaptureCheckpointPose();
+                activeStates[index] = npc.gameObject.activeSelf;
+            }
+
+            _checkpoint = new PopulationCheckpoint(
+                poses,
+                activeStates,
+                IsCrowdPressureActive);
+            _hasCheckpoint = true;
+        }
+
+        public void RestoreCheckpoint()
+        {
+            if (!_hasCheckpoint) return;
+
+            _roundActive = false;
+            EnsurePopulation(_checkpoint.Poses.Length);
+            IsCrowdPressureActive = _checkpoint.CrowdPressureActive;
+
+            for (int index = 0; index < _npcs.Count; index++)
+            {
+                NpcAgent npc = _npcs[index];
+                if (npc == null) continue;
+
+                bool hasSavedPose = index < _checkpoint.Poses.Length;
+                bool shouldBeActive = hasSavedPose && _checkpoint.ActiveStates[index];
+                npc.SetRoundActive(false);
+                if (npc.gameObject.activeSelf != shouldBeActive)
+                    npc.gameObject.SetActive(shouldBeActive);
+                if (hasSavedPose) npc.RestoreCheckpointPose(_checkpoint.Poses[index]);
+            }
+
+            Physics.SyncTransforms();
         }
 
         public void SetCrowdPressure(bool active)
@@ -193,6 +242,23 @@ namespace ElectricPalletStackers.NPCs
                 npc.gameObject.SetActive(active);
                 if (active) npc.ResetForRound(_roundActive);
             }
+        }
+
+        private readonly struct PopulationCheckpoint
+        {
+            public PopulationCheckpoint(
+                NpcAgent.CheckpointPose[] poses,
+                bool[] activeStates,
+                bool crowdPressureActive)
+            {
+                Poses = poses;
+                ActiveStates = activeStates;
+                CrowdPressureActive = crowdPressureActive;
+            }
+
+            public NpcAgent.CheckpointPose[] Poses { get; }
+            public bool[] ActiveStates { get; }
+            public bool CrowdPressureActive { get; }
         }
     }
 }
