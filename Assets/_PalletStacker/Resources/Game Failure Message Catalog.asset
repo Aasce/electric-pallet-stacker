@@ -1,0 +1,87 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c85b2a4d9f44a7c97c1e75876b29e31, type: 3}
+  m_Name: Game Failure Message Catalog
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.UI.GameFailureMessageCatalog
+  _entries:
+  - _reason: 0
+    _cause:
+      _english: "The training run ended because an unclassified safety violation was detected."
+      _vietnamese: "Lượt huấn luyện đã kết thúc do phát hiện một vi phạm an toàn chưa được phân loại."
+      _japanese: "分類されていない安全違反が検出されたため、訓練を終了しました。"
+    _guidance:
+      _english: "Stop the vehicle, identify the hazard that triggered the stop, and correct it before continuing."
+      _vietnamese: "Hãy dừng xe, xác định mối nguy đã kích hoạt dừng an toàn và khắc phục trước khi tiếp tục."
+      _japanese: "車両を停止し、安全停止を作動させた危険要因を確認して、再開前に是正してください。"
+  - _reason: 1
+    _cause:
+      _english: "The pallet stacker hit a fixed obstacle because a safe clearance was not maintained."
+      _vietnamese: "Xe nâng tay điện đã va vào chướng ngại vật cố định do không duy trì khoảng cách an toàn."
+      _japanese: "安全な間隔を確保しなかったため、パレットスタッカーが固定障害物に衝突しました。"
+    _guidance:
+      _english: "Stop before narrow passages, check both sides and the fork clearance, then proceed slowly only when the path is clear."
+      _vietnamese: "Hãy dừng trước lối hẹp, kiểm tra hai bên và khoảng hở của càng nâng; chỉ đi chậm khi lối đi đã thông thoáng."
+      _japanese: "狭い通路の手前で停止し、左右とフォークの間隔を確認して、進路が空いてから低速で進んでください。"
+  - _reason: 2
+    _cause:
+      _english: "The operator entered a collision zone and contacted an obstacle while controlling the vehicle."
+      _vietnamese: "Người vận hành đã đi vào vùng có nguy cơ va chạm và chạm phải chướng ngại vật khi điều khiển xe."
+      _japanese: "車両の操作中に作業者が衝突危険範囲へ入り、障害物に接触しました。"
+    _guidance:
+      _english: "Walk in the designated operating position, keep your body outside the travel path, and maintain clearance from walls and equipment."
+      _vietnamese: "Hãy đứng đúng vị trí vận hành, giữ cơ thể ngoài quỹ đạo di chuyển của xe và duy trì khoảng cách với tường, thiết bị."
+      _japanese: "所定の操作位置を歩き、身体を車両の走行経路から外し、壁や設備との間隔を保ってください。"
+  - _reason: 3
+    _cause:
+      _english: "The raised pallet or load struck an obstacle because overhead and side clearances were not checked."
+      _vietnamese: "Pallet hoặc hàng đang nâng đã va vào chướng ngại vật do chưa kiểm tra khoảng hở phía trên và hai bên."
+      _japanese: "上方および側方の間隔を確認しなかったため、持ち上げたパレットまたは荷が障害物に接触しました。"
+    _guidance:
+      _english: "Lower the load to the travel position, confirm overhead and side clearances, and move at low speed."
+      _vietnamese: "Hãy hạ tải về vị trí di chuyển, kiểm tra khoảng hở phía trên và hai bên rồi di chuyển ở tốc độ thấp."
+      _japanese: "荷を走行位置まで下げ、上方と側方の間隔を確認してから低速で移動してください。"
+  - _reason: 4
+    _cause:
+      _english: "The pallet or load fell because it was not stably supported or the lifting connection was overloaded."
+      _vietnamese: "Pallet hoặc hàng đã rơi do không được đỡ ổn định hoặc liên kết nâng bị quá tải."
+      _japanese: "荷が安定して支持されていない、または持ち上げ部に過負荷がかかったため、パレットまたは荷が落下しました。"
+    _guidance:
+      _english: "Insert the forks fully and centrally under the pallet, verify load stability, and avoid sudden travel or mast movements."
+      _vietnamese: "Hãy đưa càng vào hết và đúng tâm pallet, kiểm tra tải ổn định, đồng thời tránh di chuyển hoặc nâng hạ đột ngột."
+      _japanese: "フォークをパレットの中央まで十分に差し込み、荷の安定を確認し、急な走行やマスト操作を避けてください。"
+  - _reason: 5
+    _cause:
+      _english: "The pallet stacker collided with a pedestrian because a safe separation distance and right of way were not maintained."
+      _vietnamese: "Xe nâng tay điện đã va chạm với người đi bộ do không giữ khoảng cách an toàn và không nhường đường."
+      _japanese: "安全な離隔距離と歩行者優先を守らなかったため、パレットスタッカーが歩行者に衝突しました。"
+    _guidance:
+      _english: "Stop, sound the horn, make eye contact with the pedestrian, and move only after the person has completely cleared the travel path."
+      _vietnamese: "Hãy dừng xe, bấm còi, giao tiếp bằng mắt với người đi bộ và chỉ di chuyển khi họ đã ra hoàn toàn khỏi lộ trình của xe."
+      _japanese: "停止して警笛を鳴らし、歩行者と目を合わせ、歩行者が走行経路から完全に離れてから進んでください。"
+  - _reason: 6
+    _cause:
+      _english: "You were involved in a workplace accident because you operated the pallet stacker while talking on the phone and collided with a pedestrian."
+      _vietnamese: "Bạn đã bị tai nạn lao động do vừa điều khiển xe nâng tay điện vừa nghe điện thoại và va chạm với người đi bộ."
+      _japanese: "通話しながらパレットスタッカーを操作して歩行者に衝突したため、労働災害が発生しました。"
+    _guidance:
+      _english: "Never answer or use a phone while the vehicle is moving. Stop completely in a safe place and return the controls to neutral before handling the call."
+      _vietnamese: "Không nghe hoặc sử dụng điện thoại khi xe đang di chuyển. Hãy dừng hẳn xe tại vị trí an toàn và đưa cần điều khiển về trung tính rồi mới xử lý cuộc gọi."
+      _japanese: "走行中は電話に出たり操作したりしないでください。安全な場所で完全に停止し、操作レバーを中立にしてから通話してください。"
+  - _reason: 7
+    _cause:
+      _english: "You were involved in a workplace accident because you did not follow intersection safety rules and collided with another vehicle."
+      _vietnamese: "Bạn đã bị tai nạn lao động do không tuân thủ quy tắc an toàn tại góc cua, lối rẽ hoặc ngã tư và va chạm với xe khác."
+      _japanese: "曲がり角、分岐、交差点での安全手順を守らず他の車両と衝突したため、労働災害が発生しました。"
+    _guidance:
+      _english: "Come to a complete stop before every corner, branch, or intersection; look left-right-left, sound the horn when visibility is obstructed, and proceed only when clear."
+      _vietnamese: "Hãy dừng hẳn trước mọi góc cua, lối rẽ hoặc ngã tư; quan sát trái-phải-trái, bấm còi khi tầm nhìn bị che khuất và chỉ đi tiếp khi đường đã an toàn."
+      _japanese: "曲がり角、分岐、交差点の手前で必ず完全停止し、左・右・左を確認してください。見通しが悪い場合は警笛を鳴らし、安全を確認してから進んでください。"

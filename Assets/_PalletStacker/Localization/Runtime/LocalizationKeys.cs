@@ -50,10 +50,6 @@ namespace ElectricPalletStackers.Localization
             public const string Title = "failed.title";
             public const string Description = "failed.description";
             public const string UnknownReason = "failed.reason.unknown";
-            public const string VehicleCollisionReason = "failed.reason.vehicleCollision";
-            public const string OperatorCollisionReason = "failed.reason.operatorCollision";
-            public const string LoadCollisionReason = "failed.reason.loadCollision";
-            public const string LoadDroppedReason = "failed.reason.loadDropped";
             public const string ContinueCheckpoint = "failed.continueCheckpoint";
             public const string ExitRestart = "failed.exitRestart";
             public const string NavigationHint = "failed.navigationHint";

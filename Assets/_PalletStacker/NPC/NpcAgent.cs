@@ -1,10 +1,11 @@
+using ElectricPalletStackers.Gameplay;
 using UnityEngine;
 
 namespace ElectricPalletStackers.NPCs
 {
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CapsuleCollider))]
-    public sealed class NpcAgent : MonoBehaviour
+    public sealed class NpcAgent : MonoBehaviour, IGameFailureReasonProvider
     {
         private enum MovementState { Paused, Moving, Waiting, YieldingToVehicle, Scripted }
 
@@ -13,8 +14,11 @@ namespace ElectricPalletStackers.NPCs
         [SerializeField, Min(1f)] private float _turnSpeed = 540f;
         [SerializeField, Min(0.01f)] private float _arrivalDistance = 0.12f;
         [Header("Vehicle awareness")]
+        [SerializeField] private CapsuleCollider _bodyCollider;
         [SerializeField, Min(0f)] private float _pathCollisionPadding = 0.05f;
         [SerializeField, Min(0.25f)] private float _vehicleClearance = 2.5f;
+        [SerializeField] private GameFailureReason _collisionFailureReason =
+            GameFailureReason.PedestrianCollision;
         [Header("Optional animation parameter")]
         [SerializeField] private Animator _animator;
         [SerializeField] private string _walkingBool = "Walking";
@@ -22,7 +26,6 @@ namespace ElectricPalletStackers.NPCs
         private NpcPopulationController _population;
         private NpcWaypointRoute _route;
         private NpcVehicleCollisionTarget _vehicleTarget;
-        private CapsuleCollider _bodyCollider;
         private MovementState _state = MovementState.Paused;
         private int _waypointIndex;
         private int _direction = 1;
@@ -38,18 +41,15 @@ namespace ElectricPalletStackers.NPCs
         public bool IsAvailableForPhoneEvent =>
             isActiveAndEnabled && _roundActive && _state != MovementState.Scripted;
         public NpcWaypointRoute Route => _route;
+        public GameFailureReason FailureReason => _collisionFailureReason;
         public event System.Action VehicleCollisionStarted;
-
-        private void Reset() => _animator = GetComponentInChildren<Animator>();
 
         private void Awake()
         {
             // NPC locomotion is transform-driven. A solid collider can inject large
             // impulses into the controlled vehicle, while a trigger still detects contact.
-            _bodyCollider = GetComponent<CapsuleCollider>();
             if (_bodyCollider != null) _bodyCollider.isTrigger = true;
 
-            if (_animator == null) _animator = GetComponentInChildren<Animator>();
             _walkingHash = Animator.StringToHash(_walkingBool);
             if (_animator == null) return;
             foreach (AnimatorControllerParameter parameter in _animator.parameters)
@@ -177,6 +177,11 @@ namespace ElectricPalletStackers.NPCs
             if (enabled) _vehicleCollisionReported = false;
         }
 
+        public void SetCollisionFailureReason(GameFailureReason reason)
+        {
+            _collisionFailureReason = reason;
+        }
+
         public void ResumeNormalBehaviour()
         {
             if (!_roundActive) return;
@@ -283,7 +288,7 @@ namespace ElectricPalletStackers.NPCs
 
             _vehicleCollisionReported = true;
             VehicleCollisionStarted?.Invoke();
-            if (!_vehicleTarget.ReportNpcCollision())
+            if (!_vehicleTarget.ReportNpcCollision(this))
             {
                 _vehicleCollisionReported = false;
                 return false;

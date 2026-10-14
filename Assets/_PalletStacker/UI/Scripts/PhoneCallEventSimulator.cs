@@ -15,10 +15,9 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private PhoneCallPanel _phoneCallPanel;
         [SerializeField] private PalletStackerRigidbodyMotor _vehicleMotor;
         [SerializeField] private Rigidbody _vehicleBody;
-        [SerializeField] private PalletStackerCollisionReporter _collisionReporter;
         [SerializeField] private NpcPopulationController _npcPopulation;
         [SerializeField] private PalletStackerForkCollisionSensor _forkCollisionSensor;
-        [Tooltip("Defaults to the main camera and represents the player's head position.")]
+        [Tooltip("The player's head/view transform, assigned in the Inspector.")]
         [SerializeField] private Transform _playerView;
 
         [Header("Call")]
@@ -26,7 +25,6 @@ namespace ElectricPalletStackers.UI
         [SerializeField, Min(0.1f)] private float _conversationDuration = 10f;
 
         [Header("Phone distraction NPC")]
-        [Tooltip("Falls back to the population controller's NPC prefab when empty.")]
         [SerializeField] private NpcAgent _phoneNpcPrefab;
         [SerializeField, Min(0f)] private float _npcFrontClearance = 1.25f;
         [SerializeField, Min(0f)] private float _npcBehindPlayerClearance = 1.25f;
@@ -53,11 +51,8 @@ namespace ElectricPalletStackers.UI
         public bool IsRinging => _phoneCallPanel != null && _phoneCallPanel.IsRinging;
         public bool IsInCall => _activeConversation;
 
-        private void Awake() => ResolveReferences();
-
         private void OnEnable()
         {
-            ResolveReferences();
             if (_phoneCallPanel != null) _phoneCallPanel.CallAccepted += HandleCallAccepted;
             if (_appManager != null)
             {
@@ -79,7 +74,6 @@ namespace ElectricPalletStackers.UI
 
         public void TriggerIncomingCall()
         {
-            ResolveReferences();
             if (_triggeredThisRound ||
                 (_appManager != null && _appManager.CurrentState != GameState.Playing)) return;
 
@@ -156,9 +150,7 @@ namespace ElectricPalletStackers.UI
             DespawnPhoneNpc();
             if (_vehicleBody == null) return;
 
-            NpcAgent prefab = _phoneNpcPrefab != null
-                ? _phoneNpcPrefab
-                : _npcPopulation != null ? _npcPopulation.NpcPrefab : null;
+            NpcAgent prefab = _phoneNpcPrefab;
             if (prefab == null)
             {
                 Debug.LogWarning("No NPC prefab is configured for the phone distraction event.", this);
@@ -173,6 +165,7 @@ namespace ElectricPalletStackers.UI
 
             _activePhoneNpc = Instantiate(prefab, spawnPosition, spawnRotation, transform);
             _activePhoneNpc.name = "Phone Call Hazard NPC";
+            _activePhoneNpc.SetCollisionFailureReason(GameFailureReason.PhoneDistractionCollision);
             _activePhoneNpc.VehicleCollisionStarted += HandlePhoneNpcCollisionStarted;
             _activePhoneNpc.Initialize(
                 null,
@@ -285,7 +278,6 @@ namespace ElectricPalletStackers.UI
 
         private Vector3 GetPointBehindPlayer(Vector3 vehicleForward)
         {
-            if (_playerView == null && Camera.main != null) _playerView = Camera.main.transform;
             Vector3 playerPosition = _playerView != null
                 ? _playerView.position
                 : _vehicleBody.position;
@@ -390,26 +382,6 @@ namespace ElectricPalletStackers.UI
             DespawnPhoneNpc();
             _npcPopulation?.SetCrowdPressure(false);
             _phoneCallPanel?.HideImmediate();
-        }
-
-        private void ResolveReferences()
-        {
-            if (_appManager == null)
-                _appManager = FindFirstObjectByType<AppManager>(FindObjectsInactive.Include);
-            if (_phoneCallPanel == null)
-                _phoneCallPanel = FindFirstObjectByType<PhoneCallPanel>(FindObjectsInactive.Include);
-            if (_vehicleMotor == null)
-                _vehicleMotor = FindFirstObjectByType<PalletStackerRigidbodyMotor>(FindObjectsInactive.Include);
-            if (_vehicleBody == null && _vehicleMotor != null)
-                _vehicleBody = _vehicleMotor.GetComponent<Rigidbody>();
-            if (_collisionReporter == null)
-                _collisionReporter = FindFirstObjectByType<PalletStackerCollisionReporter>(FindObjectsInactive.Include);
-            if (_npcPopulation == null)
-                _npcPopulation = FindFirstObjectByType<NpcPopulationController>(FindObjectsInactive.Include);
-            if (_forkCollisionSensor == null && _vehicleBody != null)
-                _forkCollisionSensor = _vehicleBody.GetComponentInChildren<PalletStackerForkCollisionSensor>(true);
-            if (_playerView == null && Camera.main != null)
-                _playerView = Camera.main.transform;
         }
 
         private void CancelCallRoutine()

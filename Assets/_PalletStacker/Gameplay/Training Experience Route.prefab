@@ -1023,6 +1023,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78606b595a2a1c145ad39c3a729c3eaa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Gameplay.CrossingVehicleController
+  _body: {fileID: 9170642672537513841}
   _startPoint: {fileID: 6456087874672231098}
   _endPoint: {fileID: 3432751559786191943}
   _speed: 3

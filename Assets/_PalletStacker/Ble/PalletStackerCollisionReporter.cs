@@ -1,4 +1,5 @@
 using System;
+using ElectricPalletStackers.Gameplay;
 using ElectricPalletStackers.PalletStackers;
 using UnityEngine;
 using UnityEngine.Events;
@@ -20,7 +21,7 @@ namespace ElectricPalletStackers.Ble
         [SerializeField] private Collider[] _forkCargoSafeColliders;
         [SerializeField] private UnityEvent _onLocalCollisionDetected;
 
-        public event Action CollisionDetected;
+        public event Action<GameFailureReason> CollisionDetected;
 
         public void Bind(PalletStackerCollisionSender collisionSender)
         {
@@ -43,7 +44,7 @@ namespace ElectricPalletStackers.Ble
                 $"on layer {LayerMask.LayerToName(collision.gameObject.layer)} " +
                 $"at {impactSpeed:0.00} m/s.",
                 this);
-            ReportCollision();
+            ReportCollision(collision.collider);
         }
 
         private float GetMaximumObstacleImpactSpeed(Collision collision)
@@ -92,10 +93,31 @@ namespace ElectricPalletStackers.Ble
         [ContextMenu("Simulate Vehicle Collision")]
         public void ReportCollision()
         {
+            ReportCollision(GameFailureReason.VehicleCollision);
+        }
+
+        public void ReportCollision(Collider collisionTarget)
+        {
+            ReportCollision(ResolveFailureReason(collisionTarget));
+        }
+
+        public void ReportCollision(GameFailureReason reason)
+        {
             // Local gameplay stops before BLE confirmation to avoid network latency in the safety path.
-            CollisionDetected?.Invoke();
+            CollisionDetected?.Invoke(reason);
             _onLocalCollisionDetected?.Invoke();
             _collisionSender?.SendCollision();
+        }
+
+        private static GameFailureReason ResolveFailureReason(Collider collisionTarget)
+        {
+            if (collisionTarget == null) return GameFailureReason.VehicleCollision;
+
+            IGameFailureReasonProvider provider =
+                collisionTarget.GetComponentInParent<IGameFailureReasonProvider>();
+            return provider != null
+                ? provider.FailureReason
+                : GameFailureReason.VehicleCollision;
         }
     }
 }

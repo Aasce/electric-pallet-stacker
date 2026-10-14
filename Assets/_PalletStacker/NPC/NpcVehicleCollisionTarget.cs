@@ -1,4 +1,5 @@
 using ElectricPalletStackers.Ble;
+using ElectricPalletStackers.Gameplay;
 using ElectricPalletStackers.PalletStackers;
 using UnityEngine;
 
@@ -85,10 +86,11 @@ namespace ElectricPalletStackers.NPCs
             return load != null && load == _loadHandler.HeldLoad;
         }
 
-        public bool ReportNpcCollision()
+        public bool ReportNpcCollision(NpcAgent npc)
         {
             if (_collisionReporter == null) return false;
-            _collisionReporter.ReportCollision();
+            _collisionReporter.ReportCollision(
+                npc != null ? npc.FailureReason : GameFailureReason.PedestrianCollision);
             return true;
         }
 

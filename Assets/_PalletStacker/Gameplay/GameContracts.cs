@@ -23,6 +23,15 @@ namespace ElectricPalletStackers.Gameplay
         event Action<GameFailureReason> FailureRequested;
     }
 
+    /// <summary>
+    /// Supplies the safety-specific reason for a collision target. Collision detection
+    /// remains independent from the systems that own pedestrians, traffic, or hazards.
+    /// </summary>
+    public interface IGameFailureReasonProvider
+    {
+        GameFailureReason FailureReason { get; }
+    }
+
     public interface IGameResettable
     {
         void ResetState();

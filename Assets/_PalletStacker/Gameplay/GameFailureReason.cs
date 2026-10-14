@@ -6,6 +6,9 @@ namespace ElectricPalletStackers.Gameplay
         VehicleCollision,
         OperatorCollision,
         LoadCollision,
-        LoadDropped
+        LoadDropped,
+        PedestrianCollision,
+        PhoneDistractionCollision,
+        IntersectionVehicleCollision
     }
 }

@@ -41,11 +41,11 @@ namespace ElectricPalletStackers.Gameplay
             _controlDriver?.SetGameplayInterlock(true);
         }
 
-        private void HandleCollisionDetected()
+        private void HandleCollisionDetected(GameFailureReason reason)
         {
             // Stop locally before the AppManager broadcasts the result.
             _controlDriver?.SetGameplayInterlock(true);
-            FailureRequested?.Invoke(GameFailureReason.VehicleCollision);
+            FailureRequested?.Invoke(reason);
         }
     }
 }

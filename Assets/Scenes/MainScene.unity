@@ -4974,13 +4974,12 @@ MonoBehaviour:
   _phoneCallPanel: {fileID: 1554875647}
   _vehicleMotor: {fileID: 3505153867693228159}
   _vehicleBody: {fileID: 2200000101}
-  _collisionReporter: {fileID: 455976367}
   _npcPopulation: {fileID: 1900000006}
-  _forkCollisionSensor: {fileID: 0}
-  _playerView: {fileID: 0}
+  _forkCollisionSensor: {fileID: 2200000105}
+  _playerView: {fileID: 1856687364}
   _callerDisplay: 0123456789
   _conversationDuration: 10
-  _phoneNpcPrefab: {fileID: 0}
+  _phoneNpcPrefab: {fileID: 5287491308231157334, guid: 6d9c86d5e16b3714db7031e68a6ace5f, type: 3}
   _npcFrontClearance: 1.25
   _npcBehindPlayerClearance: 1.25
   _minimumCollisionGrace: 1
@@ -6255,7 +6254,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ec72546729d4123448d0b3dfb073402d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.UI.UIController
-  _localizationManager: {fileID: 0}
+  _localizationManager: {fileID: 1662881610}
+  _failureMessageCatalog: {fileID: 11400000, guid: 8de5f1ef1bf448f8ac535e79d1e13b44, type: 2}
   _inputRouter: {fileID: 1662881605}
   _selectLanguagePanel: {fileID: 1114851439}
   _calibrationPanel: {fileID: 5035545479161186816}
@@ -9274,6 +9274,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d0f4d8a71544d748da60e38961526aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.NPCs.NpcVehicleCollisionTarget
+--- !u!114 &2200000105 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 780000000000000002, guid: afea59b60ad2fb641a2a635f948c9768, type: 3}
+  m_PrefabInstance: {fileID: 3505153867693228158}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c95d29e2e70467482a3d4ac84ea270f, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Ble.PalletStackerForkCollisionSensor
 --- !u!1001 &6000000001
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -12,6 +12,7 @@ namespace ElectricPalletStackers.UI
     {
         [Header("Services")]
         [SerializeField] private LocalizationManager _localizationManager;
+        [SerializeField] private GameFailureMessageCatalog _failureMessageCatalog;
 
         [Header("UI Flow")]
         [SerializeField] private UIInputRouter _inputRouter;
@@ -43,9 +44,19 @@ namespace ElectricPalletStackers.UI
         private void Awake()
         {
             if (_localizationManager == null)
-                _localizationManager = GetComponent<LocalizationManager>();
-            if (_localizationManager == null)
-                _localizationManager = gameObject.AddComponent<LocalizationManager>();
+            {
+                Debug.LogError("UIController requires a LocalizationManager assigned in the Inspector.", this);
+                enabled = false;
+                return;
+            }
+
+            if (_failureMessageCatalog == null)
+            {
+                Debug.LogError("UIController requires a GameFailureMessageCatalog assigned in the Inspector.", this);
+                enabled = false;
+                return;
+            }
+
             _localizationManager.Initialize();
             if (_selectLanguagePanel != null)
                 _selectLanguagePanel.FocusChanged += HandleLanguageFocusChanged;
@@ -162,7 +173,9 @@ namespace ElectricPalletStackers.UI
         public void ShowFailed(GameFailureReason reason)
         {
             _failedPanel.SetFailureReason(
-                ResolveFailureReasonKey(reason),
+                reason,
+                _failureMessageCatalog,
+                _localizationManager.CurrentLanguage,
                 _localizationManager.Service);
             TransitionTo(UIFlowState.Failed);
         }
@@ -242,20 +255,5 @@ namespace ElectricPalletStackers.UI
             TransitionTo(UIFlowState.Welcome);
         }
 
-        private static string ResolveFailureReasonKey(GameFailureReason reason)
-        {
-            return reason switch
-            {
-                GameFailureReason.VehicleCollision =>
-                    LocalizationKeys.Failed.VehicleCollisionReason,
-                GameFailureReason.OperatorCollision =>
-                    LocalizationKeys.Failed.OperatorCollisionReason,
-                GameFailureReason.LoadCollision =>
-                    LocalizationKeys.Failed.LoadCollisionReason,
-                GameFailureReason.LoadDropped =>
-                    LocalizationKeys.Failed.LoadDroppedReason,
-                _ => LocalizationKeys.Failed.UnknownReason
-            };
-        }
     }
 }

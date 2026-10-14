@@ -1,4 +1,5 @@
 using System;
+using ElectricPalletStackers.Gameplay;
 using ElectricPalletStackers.Localization;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -37,9 +38,20 @@ namespace ElectricPalletStackers.UI
             _exitButton.Button.onClick.RemoveListener(ConfirmExit);
         }
 
-        public void SetFailureReason(string localizationKey, ILocalizationService localization)
+        public void SetFailureReason(
+            GameFailureReason reason,
+            GameFailureMessageCatalog catalog,
+            LanguageCode language,
+            ILocalizationService localization)
         {
-            _reasonText.SetKey(localizationKey, localization);
+            if (catalog != null && catalog.TryGet(reason, language, out GameFailureMessage message))
+            {
+                _reasonText.SetText($"{message.Cause}\n\n{message.Guidance}", localization);
+                return;
+            }
+
+            Debug.LogError($"No failure message is configured for '{reason}'.", this);
+            _reasonText.SetKey(LocalizationKeys.Failed.UnknownReason, localization);
         }
 
         public void NavigateNext()

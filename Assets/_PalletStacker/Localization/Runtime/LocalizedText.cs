@@ -17,7 +17,7 @@ namespace ElectricPalletStackers.Localization
         public void ApplyLocalization(ILocalizationService localization)
         {
             if (localization == null) return;
-            ResolveTarget();
+            CacheDefaultFont();
             if (_target == null || string.IsNullOrWhiteSpace(_key)) return;
 
             _target.text = localization.GetText(_key);
@@ -31,14 +31,19 @@ namespace ElectricPalletStackers.Localization
             ApplyLocalization(localization);
         }
 
-        private void Reset()
+        public void SetText(string value, ILocalizationService localization)
         {
-            ResolveTarget();
+            CacheDefaultFont();
+            if (_target == null) return;
+
+            _key = string.Empty;
+            _target.text = value ?? string.Empty;
+            TMP_FontAsset overrideFont = localization?.GetFontOverride();
+            _target.font = overrideFont != null ? overrideFont : _defaultFont;
         }
 
-        private void ResolveTarget()
+        private void CacheDefaultFont()
         {
-            if (_target == null) _target = GetComponent<TMP_Text>();
             if (_defaultFont == null && _target != null) _defaultFont = _target.font;
         }
     }

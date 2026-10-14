@@ -26,7 +26,7 @@ namespace ElectricPalletStackers.Ble
             Debug.LogWarning(
                 $"[PALLET STACKER] Fork collision interlock triggered by '{other.gameObject.name}'.",
                 this);
-            _collisionReporter.ReportCollision();
+            _collisionReporter.ReportCollision(other);
         }
 
         private bool ShouldIgnore(Collider other)

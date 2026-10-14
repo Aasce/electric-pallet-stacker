@@ -1,5 +1,6 @@
 using System;
 using ElectricPalletStackers.Ble;
+using ElectricPalletStackers.Gameplay;
 using ElectricPalletStackers.PalletStackers;
 using UnityEngine;
 
@@ -162,7 +163,10 @@ namespace ElectricPalletStackers.NPCs
             if (!_active) return;
             _active = false;
             if (_npc == null || !_npc.TryReportVehicleCollision())
-                _collisionReporter?.ReportCollision();
+                _collisionReporter?.ReportCollision(
+                    _npc != null
+                        ? _npc.FailureReason
+                        : GameFailureReason.PedestrianCollision);
             _impactHandler?.Invoke();
             RestoreNpc();
             Destroy(this);

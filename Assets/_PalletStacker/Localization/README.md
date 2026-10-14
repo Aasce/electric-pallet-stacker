@@ -27,6 +27,19 @@ selection panel, it delegates the change to `LocalizationManager`; it does not r
 Missing text falls back to English. If the key is absent from every language, the service renders
 `[key]` so configuration errors remain visible during development.
 
+## Add or edit a failure message
+
+Failure results use the separate
+`Resources/Game Failure Message Catalog.asset`. Each list entry contains a concrete cause and a
+corrective action in English, Vietnamese, and Japanese.
+
+1. Add or edit a `GameFailureReason` entry.
+2. Add the matching cause and guidance entry to the failure message catalog.
+3. For collision targets with their own reason, implement `IGameFailureReasonProvider`. Runtime
+   variants such as the phone-distraction NPC can set their reason before reporting the collision.
+
+Collision sources publish only domain reasons. They do not depend on UI or localization code.
+
 ## Add a language
 
 1. Add the language to `LanguageCode`.

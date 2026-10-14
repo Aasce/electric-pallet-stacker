@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ElectricPalletStackers.Ble;
+using ElectricPalletStackers.Gameplay;
 using UnityEngine;
 
 namespace ElectricPalletStackers.PalletStackers
@@ -189,7 +190,7 @@ namespace ElectricPalletStackers.PalletStackers
             ? _settings.TravelDeadzoneNormalized
             : PalletStackerVehicleSettings.DefaultTravelDeadzoneNormalized;
 
-        private void HandleLocalCollision()
+        private void HandleLocalCollision(GameFailureReason _)
         {
             if (_collisionInterlock) return;
             _collisionInterlock = true;
