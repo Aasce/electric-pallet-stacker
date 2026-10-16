@@ -23,6 +23,8 @@ namespace ElectricPalletStackers.UI
         [Header("Call")]
         [SerializeField] private string _callerDisplay = "0123456789";
         [SerializeField, Min(0.1f)] private float _conversationDuration = 10f;
+        [SerializeField] private bool _applyCrowdPressureWhileRinging = true;
+        [SerializeField] private bool _spawnPhoneNpcWhenAnswered = true;
 
         [Header("Phone distraction NPC")]
         [SerializeField] private NpcAgent _phoneNpcPrefab;
@@ -85,7 +87,8 @@ namespace ElectricPalletStackers.UI
             _phoneCallPanel?.ShowIncomingCall(_callerDisplay);
             _phoneCallPanel?.SetOcclusionTarget(_ringingTargetAnchor);
             // An unanswered call intentionally rings forever and raises pedestrian pressure.
-            _npcPopulation?.SetCrowdPressure(true);
+            if (_applyCrowdPressureWhileRinging)
+                _npcPopulation?.SetCrowdPressure(true);
         }
 
         public void ResetState()
@@ -124,9 +127,10 @@ namespace ElectricPalletStackers.UI
         private void HandleCallAccepted()
         {
             if (_activeConversation) return;
-            _npcPopulation?.SetCrowdPressure(false);
+            if (_applyCrowdPressureWhileRinging)
+                _npcPopulation?.SetCrowdPressure(false);
             _activeConversation = true;
-            SpawnPhoneNpc();
+            if (_spawnPhoneNpcWhenAnswered) SpawnPhoneNpc();
             _phoneCallPanel?.SetOcclusionTarget(_activePhoneNpc != null
                 ? _activePhoneNpc.transform
                 : null);
@@ -380,7 +384,8 @@ namespace ElectricPalletStackers.UI
             _phoneNpcImpactOccurred = false;
             ClearRingingTargetAnchor();
             DespawnPhoneNpc();
-            _npcPopulation?.SetCrowdPressure(false);
+            if (_applyCrowdPressureWhileRinging)
+                _npcPopulation?.SetCrowdPressure(false);
             _phoneCallPanel?.HideImmediate();
         }
 

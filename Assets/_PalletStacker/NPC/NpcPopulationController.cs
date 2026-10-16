@@ -12,6 +12,7 @@ namespace ElectricPalletStackers.NPCs
         [SerializeField] private NpcAgent _npcPrefab;
         [SerializeField, Min(0)] private int _normalNpcCount = 4;
         [SerializeField, Min(0)] private int _busyNpcCount = 8;
+        [SerializeField] private bool _activateOnRoundStart = true;
         [SerializeField] private Transform _runtimeParent;
         [SerializeField] private NpcWaypointRoute[] _routes;
 
@@ -28,6 +29,7 @@ namespace ElectricPalletStackers.NPCs
 
         private readonly List<NpcAgent> _npcs = new();
         private bool _roundActive;
+        private bool _populationActivated;
         private PopulationCheckpoint _checkpoint;
         private bool _hasCheckpoint;
 
@@ -49,6 +51,7 @@ namespace ElectricPalletStackers.NPCs
 
         private void Start()
         {
+            _populationActivated = _activateOnRoundStart;
             EnsurePopulation(_normalNpcCount);
             ApplyPopulationState();
         }
@@ -56,16 +59,21 @@ namespace ElectricPalletStackers.NPCs
         public void PrepareRound()
         {
             _roundActive = true;
-            SetCrowdPressure(false);
+            _populationActivated = _activateOnRoundStart;
+            IsCrowdPressureActive = false;
             EnsurePopulation(_normalNpcCount);
-            for (int index = 0; index < _npcs.Count; index++)
-            {
-                NpcAgent npc = _npcs[index];
-                if (npc == null) continue;
-                bool active = index < _normalNpcCount;
-                npc.gameObject.SetActive(active);
-                if (active) npc.ResetForRound(true);
-            }
+            ApplyPopulationState();
+        }
+
+        public void ActivatePopulation()
+        {
+            if (_populationActivated) return;
+            _populationActivated = true;
+            int count = IsCrowdPressureActive
+                ? Mathf.Max(_normalNpcCount, _busyNpcCount)
+                : _normalNpcCount;
+            EnsurePopulation(count);
+            ApplyPopulationState();
         }
 
         public void ResumeRound()
@@ -91,7 +99,8 @@ namespace ElectricPalletStackers.NPCs
         {
             _roundActive = false;
             _hasCheckpoint = false;
-            SetCrowdPressure(false);
+            IsCrowdPressureActive = false;
+            _populationActivated = _activateOnRoundStart;
             ApplyPopulationState();
         }
 
@@ -122,6 +131,7 @@ namespace ElectricPalletStackers.NPCs
             _roundActive = false;
             EnsurePopulation(_checkpoint.Poses.Length);
             IsCrowdPressureActive = _checkpoint.CrowdPressureActive;
+            _populationActivated = false;
 
             for (int index = 0; index < _npcs.Count; index++)
             {
@@ -130,6 +140,7 @@ namespace ElectricPalletStackers.NPCs
 
                 bool hasSavedPose = index < _checkpoint.Poses.Length;
                 bool shouldBeActive = hasSavedPose && _checkpoint.ActiveStates[index];
+                _populationActivated |= shouldBeActive;
                 npc.SetRoundActive(false);
                 if (npc.gameObject.activeSelf != shouldBeActive)
                     npc.gameObject.SetActive(shouldBeActive);
@@ -148,7 +159,7 @@ namespace ElectricPalletStackers.NPCs
             {
                 NpcAgent npc = _npcs[index];
                 if (npc == null) continue;
-                bool shouldBeActive = index < targetCount;
+                bool shouldBeActive = _populationActivated && index < targetCount;
                 if (npc.gameObject.activeSelf != shouldBeActive)
                 {
                     npc.gameObject.SetActive(shouldBeActive);
@@ -238,7 +249,7 @@ namespace ElectricPalletStackers.NPCs
             {
                 NpcAgent npc = _npcs[index];
                 if (npc == null) continue;
-                bool active = index < count;
+                bool active = _populationActivated && index < count;
                 npc.gameObject.SetActive(active);
                 if (active) npc.ResetForRound(_roundActive);
             }

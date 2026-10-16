@@ -27,6 +27,7 @@ namespace ElectricPalletStackers.NPCs
         private NpcWaypointRoute _route;
         private NpcVehicleCollisionTarget _vehicleTarget;
         private MovementState _state = MovementState.Paused;
+        private int _startingWaypointIndex;
         private int _waypointIndex;
         private int _direction = 1;
         private float _waitUntil;
@@ -88,9 +89,10 @@ namespace ElectricPalletStackers.NPCs
             _population = population;
             _vehicleTarget = vehicleTarget;
             _route = route;
-            _waypointIndex = route != null && route.Count > 0
+            _startingWaypointIndex = route != null && route.Count > 0
                 ? Mathf.Abs(startingWaypoint) % route.Count
                 : 0;
+            _waypointIndex = _startingWaypointIndex;
             _direction = 1;
         }
 
@@ -102,6 +104,7 @@ namespace ElectricPalletStackers.NPCs
             _hornMinimumWaitUntil = 0f;
             _state = roundActive ? MovementState.Moving : MovementState.Paused;
             _direction = 1;
+            _waypointIndex = _startingWaypointIndex;
             if (_route != null && _route.TryGetWaypoint(_waypointIndex, out Vector3 position))
             {
                 transform.position = position;
@@ -203,6 +206,12 @@ namespace ElectricPalletStackers.NPCs
             if (delta.sqrMagnitude <= _arrivalDistance * _arrivalDistance)
             {
                 transform.position = new Vector3(destination.x, transform.position.y, destination.z);
+                if (_route.IsTerminalIndex(_waypointIndex, _direction))
+                {
+                    _state = MovementState.Paused;
+                    UpdateAnimation();
+                    return;
+                }
                 _waypointIndex = _route.GetNextIndex(_waypointIndex, ref _direction);
                 float wait = _population != null && _population.IsCrowdPressureActive
                     ? 0f

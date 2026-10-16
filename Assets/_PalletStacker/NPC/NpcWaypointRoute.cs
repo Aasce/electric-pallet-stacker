@@ -45,6 +45,12 @@ namespace ElectricPalletStackers.NPCs
             return next < Count ? next : (_loop ? 0 : Count - 1);
         }
 
+        public bool IsTerminalIndex(int index, int direction)
+        {
+            if (_loop || _pingPong || Count == 0) return false;
+            return direction >= 0 ? index >= Count - 1 : index <= 0;
+        }
+
         public int FindSafestIndex(Vector3 origin, Vector3 vehiclePosition, Vector3 vehicleForward)
         {
             if (Count == 0) return -1;
