@@ -28,11 +28,9 @@ namespace ElectricPalletStackers.UI
         [SerializeField, Range(1f, 1.05f)] private float _hoverScale = 1.012f;
         [SerializeField, Range(0.9f, 1f)] private float _pressedScale = 0.985f;
         [SerializeField] private Color _normalTextColor = Color.white;
-        [SerializeField] private Color _focusedTextColor = new Color(0f, 0.7843137f, 1f, 1f);
+        [SerializeField] private Color _focusedTextColor = Color.white;
         [SerializeField] private Color _disabledTextColor = new Color(0.66f, 0.78f, 0.84f, 0.5f);
 
-        private CanvasGroup _normalGroup;
-        private CanvasGroup _focusedGroup;
         private bool _pointerInside;
         private bool _pointerDown;
         private bool _lastInteractable;
@@ -138,17 +136,6 @@ namespace ElectricPalletStackers.UI
             if (_button != null) _button.transition = Selectable.Transition.None;
             if (_label == null) _label = GetComponentInChildren<TextMeshProUGUI>(true);
 
-            _normalGroup = ResolveGroup(_normalLayer, _normalGroup);
-            _focusedGroup = ResolveGroup(_focusedLayer, _focusedGroup);
-        }
-
-        private static CanvasGroup ResolveGroup(GameObject layer, CanvasGroup current)
-        {
-            if (layer == null) return null;
-            layer.SetActive(true);
-            return current != null
-                ? current
-                : layer.GetComponent<CanvasGroup>() ?? layer.AddComponent<CanvasGroup>();
         }
 
         private void ApplyVisualState(bool instant)
@@ -157,8 +144,8 @@ namespace ElectricPalletStackers.UI
             bool interactable = _button != null && _button.interactable;
             bool highlighted = interactable && (IsFocused || _pointerInside || _pointerDown);
 
-            SetGroupAlpha(_normalGroup, highlighted ? 0f : 1f, instant);
-            SetGroupAlpha(_focusedGroup, highlighted ? 1f : 0f, instant);
+            SetLayerVisible(_normalLayer, !highlighted);
+            SetLayerVisible(_focusedLayer, highlighted);
 
             float scaleMultiplier = _pointerDown
                 ? _pressedScale
@@ -171,14 +158,10 @@ namespace ElectricPalletStackers.UI
             AnimateTextColor(textColor, instant);
         }
 
-        private void SetGroupAlpha(CanvasGroup group, float alpha, bool instant)
+        private static void SetLayerVisible(GameObject layer, bool visible)
         {
-            if (group == null) return;
-            group.DOKill();
-            group.interactable = false;
-            group.blocksRaycasts = false;
-            if (instant || _duration <= 0f) group.alpha = alpha;
-            else group.DOFade(alpha, _duration).SetEase(_ease).SetUpdate(true).SetLink(gameObject);
+            if (layer != null && layer.activeSelf != visible)
+                layer.SetActive(visible);
         }
 
         private void AnimateScale(Vector3 target, bool instant)
@@ -214,8 +197,6 @@ namespace ElectricPalletStackers.UI
         private void KillTweens()
         {
             transform.DOKill();
-            if (_normalGroup != null) _normalGroup.DOKill();
-            if (_focusedGroup != null) _focusedGroup.DOKill();
             if (_label != null) _label.DOKill();
         }
     }

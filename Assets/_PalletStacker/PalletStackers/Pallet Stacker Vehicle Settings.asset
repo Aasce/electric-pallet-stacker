@@ -20,5 +20,5 @@ MonoBehaviour:
   _travelDeadzoneNormalized: 0.05
   _maximumSteeringAngleDegrees: 35
   _minimumForkHeight: 0.3
-  _maximumForkHeight: 2
+  _maximumForkHeight: 2.4
   _forkLiftSpeed: 0.75

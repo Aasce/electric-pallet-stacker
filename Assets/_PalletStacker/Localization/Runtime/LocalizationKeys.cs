@@ -49,6 +49,7 @@ namespace ElectricPalletStackers.Localization
         {
             public const string Instruction = "crossSafety.instruction";
             public const string Danger = "crossSafety.danger";
+            public const string PointThisWay = "crossSafety.pointThisWay";
         }
 
         public static class Completed

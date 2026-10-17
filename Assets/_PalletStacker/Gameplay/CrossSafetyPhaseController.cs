@@ -14,6 +14,7 @@ namespace ElectricPalletStackers.Gameplay
             Idle,
             WaitingForStop,
             ConfirmingDirections,
+            CompletingDirections,
             HazardActive,
             FootAccidentCutscene,
             Completed
@@ -42,8 +43,16 @@ namespace ElectricPalletStackers.Gameplay
         [SerializeField] private CrossDirectionPokeTarget[] _directionTargets;
         [Tooltip("Reach distance from the player's view to every poke sphere.")]
         [SerializeField, Range(0.3f, 0.8f)] private float _targetDistance = 0.5625f;
+        [Tooltip("Moves the centre shared by all direction targets slightly forward, making side targets easier to see without a full 90-degree head turn.")]
+        [SerializeField, Min(0f)] private float _targetForwardOffset = 0.2f;
+        [Tooltip("Additional forward-axis adjustment for the Forward target.")]
+        [SerializeField] private float _forwardTargetForwardAdjustment = -0.2f;
+        [Tooltip("Additional forward-axis adjustment for the Turn Right target.")]
+        [SerializeField] private float _turnRightTargetForwardAdjustment = 0.1f;
         [Tooltip("Vertical offset from the player's view. Negative values place spheres below eye level.")]
         [SerializeField, Range(-0.5f, 0.25f)] private float _targetVerticalOffset = -0.18f;
+        [Tooltip("How long the final confirmed target remains visible before all direction targets are hidden.")]
+        [SerializeField, Min(0f)] private float _finalConfirmationVisibleDuration = 1f;
 
         [Header("Stop validation")]
         [SerializeField, Min(0.01f)] private float _stoppedSpeedThreshold = 0.05f;
@@ -68,12 +77,15 @@ namespace ElectricPalletStackers.Gameplay
         private Vector3[] _fixedDirections;
         private Collider[] _playerColliders;
         private float _stoppedDuration;
+        private float _finalConfirmationElapsed;
         private float _cutsceneElapsed;
         private bool _hazardWasReversing;
+        private int _promptedDirectionIndex;
 
         public bool HasCompleted => _state == PhaseState.Completed;
         public bool IsRunning => _state == PhaseState.WaitingForStop ||
-                                 _state == PhaseState.ConfirmingDirections;
+                                 _state == PhaseState.ConfirmingDirections ||
+                                 _state == PhaseState.CompletingDirections;
         public event Action<GameFailureReason> FailureRequested;
 
         private void Awake()
@@ -121,10 +133,19 @@ namespace ElectricPalletStackers.Gameplay
 
         private void Update()
         {
-            if (_playerVehicle == null ||
-                (_appManager != null && _appManager.CurrentState != GameState.Playing) ||
+            if ((_appManager != null && _appManager.CurrentState != GameState.Playing) ||
                 _state == PhaseState.Completed)
                 return;
+
+            if (_state == PhaseState.CompletingDirections)
+            {
+                _finalConfirmationElapsed += Time.deltaTime;
+                if (_finalConfirmationElapsed >= _finalConfirmationVisibleDuration)
+                    CompleteSafetyCheck();
+                return;
+            }
+
+            if (_playerVehicle == null) return;
 
             if (_state == PhaseState.FootAccidentCutscene)
             {
@@ -170,19 +191,35 @@ namespace ElectricPalletStackers.Gameplay
 
         private void LateUpdate()
         {
-            if (_state != PhaseState.ConfirmingDirections || _playerView == null ||
+            if ((_state != PhaseState.ConfirmingDirections &&
+                 _state != PhaseState.CompletingDirections) ||
+                _playerView == null ||
                 _directionTargets == null || _fixedDirections == null) return;
 
-            Vector3 origin = _playerView.position + Vector3.up * _targetVerticalOffset;
+            Vector3 forwardDirection = _fixedDirections.Length > 0
+                ? _fixedDirections[0]
+                : Vector3.ProjectOnPlane(_playerView.forward, Vector3.up).normalized;
+            Vector3 origin = _playerView.position +
+                             Vector3.up * _targetVerticalOffset +
+                             forwardDirection * _targetForwardOffset;
             int count = Mathf.Min(_directionTargets.Length, _fixedDirections.Length);
             for (int index = 0; index < count; index++)
             {
                 CrossDirectionPokeTarget target = _directionTargets[index];
                 if (target == null) continue;
-                target.transform.position = origin + _fixedDirections[index] * _targetDistance;
+                float forwardAdjustment = index switch
+                {
+                    0 => _forwardTargetForwardAdjustment,
+                    1 => _turnRightTargetForwardAdjustment,
+                    _ => 0f
+                };
+                target.transform.position = origin +
+                                            _fixedDirections[index] * _targetDistance +
+                                            forwardDirection * forwardAdjustment;
                 target.transform.rotation = Quaternion.LookRotation(
                     _fixedDirections[index],
                     Vector3.up);
+                target.FaceInstructionLabel(_playerView);
             }
         }
 
@@ -190,12 +227,16 @@ namespace ElectricPalletStackers.Gameplay
         {
             if (_state != PhaseState.ConfirmingDirections || confirmedTarget == null) return;
 
+            AdvanceDirectionPrompt(confirmedTarget);
+
             for (int index = 0; index < _directionTargets.Length; index++)
             {
                 CrossDirectionPokeTarget target = _directionTargets[index];
                 if (target != null && !target.IsConfirmed) return;
             }
-            CompleteSafetyCheck();
+
+            _state = PhaseState.CompletingDirections;
+            _finalConfirmationElapsed = 0f;
         }
 
         private void BeginSafetyCheck()
@@ -211,7 +252,37 @@ namespace ElectricPalletStackers.Gameplay
         {
             _state = PhaseState.ConfirmingDirections;
             SetTargetsActive(true, true);
+            ShowFirstDirectionPrompt();
             Debug.Log("[Cross Safety] Vehicle stopped. Direction targets are now active.", this);
+        }
+
+        private void ShowFirstDirectionPrompt()
+        {
+            _promptedDirectionIndex = 0;
+            SetAllDirectionPromptsVisible(false);
+            if (_directionTargets != null && _directionTargets.Length > 0)
+                _directionTargets[0]?.SetInstructionVisible(true);
+        }
+
+        private void AdvanceDirectionPrompt(CrossDirectionPokeTarget confirmedTarget)
+        {
+            if (_directionTargets == null ||
+                _promptedDirectionIndex < 0 ||
+                _promptedDirectionIndex >= _directionTargets.Length ||
+                _directionTargets[_promptedDirectionIndex] != confirmedTarget)
+                return;
+
+            confirmedTarget.SetInstructionVisible(false);
+            _promptedDirectionIndex++;
+            if (_promptedDirectionIndex < _directionTargets.Length)
+                _directionTargets[_promptedDirectionIndex]?.SetInstructionVisible(true);
+        }
+
+        private void SetAllDirectionPromptsVisible(bool visible)
+        {
+            if (_directionTargets == null) return;
+            for (int index = 0; index < _directionTargets.Length; index++)
+                _directionTargets[index]?.SetInstructionVisible(visible);
         }
 
         private void CompleteSafetyCheck()
@@ -368,6 +439,7 @@ namespace ElectricPalletStackers.Gameplay
         {
             _state = PhaseState.Idle;
             _stoppedDuration = 0f;
+            _finalConfirmationElapsed = 0f;
             _cutsceneElapsed = 0f;
             _hazardWasReversing = false;
             HidePresentation();
@@ -473,7 +545,7 @@ namespace ElectricPalletStackers.Gameplay
             if (panelCanvas == null) return;
 
             panelCanvas.overrideSorting = true;
-            panelCanvas.sortingOrder = short.MaxValue;
+            panelCanvas.sortingOrder = short.MaxValue - 10;
         }
 
         private void HidePresentation()
@@ -483,6 +555,7 @@ namespace ElectricPalletStackers.Gameplay
             if (_footAccidentVideoPlayer != null) _footAccidentVideoPlayer.Stop();
             if (_footAccidentCutscenePanel != null)
                 _footAccidentCutscenePanel.SetActive(false);
+            SetAllDirectionPromptsVisible(false);
             SetTargetsActive(false, false);
         }
 

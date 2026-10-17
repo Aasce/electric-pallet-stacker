@@ -9,7 +9,8 @@ namespace ElectricPalletStackers.Gameplay
     public sealed class PalletDestinationZone : MonoBehaviour
     {
         [SerializeField] private BoxCollider _trigger;
-        [SerializeField, Min(0f)] private float _confirmationDuration = 1f;
+        [Tooltip("Seconds the pallet must remain in the destination after the forks release it before the round is completed.")]
+        [SerializeField, Min(0f)] private float _confirmationDuration = 2f;
         [SerializeField] private PalletDestinationView _view;
 
         private readonly HashSet<Collider> _overlappingTargetColliders = new();
