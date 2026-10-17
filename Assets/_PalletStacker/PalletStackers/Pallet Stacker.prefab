@@ -54,7 +54,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b3b2aeea9b014d62b5a4e05625049def, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: 
   _mast: {fileID: 2871494232518386074}
 --- !u!65 &5342792113791399360
@@ -173,7 +173,7 @@ MonoBehaviour:
   _collisionSender: {fileID: 0}
   _collisionLayers:
     serializedVersion: 2
-    m_Bits: 768
+    m_Bits: 2816
   _minimumRelativeSpeed: 0
   _ignoreGroundLikeContacts: 1
   _groundNormalDotThreshold: 0.7
@@ -194,6 +194,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _userRig: {fileID: 0}
+  _playerControllers: []
+  _vehicleColliders:
+  - {fileID: 5342792113791399360}
+  - {fileID: 780000000000000001}
+  - {fileID: 910000000000000003}
+  _followAnchor: {fileID: 0}
   _localOperatorOffset: {x: 0, y: 0, z: -1}
   _localFacingEuler: {x: 0, y: 0, z: 0}
   _followPosition: 1
@@ -207,7 +213,7 @@ MonoBehaviour:
   _snapAlignmentStepDegrees: 30
   _snapCooldownSeconds: 0.35
   _useTurnVignette: 0
-  _turnVignettePrefab: {fileID: 8429981633443581377, guid: 6c8af5c8012f01440af6cb2bc3eb987c, type: 3}
+  _turnVignetteViewPrefab: {fileID: 1554261397372547578, guid: b1e8e173f2176fe429b3d40fa16a59d3, type: 3}
   _vignetteEngageYawSpeed: 8
   _vignetteReleaseYawSpeed: 3
   _vignetteFullYawSpeed: 45
@@ -240,6 +246,21 @@ MonoBehaviour:
   _releaseAtMinimumHeightTolerance: 0.03
   _autoAttachWhenRaising: 1
   _autoReleaseOnExternalSupport: 1
+--- !u!114 &910000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 140053820047635898}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f009a1d10b8a4ba4ad01000000000009, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Audio.PalletStackerAudioPresenter
+  _hornOutput: {fileID: 6924479301191952720}
+  _motor: {fileID: 5210768195172812719}
+  _followTarget: {fileID: 550797599305683205}
 --- !u!114 &930000000000000001
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -250,7 +271,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4d0f4d8a71544d748da60e38961526aa, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.NPCs.NpcVehicleCollisionTarget
   _vehicleColliders:
   - {fileID: 5342792113791399360}
@@ -290,21 +311,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 550797599305683205}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &910000000000000001
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 140053820047635898}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f009a1d10b8a4ba4ad01000000000009, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Audio.PalletStackerAudioPresenter
-  _hornOutput: {fileID: 6924479301191952720}
-  _motor: {fileID: 5210768195172812719}
-  _followTarget: {fileID: 550797599305683205}
 --- !u!114 &910000000000000002
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -315,7 +321,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7c2f24a8189d4a739d81ac3bf9b857b4, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.PalletStackers.PalletStackerProximityWarning
   _warningTrigger: {fileID: 910000000000000003}
   _environmentLayers:

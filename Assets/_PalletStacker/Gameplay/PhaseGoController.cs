@@ -16,6 +16,8 @@ namespace ElectricPalletStackers.Gameplay
         [SerializeField] private Transform _crossMarker;
         [SerializeField, Min(0.1f)] private float _crossActivationDistance = 6.5f;
         [SerializeField] private CrossingVehicleController _crossingVehicle;
+        [Tooltip("When assigned, the dedicated stop-and-point safety flow owns the Cross phase.")]
+        [SerializeField] private CrossSafetyPhaseController _crossSafetyPhase;
 
         [Header("Phone call")]
         [SerializeField] private Collider _phoneZone;
@@ -45,7 +47,8 @@ namespace ElectricPalletStackers.Gameplay
                 (_appManager != null && _appManager.CurrentState != GameState.Playing)) return;
 
             Vector3 vehiclePosition = _playerVehicle.worldCenterOfMass;
-            if (!_crossTriggered && IsNearCross(vehiclePosition)) TriggerCross();
+            if (_crossSafetyPhase == null && !_crossTriggered && IsNearCross(vehiclePosition))
+                TriggerCross();
             if (!_phoneTriggered && IsInsideZone(_phoneZone, vehiclePosition)) TriggerPhoneCall();
             if (!_npcTriggered && IsInsideZone(_npcZone, vehiclePosition)) TriggerNpcArea();
         }

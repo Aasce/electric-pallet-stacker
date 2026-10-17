@@ -1,7 +1,6 @@
 using System;
 using DG.Tweening;
 using ElectricPalletStackers.Localization;
-using ElectricPalletStackers.PalletStackers;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,12 +14,16 @@ namespace ElectricPalletStackers.UI
         InCall
     }
 
+    /// <summary>
+    /// Visual state for the phone call view. World placement is owned by
+    /// <see cref="PhoneCallWorldPlacement"/> and event timing is owned by
+    /// <see cref="PhoneCallEventSimulator"/>.
+    /// </summary>
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(10000)]
-    [RequireComponent(typeof(WorldSpacePanelGrab))]
     public sealed class PhoneCallPanel : MonoBehaviour, ILocalizedView
     {
-        [Header("Content")]
+        [Header("View References")]
         [SerializeField] private CanvasGroup _canvasGroup;
         [SerializeField] private RectTransform _content;
         [SerializeField] private TMP_Text _statusLabel;
@@ -30,34 +33,22 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private GameObject _activeCallActions;
         [SerializeField] private Button _acceptButton;
 
-        [Header("Hand Interaction")]
-        [SerializeField] private WorldSpacePanelGrab _panelGrab;
-        [SerializeField] private Collider _moveCollider;
-
-        [Header("Placement")]
-        [Tooltip("Defaults to the main camera when left empty.")]
-        [SerializeField] private Transform _viewer;
-        [SerializeField] private Vector3 _viewerOffset = new(-0.06f, -0.03f, 0.55f);
-        [SerializeField, Range(0.1f, 0.9f)] private float _occlusionLineRatio = 0.35f;
-        [SerializeField, Min(0.1f)] private float _maximumOcclusionDistance = 0.65f;
-        [SerializeField, Min(0f)] private float _occlusionTargetHeight = 1.35f;
-        [Tooltip("Vertical offset used while the panel is locked between the viewer and the phone NPC.")]
-        [SerializeField] private float _inCallVerticalOffset = -0.16f;
-
         [Header("Presentation")]
         [SerializeField] private string _defaultCaller = "0123456789";
         [SerializeField, Min(0f)] private float _transitionDuration = 0.2f;
+        [SerializeField, Range(0.01f, 1f)] private float _ringingStartScale = 0.92f;
+        [SerializeField, Range(0.01f, 1f)] private float _hiddenScale = 0.94f;
         [SerializeField] private bool _startHidden = true;
 
-        private Vector3 _baseScale = Vector3.one;
-        private bool _isInitialized;
+        private Vector3 _shownScale = Vector3.one;
+        private bool _scaleCaptured;
+        private bool _acceptButtonBound;
+        private bool _configurationErrorReported;
         private float _callStartedAt;
         private int _lastDisplayedCallSecond = -1;
         private ILocalizationService _localization;
         private TMP_FontAsset _statusDefaultFont;
         private TMP_FontAsset _hintDefaultFont;
-        private bool _followViewerPosition;
-        private Transform _occlusionTarget;
 
         public bool IsRinging { get; private set; }
         public bool IsInCall { get; private set; }
@@ -66,6 +57,32 @@ namespace ElectricPalletStackers.UI
 
         public event Action CallAccepted;
         public event Action<PhoneCallState, PhoneCallState> StateChanged;
+
+        private void OnEnable()
+        {
+            CaptureAuthoredScale();
+            BindAcceptButton();
+            if (_startHidden && State == PhoneCallState.Hidden) HideImmediate();
+        }
+
+        private void OnDisable()
+        {
+            UnbindAcceptButton();
+            KillTweens();
+        }
+
+        private void Update()
+        {
+            if (!IsInCall) return;
+
+            int elapsedSeconds = Mathf.Max(
+                0,
+                Mathf.FloorToInt(Time.realtimeSinceStartup - _callStartedAt));
+            if (elapsedSeconds == _lastDisplayedCallSecond) return;
+
+            _lastDisplayedCallSecond = elapsedSeconds;
+            UpdateCallDuration(elapsedSeconds);
+        }
 
         public void ApplyLocalization(ILocalizationService localization)
         {
@@ -76,63 +93,19 @@ namespace ElectricPalletStackers.UI
             if (IsInCall)
             {
                 SetLocalizedText(_statusLabel, LocalizationKeys.Phone.InCall, "In call");
-                if (_lastDisplayedCallSecond >= 0) UpdateCallDuration(_lastDisplayedCallSecond);
-            }
-            else
-            {
-                SetLocalizedText(_statusLabel, LocalizationKeys.Phone.IncomingCall, "Incoming call");
-                SetLocalizedText(_hintLabel, LocalizationKeys.Phone.TapToAnswer, "Tap to answer");
-            }
-        }
-
-        private void Awake()
-        {
-            Initialize();
-            if (_startHidden) HideImmediate();
-        }
-
-        private void OnDestroy()
-        {
-            if (_acceptButton != null) _acceptButton.onClick.RemoveListener(AcceptCall);
-            KillTweens();
-        }
-
-        private void Update()
-        {
-            if (!IsInCall) return;
-
-            int elapsedSeconds = Mathf.Max(0, Mathf.FloorToInt(Time.realtimeSinceStartup - _callStartedAt));
-            if (elapsedSeconds == _lastDisplayedCallSecond) return;
-
-            _lastDisplayedCallSecond = elapsedSeconds;
-            UpdateCallDuration(elapsedSeconds);
-        }
-
-        private void LateUpdate()
-        {
-            if (!_followViewerPosition) return;
-            if (!TryResolveViewer()) return;
-
-            if (_occlusionTarget != null)
-            {
-                PlaceBetweenViewerAndTarget();
+                if (_lastDisplayedCallSecond >= 0)
+                    UpdateCallDuration(_lastDisplayedCallSecond);
                 return;
             }
 
-            // Follow headset yaw only, keeping the panel upright without inheriting
-            // head pitch or roll.
-            transform.rotation = GetViewerYawRotation();
-
-            // Let the hand move the panel freely. While it is held, keep the latest
-            // camera-relative offset so releasing it does not snap it back.
-            if (_panelGrab != null && _panelGrab.IsGrabbed)
-            {
-                _viewerOffset = _viewer.InverseTransformPoint(transform.position);
-                return;
-            }
-
-            // Position follows the headset, while the panel keeps its own rotation.
-            transform.position = _viewer.TransformPoint(_viewerOffset);
+            SetLocalizedText(
+                _statusLabel,
+                LocalizationKeys.Phone.IncomingCall,
+                "Incoming call");
+            SetLocalizedText(
+                _hintLabel,
+                LocalizationKeys.Phone.TapToAnswer,
+                "Tap to answer");
         }
 
         [ContextMenu("Simulate Incoming Call")]
@@ -143,40 +116,30 @@ namespace ElectricPalletStackers.UI
 
         public void ShowIncomingCall(string callerDisplay)
         {
-            Initialize();
-            SetCallerDisplay(string.IsNullOrWhiteSpace(callerDisplay) ? _defaultCaller : callerDisplay);
-            // The UI hierarchy follows the vehicle. A call panel must be independent so
-            // it stays at the viewer position and can be moved by hand after appearing.
-            transform.SetParent(null, true);
-            _occlusionTarget = null;
-            PlaceInFrontOfViewer();
-            _followViewerPosition = true;
+            if (!HasRequiredReferences()) return;
 
+            SetCallerDisplay(string.IsNullOrWhiteSpace(callerDisplay)
+                ? _defaultCaller
+                : callerDisplay);
             IsRinging = true;
             IsInCall = false;
             SetState(PhoneCallState.Ringing);
-            SetMoveInteractionEnabled(true);
             SetRingingVisual();
             KillTweens();
-
-            if (_canvasGroup == null) return;
 
             _canvasGroup.alpha = 0f;
             _canvasGroup.interactable = true;
             _canvasGroup.blocksRaycasts = true;
+            _content.localScale = _shownScale * _ringingStartScale;
 
-            if (_content != null) _content.localScale = _baseScale * 0.92f;
             _canvasGroup.DOFade(1f, _transitionDuration)
                 .SetEase(Ease.OutQuad)
                 .SetUpdate(true)
                 .SetLink(gameObject);
-            if (_content != null)
-            {
-                _content.DOScale(_baseScale, _transitionDuration)
-                    .SetEase(Ease.OutBack)
-                    .SetUpdate(true)
-                    .SetLink(gameObject);
-            }
+            _content.DOScale(_shownScale, _transitionDuration)
+                .SetEase(Ease.OutBack)
+                .SetUpdate(true)
+                .SetLink(gameObject);
         }
 
         public void SetCallerDisplay(string callerDisplay)
@@ -187,24 +150,14 @@ namespace ElectricPalletStackers.UI
         public void AcceptCall()
         {
             if (!IsRinging) return;
+
             IsRinging = false;
             IsInCall = true;
             SetState(PhoneCallState.InCall);
             _callStartedAt = Time.realtimeSinceStartup;
             _lastDisplayedCallSecond = -1;
             SetActiveCallVisual();
-            SetMoveInteractionEnabled(false);
             CallAccepted?.Invoke();
-        }
-
-        public void SetOcclusionTarget(Transform target)
-        {
-            _occlusionTarget = target;
-            if (target == null) return;
-
-            _followViewerPosition = true;
-            SetMoveInteractionEnabled(false);
-            if (TryResolveViewer()) PlaceBetweenViewerAndTarget();
         }
 
         public void FinishCall()
@@ -215,16 +168,12 @@ namespace ElectricPalletStackers.UI
 
         public void Hide()
         {
-            Initialize();
             IsRinging = false;
             IsInCall = false;
             SetState(PhoneCallState.Hidden);
-            _followViewerPosition = false;
-            _occlusionTarget = null;
-            SetMoveInteractionEnabled(false);
             KillTweens();
 
-            if (_canvasGroup == null) return;
+            if (!HasRequiredReferences()) return;
 
             _canvasGroup.interactable = false;
             _canvasGroup.blocksRaycasts = false;
@@ -232,23 +181,18 @@ namespace ElectricPalletStackers.UI
                 .SetEase(Ease.InQuad)
                 .SetUpdate(true)
                 .SetLink(gameObject);
-            if (_content != null)
-            {
-                _content.DOScale(_baseScale * 0.94f, _transitionDuration)
-                    .SetEase(Ease.InQuad)
-                    .SetUpdate(true)
-                    .SetLink(gameObject);
-            }
+            _content.DOScale(_shownScale * _hiddenScale, _transitionDuration)
+                .SetEase(Ease.InQuad)
+                .SetUpdate(true)
+                .SetLink(gameObject);
         }
 
         public void HideImmediate()
         {
-            Initialize();
+            CaptureAuthoredScale();
             IsRinging = false;
             IsInCall = false;
             SetState(PhoneCallState.Hidden);
-            _followViewerPosition = false;
-            _occlusionTarget = null;
             KillTweens();
 
             if (_canvasGroup != null)
@@ -258,129 +202,56 @@ namespace ElectricPalletStackers.UI
                 _canvasGroup.blocksRaycasts = false;
             }
 
-            if (_content != null) _content.localScale = _baseScale;
-            SetMoveInteractionEnabled(false);
+            if (_content != null) _content.localScale = _shownScale;
         }
 
-        private void Initialize()
+        private void BindAcceptButton()
         {
-            if (_isInitialized) return;
+            if (_acceptButton == null || _acceptButtonBound) return;
+            _acceptButton.onClick.AddListener(AcceptCall);
+            _acceptButtonBound = true;
+        }
 
-            if (_canvasGroup == null) _canvasGroup = GetComponent<CanvasGroup>();
-            if (_content == null) _content = transform as RectTransform;
-            if (_callerLabel == null)
+        private void UnbindAcceptButton()
+        {
+            if (_acceptButton == null || !_acceptButtonBound) return;
+            _acceptButton.onClick.RemoveListener(AcceptCall);
+            _acceptButtonBound = false;
+        }
+
+        private void CaptureAuthoredScale()
+        {
+            if (_scaleCaptured || _content == null) return;
+            _shownScale = _content.localScale;
+            _scaleCaptured = true;
+        }
+
+        private bool HasRequiredReferences()
+        {
+            if (_canvasGroup != null && _content != null) return true;
+
+            if (!_configurationErrorReported)
             {
-                Transform caller = transform.Find("Background/Caller Number");
-                if (caller != null) _callerLabel = caller.GetComponent<TMP_Text>();
+                Debug.LogError(
+                    "PhoneCallPanel is not configured. Assign Canvas Group and Content " +
+                    "on the Phone Call View in the Inspector.",
+                    this);
+                _configurationErrorReported = true;
             }
 
-            if (_panelGrab == null) _panelGrab = GetComponent<WorldSpacePanelGrab>();
-            if (_moveCollider == null) _moveCollider = GetComponent<Collider>();
-            _panelGrab?.Initialize();
-
-            Rigidbody moveBody = GetComponent<Rigidbody>();
-            if (moveBody != null)
-            {
-                moveBody.useGravity = false;
-                moveBody.isKinematic = true;
-            }
-
-            IgnoreGameplayCollisions();
-
-            _baseScale = _content != null ? _content.localScale : transform.localScale;
-
-            if (_acceptButton != null) _acceptButton.onClick.AddListener(AcceptCall);
-
-            _isInitialized = true;
-        }
-
-        private void IgnoreGameplayCollisions()
-        {
-            if (_moveCollider == null) return;
-
-            CharacterController[] playerControllers = FindObjectsByType<CharacterController>(
-                FindObjectsInactive.Include,
-                FindObjectsSortMode.None);
-            for (int index = 0; index < playerControllers.Length; index++)
-            {
-                CharacterController controller = playerControllers[index];
-                if (controller != null) Physics.IgnoreCollision(_moveCollider, controller, true);
-            }
-
-            PalletStacker[] vehicles = FindObjectsByType<PalletStacker>(
-                FindObjectsInactive.Include,
-                FindObjectsSortMode.None);
-            for (int index = 0; index < vehicles.Length; index++)
-                IgnoreColliders(vehicles[index].GetComponentsInChildren<Collider>(true));
-
-            PalletStackerLoad[] loads = FindObjectsByType<PalletStackerLoad>(
-                FindObjectsInactive.Include,
-                FindObjectsSortMode.None);
-            for (int index = 0; index < loads.Length; index++)
-                IgnoreColliders(loads[index].GetComponentsInChildren<Collider>(true));
-        }
-
-        private void IgnoreColliders(Collider[] colliders)
-        {
-            if (_moveCollider == null || colliders == null) return;
-
-            for (int index = 0; index < colliders.Length; index++)
-            {
-                Collider other = colliders[index];
-                if (other != null && other != _moveCollider)
-                    Physics.IgnoreCollision(_moveCollider, other, true);
-            }
-        }
-
-        private void PlaceInFrontOfViewer()
-        {
-            if (!TryResolveViewer()) return;
-
-            Quaternion yawRotation = GetViewerYawRotation();
-            transform.position = _viewer.position + yawRotation * _viewerOffset;
-            transform.rotation = yawRotation;
-            _viewerOffset = _viewer.InverseTransformPoint(transform.position);
-        }
-
-        private void PlaceBetweenViewerAndTarget()
-        {
-            if (_viewer == null || _occlusionTarget == null) return;
-
-            Vector3 targetPoint = _occlusionTarget.position + Vector3.up * _occlusionTargetHeight;
-            Vector3 toTarget = targetPoint - _viewer.position;
-            float targetDistance = toTarget.magnitude;
-            if (targetDistance < 0.01f) return;
-
-            Vector3 direction = toTarget / targetDistance;
-            float distance = Mathf.Min(
-                _maximumOcclusionDistance,
-                targetDistance * _occlusionLineRatio);
-            // Use the same lowered position while ringing and while in-call so
-            // accepting the call never makes the panel jump vertically.
-            transform.position = _viewer.position + direction * distance +
-                                 Vector3.up * _inCallVerticalOffset;
-
-            Vector3 planarDirection = Vector3.ProjectOnPlane(direction, Vector3.up);
-            transform.rotation = planarDirection.sqrMagnitude > 0.001f
-                ? Quaternion.LookRotation(planarDirection.normalized, Vector3.up)
-                : GetViewerYawRotation();
-        }
-
-        private Quaternion GetViewerYawRotation()
-        {
-            return Quaternion.Euler(0f, _viewer.eulerAngles.y, 0f);
-        }
-
-        private bool TryResolveViewer()
-        {
-            if (_viewer == null && Camera.main != null) _viewer = Camera.main.transform;
-            return _viewer != null;
+            return false;
         }
 
         private void SetRingingVisual()
         {
-            SetLocalizedText(_statusLabel, LocalizationKeys.Phone.IncomingCall, "Incoming call");
-            SetLocalizedText(_hintLabel, LocalizationKeys.Phone.TapToAnswer, "Tap to answer");
+            SetLocalizedText(
+                _statusLabel,
+                LocalizationKeys.Phone.IncomingCall,
+                "Incoming call");
+            SetLocalizedText(
+                _hintLabel,
+                LocalizationKeys.Phone.TapToAnswer,
+                "Tap to answer");
             if (_incomingActions != null) _incomingActions.SetActive(true);
             if (_activeCallActions != null) _activeCallActions.SetActive(false);
         }
@@ -413,11 +284,6 @@ namespace ElectricPalletStackers.UI
             StateChanged?.Invoke(previousState, nextState);
         }
 
-        private void SetMoveInteractionEnabled(bool enabled)
-        {
-            _panelGrab?.SetEnabled(enabled);
-        }
-
         private void KillTweens()
         {
             if (_canvasGroup != null) _canvasGroup.DOKill();
@@ -442,9 +308,13 @@ namespace ElectricPalletStackers.UI
         {
             TMP_FontAsset fontOverride = _localization?.GetFontOverride();
             if (_statusLabel != null)
-                _statusLabel.font = fontOverride != null ? fontOverride : _statusDefaultFont;
+                _statusLabel.font = fontOverride != null
+                    ? fontOverride
+                    : _statusDefaultFont;
             if (_hintLabel != null)
-                _hintLabel.font = fontOverride != null ? fontOverride : _hintDefaultFont;
+                _hintLabel.font = fontOverride != null
+                    ? fontOverride
+                    : _hintDefaultFont;
         }
     }
 }

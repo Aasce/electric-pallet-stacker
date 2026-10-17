@@ -11,12 +11,6 @@ namespace ElectricPalletStackers.Audio
 
         private AudioHandle _activeAudio;
 
-        private void Awake()
-        {
-            if (_panel == null) _panel = GetComponent<PhoneCallPanel>();
-            if (_followTarget == null) _followTarget = transform;
-        }
-
         private void OnEnable()
         {
             if (_panel != null) _panel.StateChanged += HandleStateChanged;

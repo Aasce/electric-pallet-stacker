@@ -5,6 +5,13 @@ using UnityEngine;
 
 namespace ElectricPalletStackers.Gameplay
 {
+    public enum ExperienceCheckpoint
+    {
+        Corner,
+        YieldIntersection,
+        PhoneIntersection
+    }
+
     public enum TrainingExperienceStage
     {
         WaitingToStart,
@@ -12,6 +19,7 @@ namespace ElectricPalletStackers.Gameplay
         NavigateCorner,
         YieldIntersection,
         PhoneIntersection,
+        PhoneCall,
         DeliverPallet,
         Completed
     }
@@ -23,27 +31,42 @@ namespace ElectricPalletStackers.Gameplay
         IGameVictorySource,
         IGameResettable
     {
+        [Header("Scene Dependencies")]
+        [Tooltip("Round coordinator assigned from the scene Gameplay Manager.")]
         [SerializeField] private PalletRoundController _palletRoundController;
+        [Tooltip("Load handler on the player pallet stacker instance.")]
         [SerializeField] private PalletStackerLoadHandler _loadHandler;
+        [Tooltip("Crossing vehicle controller owned by the Cross phase.")]
         [SerializeField] private CrossingVehicleController _crossingVehicle;
+        [Tooltip("Phone event service assigned from the scene Gameplay Manager.")]
         [SerializeField] private PhoneCallEventSimulator _phoneCallEvent;
-        [SerializeField] private ExperienceCheckpointTrigger[] _checkpointTriggers;
+        [Tooltip("The crossing-vehicle waypoint that reveals the training pallet. Zero-based; Waypoint 03 is index 2.")]
+        [SerializeField, Min(1)] private int _palletRevealWaypointIndex = 2;
 
         public TrainingExperienceStage CurrentStage { get; private set; } =
             TrainingExperienceStage.WaitingToStart;
         public event Action VictoryRequested;
+        public event Action PalletRevealed;
         public event Action<TrainingExperienceStage, TrainingExperienceStage> StageChanged;
 
         private void OnEnable()
         {
             if (_palletRoundController != null)
                 _palletRoundController.VictoryRequested += HandleDestinationConfirmed;
+            if (_crossingVehicle != null)
+                _crossingVehicle.WaypointReached += HandleCrossingWaypointReached;
+            if (_phoneCallEvent != null)
+                _phoneCallEvent.CallCompleted += HandlePhoneCallCompleted;
         }
 
         private void OnDisable()
         {
             if (_palletRoundController != null)
                 _palletRoundController.VictoryRequested -= HandleDestinationConfirmed;
+            if (_crossingVehicle != null)
+                _crossingVehicle.WaypointReached -= HandleCrossingWaypointReached;
+            if (_phoneCallEvent != null)
+                _phoneCallEvent.CallCompleted -= HandlePhoneCallCompleted;
         }
 
         private void Update()
@@ -55,8 +78,8 @@ namespace ElectricPalletStackers.Gameplay
 
         public void PrepareRound()
         {
-            ResetCheckpoints();
             _crossingVehicle?.ResetVehicle();
+            _palletRoundController?.SetPalletVisible(false);
             TransitionTo(TrainingExperienceStage.CollectPallet);
         }
 
@@ -65,10 +88,11 @@ namespace ElectricPalletStackers.Gameplay
             switch (CurrentStage)
             {
                 case TrainingExperienceStage.PhoneIntersection:
-                    _crossingVehicle.BeginCrossing();
+                    break;
+                case TrainingExperienceStage.PhoneCall:
+                    _phoneCallEvent.RestartIncomingCall();
                     break;
                 case TrainingExperienceStage.DeliverPallet:
-                    _phoneCallEvent.TriggerIncomingCall();
                     _palletRoundController.ArmDestination();
                     break;
             }
@@ -81,15 +105,14 @@ namespace ElectricPalletStackers.Gameplay
 
         public void ResetState()
         {
-            ResetCheckpoints();
             _crossingVehicle?.ResetVehicle();
             _phoneCallEvent?.ResetState();
+            _palletRoundController?.SetPalletVisible(false);
             TransitionTo(TrainingExperienceStage.WaitingToStart);
         }
 
         public void RestoreStage(TrainingExperienceStage stage)
         {
-            _crossingVehicle.ResetVehicle();
             _phoneCallEvent.ResetState();
             TransitionTo(stage);
         }
@@ -112,8 +135,7 @@ namespace ElectricPalletStackers.Gameplay
                 case ExperienceCheckpoint.PhoneIntersection
                     when CurrentStage == TrainingExperienceStage.PhoneIntersection:
                     _phoneCallEvent?.TriggerIncomingCall();
-                    _palletRoundController?.ArmDestination();
-                    TransitionTo(TrainingExperienceStage.DeliverPallet);
+                    TransitionTo(TrainingExperienceStage.PhoneCall);
                     return true;
             }
             return false;
@@ -126,11 +148,18 @@ namespace ElectricPalletStackers.Gameplay
             VictoryRequested?.Invoke();
         }
 
-        private void ResetCheckpoints()
+        private void HandlePhoneCallCompleted()
         {
-            if (_checkpointTriggers == null) return;
-            for (int index = 0; index < _checkpointTriggers.Length; index++)
-                _checkpointTriggers[index]?.ResetTrigger();
+            if (CurrentStage != TrainingExperienceStage.PhoneCall) return;
+            _palletRoundController?.ArmDestination();
+            TransitionTo(TrainingExperienceStage.DeliverPallet);
+        }
+
+        private void HandleCrossingWaypointReached(int waypointIndex)
+        {
+            if (waypointIndex != _palletRevealWaypointIndex) return;
+            _palletRoundController?.SetPalletVisible(true);
+            PalletRevealed?.Invoke();
         }
 
         private void TransitionTo(TrainingExperienceStage next)

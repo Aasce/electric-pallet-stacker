@@ -34,13 +34,6 @@ namespace ElectricPalletStackers.Audio
             RebuildLookup();
         }
 
-#if UNITY_EDITOR
-        private void OnValidate()
-        {
-            RebuildLookup();
-        }
-#endif
-
         private void RebuildLookup()
         {
             _lookup.Clear();

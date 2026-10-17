@@ -74,7 +74,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 3523215359
   m_fontColor: {r: 1, g: 1, b: 1, a: 0.82}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -87,7 +87,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -111,7 +111,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 0
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 1
+  m_overflowMode: 3
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -384,7 +384,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 3875536895
   m_fontColor: {r: 1, g: 1, b: 1, a: 0.9}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -397,7 +397,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -548,7 +548,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -572,7 +572,7 @@ MonoBehaviour:
   m_charWidthMaxAdj: 0
   m_TextWrappingMode: 0
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 1
+  m_overflowMode: 3
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
@@ -720,7 +720,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -1035,6 +1035,7 @@ GameObject:
   - component: {fileID: 3467639773829085774}
   - component: {fileID: 910000000000000002}
   - component: {fileID: 910000000000000003}
+  - component: {fileID: 2125259010950424064}
   m_Layer: 0
   m_Name: Phone Call Panel
   m_TagString: Untagged
@@ -1256,12 +1257,10 @@ MonoBehaviour:
   _incomingActions: {fileID: 5170024533938161836}
   _activeCallActions: {fileID: 4848419549667859616}
   _acceptButton: {fileID: 5824505706950222127}
-  _panelGrab: {fileID: 910000000000000003}
-  _moveCollider: {fileID: 4559866746598061657}
-  _viewer: {fileID: 0}
-  _viewerOffset: {x: -0.06, y: -0.03, z: 0.55}
   _defaultCaller: 0123456789
   _transitionDuration: 0.2
+  _ringingStartScale: 0.92
+  _hiddenScale: 0.94
   _startHidden: 1
 --- !u!114 &910000000000000002
 MonoBehaviour:
@@ -1291,6 +1290,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.UI.WorldSpacePanelGrab
   _grabCollider: {fileID: 4559866746598061657}
   _grabInteractable: {fileID: 6683771863760199517}
+  _detachFromParentOnGrab: 1
+--- !u!114 &2125259010950424064
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7795039878925138116}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8d42f695f174fd6a3b745cb548c114e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.UI.PhoneCallWorldPlacement
+  _panelRoot: {fileID: 630016475456356732}
+  _viewer: {fileID: 0}
+  _panelGrab: {fileID: 910000000000000003}
+  _viewerYawOffset: {x: -0.06, y: -0.03, z: 0.55}
+  _blockerTargetLocalOffset: {x: 0, y: 1.35, z: 0}
+  _lineRatio: 0.35
+  _maximumDistanceFromViewer: 0.65
+  _verticalOffset: -0.06
 --- !u!1 &8047548459485120314
 GameObject:
   m_ObjectHideFlags: 0
@@ -1365,7 +1385,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 3103784959
   m_fontColor: {r: 1, g: 1, b: 1, a: 0.72}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -1378,7 +1398,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -1562,7 +1582,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
-  m_AdditionalShaderChannelsFlag: 0
+  m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 100
@@ -1589,7 +1609,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 10
-  m_PresetInfoIsWorld: 0
+  m_PresetInfoIsWorld: 1
 --- !u!114 &9222115231358109301
 MonoBehaviour:
   m_ObjectHideFlags: 0

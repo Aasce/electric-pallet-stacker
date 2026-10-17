@@ -10,7 +10,7 @@ namespace ElectricPalletStackers.Gameplay
     {
         [SerializeField] private BoxCollider _trigger;
         [SerializeField, Min(0f)] private float _confirmationDuration = 1f;
-        [SerializeField] private GameObject _activeVisual;
+        [SerializeField] private PalletDestinationView _view;
 
         private readonly HashSet<Collider> _overlappingTargetColliders = new();
         private PalletStackerLoad _targetPallet;
@@ -76,13 +76,18 @@ namespace ElectricPalletStackers.Gameplay
             _overlappingTargetColliders.Clear();
 
             if (_trigger != null) _trigger.enabled = targetPallet != null;
-            if (_activeVisual != null) _activeVisual.SetActive(targetPallet != null);
+            _view?.SetVisible(targetPallet != null);
+        }
+
+        public void SetPreviewVisible(bool visible)
+        {
+            _view?.SetVisible(visible);
         }
 
         public void Disarm()
         {
             if (_trigger != null) _trigger.enabled = false;
-            if (_activeVisual != null) _activeVisual.SetActive(false);
+            _view?.SetVisible(false);
 
             _targetPallet = null;
             _loadHandler = null;
@@ -94,7 +99,7 @@ namespace ElectricPalletStackers.Gameplay
         private void TrackTargetCollider(Collider candidate)
         {
             if (!IsArmed || candidate == null) return;
-            if (candidate.GetComponentInParent<PalletStackerLoad>() != _targetPallet) return;
+            if (candidate.attachedRigidbody != _targetPallet.Body) return;
 
             _overlappingTargetColliders.Add(candidate);
         }

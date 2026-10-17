@@ -26,6 +26,11 @@ namespace PalletStackerRendering
             public RenderPassEvent injectionPoint = RenderPassEvent.AfterRenderingTransparents;
         }
 
+        [Header("Shader References")]
+        [Tooltip("Explicit mask shader reference. Keep this assigned so player builds retain the shader.")]
+        [SerializeField] private Shader maskShader;
+        [Tooltip("Explicit composite shader reference. Keep this assigned so player builds retain the shader.")]
+        [SerializeField] private Shader compositeShader;
         [SerializeField] private Settings settings = new Settings();
 
         private Material maskMaterial;
@@ -36,9 +41,6 @@ namespace PalletStackerRendering
         {
             CoreUtils.Destroy(maskMaterial);
             CoreUtils.Destroy(compositeMaterial);
-
-            Shader maskShader = Shader.Find("Hidden/PalletStacker/SilhouetteMask");
-            Shader compositeShader = Shader.Find("Hidden/PalletStacker/SilhouetteOutline");
 
             if (maskShader == null || compositeShader == null)
             {

@@ -24,7 +24,6 @@ namespace ElectricPalletStackers.UI
         protected override void Awake()
         {
             base.Awake();
-            _panelGrab?.Initialize();
         }
 
         public override void Show()

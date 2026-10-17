@@ -68,6 +68,8 @@ MonoBehaviour:
   m_Name: Pallet Silhouette Outline
   m_EditorClassIdentifier: Assembly-CSharp::PalletStackerRendering.SilhouetteOutlineFeature
   m_Active: 1
+  maskShader: {fileID: 4800000, guid: 45c04b21d9a07554a99aa570f172bb61, type: 3}
+  compositeShader: {fileID: 4800000, guid: cabc3b3469a4fc444947bd108e1ee813, type: 3}
   settings:
     layerMask:
       serializedVersion: 2

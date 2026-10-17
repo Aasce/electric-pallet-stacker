@@ -21,6 +21,12 @@ namespace ElectricPalletStackers.Localization
             public const string NavigationHint = "selectLanguage.navigationHint";
         }
 
+        public static class Calibration
+        {
+            public const string Title = "calibration.title";
+            public const string Description = "calibration.description";
+        }
+
         public static class Welcome
         {
             public const string Title = "welcome.title";
@@ -37,6 +43,11 @@ namespace ElectricPalletStackers.Localization
         {
             public const string Title = "ppe.title";
             public const string Description = "ppe.description";
+        }
+
+        public static class CrossSafety
+        {
+            public const string Instruction = "crossSafety.instruction";
         }
 
         public static class Completed

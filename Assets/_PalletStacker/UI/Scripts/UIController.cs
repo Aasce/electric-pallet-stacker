@@ -17,6 +17,7 @@ namespace ElectricPalletStackers.UI
         [Header("UI Flow")]
         [SerializeField] private UIInputRouter _inputRouter;
         [SerializeField] private UISelectLanguagePanel _selectLanguagePanel;
+        [SerializeField] private UICalibrationPanel _calibrationInfoPanel;
         [SerializeField] private CalibrationInputPanel _calibrationPanel;
         [SerializeField] private VehicleViewCalibrationSystem _calibrationSystem;
         [SerializeField] private UIWelcomePanel _welcomePanel;
@@ -70,6 +71,7 @@ namespace ElectricPalletStackers.UI
             _failedPanel.ActionConfirmed += HandleFailureActionConfirmed;
 
             _selectLanguagePanel?.HideImmediate();
+            _calibrationInfoPanel?.HideImmediate();
             _calibrationPanel?.HideImmediate();
             _welcomePanel?.HideImmediate();
             _guidePanel?.HideImmediate();
@@ -80,7 +82,11 @@ namespace ElectricPalletStackers.UI
 
             CurrentState = UIFlowState.CalibrateVehicleView;
             _inputRouter?.ResetForPanel();
-            if (CurrentState == UIFlowState.CalibrateVehicleView) _calibrationPanel?.Show();
+            if (CurrentState == UIFlowState.CalibrateVehicleView)
+            {
+                _calibrationInfoPanel?.Show();
+                _calibrationPanel?.Show();
+            }
             else _selectLanguagePanel?.Show();
             if (_selectLanguagePanel != null)
                 FocusedLanguage = _selectLanguagePanel.FocusedLanguage;
@@ -200,6 +206,7 @@ namespace ElectricPalletStackers.UI
             bool capturedBefore = IsInputCaptured;
 
             _selectLanguagePanel?.Hide();
+            _calibrationInfoPanel?.Hide();
             _calibrationPanel?.Hide();
             _welcomePanel?.Hide();
             _guidePanel?.Hide();
@@ -214,6 +221,7 @@ namespace ElectricPalletStackers.UI
             switch (nextState)
             {
                 case UIFlowState.CalibrateVehicleView:
+                    _calibrationInfoPanel?.Show();
                     _calibrationPanel?.Show();
                     break;
                 case UIFlowState.SelectLanguage:

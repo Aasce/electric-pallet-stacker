@@ -13,10 +13,13 @@ namespace ElectricPalletStackers.UI
         [Header("References")]
         [SerializeField] private AppManager _appManager;
         [SerializeField] private PhoneCallPanel _phoneCallPanel;
+        [SerializeField] private PhoneCallWorldPlacement _phonePlacement;
         [SerializeField] private PalletStackerRigidbodyMotor _vehicleMotor;
         [SerializeField] private Rigidbody _vehicleBody;
         [SerializeField] private NpcPopulationController _npcPopulation;
         [SerializeField] private PalletStackerForkCollisionSensor _forkCollisionSensor;
+        [Tooltip("Collider on the fork sensor. Assigned explicitly so runtime code never searches for it.")]
+        [SerializeField] private Collider _forkCollider;
         [Tooltip("The player's head/view transform, assigned in the Inspector.")]
         [SerializeField] private Transform _playerView;
 
@@ -24,12 +27,13 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private string _callerDisplay = "0123456789";
         [SerializeField, Min(0.1f)] private float _conversationDuration = 10f;
         [SerializeField] private bool _applyCrowdPressureWhileRinging = true;
-        [SerializeField] private bool _spawnPhoneNpcWhenAnswered = true;
+        [Tooltip("Spawn the road-blocking NPC as soon as the phone starts ringing.")]
+        [SerializeField] private bool _spawnBlockerOnIncomingCall = true;
 
         [Header("Phone distraction NPC")]
         [SerializeField] private NpcAgent _phoneNpcPrefab;
-        [SerializeField, Min(0f)] private float _npcFrontClearance = 1.25f;
-        [SerializeField, Min(0f)] private float _npcBehindPlayerClearance = 1.25f;
+        [SerializeField, Min(0f)] private float _npcFrontClearance = 4f;
+        [SerializeField, Min(0f)] private float _npcBehindPlayerClearance = 4f;
         [SerializeField, Min(0f)] private float _minimumCollisionGrace = 1f;
         [SerializeField, Min(0f)] private float _maximumCollisionGrace = 3f;
         [SerializeField, Min(0f)] private float _travelDirectionThreshold = 0.05f;
@@ -41,17 +45,15 @@ namespace ElectricPalletStackers.UI
         private Coroutine _callRoutine;
         private Coroutine _collisionGraceRoutine;
         private NpcAgent _activePhoneNpc;
-        private Transform _ringingTargetAnchor;
-        private Vector3 _plannedNpcPosition;
         private bool _activeConversation;
-        private bool _hasPlannedNpcPosition;
         private bool _phoneNpcImpactOccurred;
-        private bool _triggeredThisRound;
         private float _callTravelSign = 1f;
 
         public float ConversationDuration => _conversationDuration;
         public bool IsRinging => _phoneCallPanel != null && _phoneCallPanel.IsRinging;
         public bool IsInCall => _activeConversation;
+
+        public event System.Action CallCompleted;
 
         private void OnEnable()
         {
@@ -76,16 +78,24 @@ namespace ElectricPalletStackers.UI
 
         public void TriggerIncomingCall()
         {
-            if (_triggeredThisRound ||
-                (_appManager != null && _appManager.CurrentState != GameState.Playing)) return;
+            if ((_appManager != null && _appManager.CurrentState != GameState.Playing) ||
+                IsRinging || _activeConversation) return;
 
-            _triggeredThisRound = true;
+            ResetCallState();
+            BeginIncomingCall();
+        }
+
+        private void BeginIncomingCall()
+        {
             _activeConversation = false;
             _phoneNpcImpactOccurred = false;
             _callTravelSign = ResolveTravelSign();
-            PreparePlannedNpcPosition();
+            if (_spawnBlockerOnIncomingCall) SpawnPhoneNpc();
             _phoneCallPanel?.ShowIncomingCall(_callerDisplay);
-            _phoneCallPanel?.SetOcclusionTarget(_ringingTargetAnchor);
+            if (_activePhoneNpc != null)
+                _phonePlacement?.ShowOccluding(_activePhoneNpc.transform);
+            else
+                _phonePlacement?.ShowInFrontOfViewer();
             // An unanswered call intentionally rings forever and raises pedestrian pressure.
             if (_applyCrowdPressureWhileRinging)
                 _npcPopulation?.SetCrowdPressure(true);
@@ -93,15 +103,20 @@ namespace ElectricPalletStackers.UI
 
         public void ResetState()
         {
-            _triggeredThisRound = false;
             ResetCallState();
+        }
+
+        public void RestartIncomingCall()
+        {
+            if (_appManager != null && _appManager.CurrentState != GameState.Playing) return;
+            ResetCallState();
+            BeginIncomingCall();
         }
 
         [ContextMenu("Simulate Call Now")]
         private void SimulateCallNow()
         {
-            _triggeredThisRound = false;
-            TriggerIncomingCall();
+            RestartIncomingCall();
         }
 
         private void HandleRoundStarted() => ResetState();
@@ -130,11 +145,10 @@ namespace ElectricPalletStackers.UI
             if (_applyCrowdPressureWhileRinging)
                 _npcPopulation?.SetCrowdPressure(false);
             _activeConversation = true;
-            if (_spawnPhoneNpcWhenAnswered) SpawnPhoneNpc();
-            _phoneCallPanel?.SetOcclusionTarget(_activePhoneNpc != null
-                ? _activePhoneNpc.transform
-                : null);
-            ClearRingingTargetAnchor();
+            if (_spawnBlockerOnIncomingCall && _activePhoneNpc == null) SpawnPhoneNpc();
+            if (_activePhoneNpc != null)
+                _phonePlacement?.ShowOccluding(_activePhoneNpc.transform);
+            StartCollisionGrace(_activePhoneNpc);
             CancelCallRoutine();
             _callRoutine = StartCoroutine(CompleteConversationAfter(_conversationDuration));
         }
@@ -144,9 +158,10 @@ namespace ElectricPalletStackers.UI
             yield return new WaitForSecondsRealtime(duration);
             _callRoutine = null;
             _activeConversation = false;
-            ClearRingingTargetAnchor();
             DespawnPhoneNpc();
             _phoneCallPanel?.FinishCall();
+            _phonePlacement?.Hide();
+            CallCompleted?.Invoke();
         }
 
         private void SpawnPhoneNpc()
@@ -162,9 +177,7 @@ namespace ElectricPalletStackers.UI
             }
 
             Vector3 travelDirection = GetVehicleForward() * _callTravelSign;
-            Vector3 spawnPosition = _hasPlannedNpcPosition
-                ? _plannedNpcPosition
-                : CalculateNpcPosition();
+            Vector3 spawnPosition = CalculateNpcPosition();
             Quaternion spawnRotation = Quaternion.LookRotation(-travelDirection, Vector3.up);
 
             _activePhoneNpc = Instantiate(prefab, spawnPosition, spawnRotation, transform);
@@ -180,26 +193,20 @@ namespace ElectricPalletStackers.UI
             _activePhoneNpc.BeginScriptedMovement();
             _activePhoneNpc.SetVehicleCollisionEnabled(false);
 
+        }
+
+        private void StartCollisionGrace(NpcAgent expectedNpc)
+        {
+            CancelCollisionGraceRoutine();
+            if (expectedNpc == null) return;
+
+            expectedNpc.SetVehicleCollisionEnabled(false);
             float minimumGrace = Mathf.Min(_minimumCollisionGrace, _maximumCollisionGrace);
             float maximumGrace = Mathf.Max(_minimumCollisionGrace, _maximumCollisionGrace);
             float graceDuration = Random.Range(minimumGrace, maximumGrace);
             _collisionGraceRoutine = StartCoroutine(EnableNpcCollisionAfter(
                 graceDuration,
-                _activePhoneNpc));
-        }
-
-        private void PreparePlannedNpcPosition()
-        {
-            _plannedNpcPosition = CalculateNpcPosition();
-            _hasPlannedNpcPosition = true;
-
-            if (_ringingTargetAnchor == null)
-            {
-                GameObject anchorObject = new("Phone Call NPC Target");
-                _ringingTargetAnchor = anchorObject.transform;
-                _ringingTargetAnchor.SetParent(transform, true);
-            }
-            _ringingTargetAnchor.position = _plannedNpcPosition;
+                expectedNpc));
         }
 
         private Vector3 CalculateNpcPosition()
@@ -216,7 +223,7 @@ namespace ElectricPalletStackers.UI
         {
             yield return new WaitForSecondsRealtime(delay);
             _collisionGraceRoutine = null;
-            if (!_activeConversation || expectedNpc == null || expectedNpc != _activePhoneNpc)
+            if (expectedNpc == null || expectedNpc != _activePhoneNpc)
                 yield break;
             expectedNpc.SetVehicleCollisionEnabled(true);
         }
@@ -258,10 +265,9 @@ namespace ElectricPalletStackers.UI
         {
             if (_forkCollisionSensor != null)
             {
-                Collider forkCollider = _forkCollisionSensor.GetComponent<Collider>();
-                if (forkCollider != null && forkCollider.enabled)
+                if (_forkCollider != null && _forkCollider.enabled)
                 {
-                    Bounds bounds = forkCollider.bounds;
+                    Bounds bounds = _forkCollider.bounds;
                     float projectedExtent = Mathf.Abs(vehicleForward.x) * bounds.extents.x +
                                             Mathf.Abs(vehicleForward.z) * bounds.extents.z;
                     Vector3 forkTip = bounds.center + vehicleForward * projectedExtent;
@@ -332,7 +338,6 @@ namespace ElectricPalletStackers.UI
         private void DespawnPhoneNpc()
         {
             CancelCollisionGraceRoutine();
-            _phoneCallPanel?.SetOcclusionTarget(null);
             if (_activePhoneNpc == null) return;
 
             GameObject npcObject = _activePhoneNpc.gameObject;
@@ -353,21 +358,9 @@ namespace ElectricPalletStackers.UI
             CancelCallRoutine();
             CancelCollisionGraceRoutine();
             _activeConversation = false;
-            ClearRingingTargetAnchor();
             _activePhoneNpc?.SetVehicleCollisionEnabled(false);
-            _phoneCallPanel?.SetOcclusionTarget(null);
             _phoneCallPanel?.FinishCall();
-        }
-
-        private void ClearRingingTargetAnchor()
-        {
-            _hasPlannedNpcPosition = false;
-            if (_ringingTargetAnchor == null) return;
-
-            GameObject anchorObject = _ringingTargetAnchor.gameObject;
-            _ringingTargetAnchor = null;
-            anchorObject.SetActive(false);
-            Destroy(anchorObject);
+            _phonePlacement?.Hide();
         }
 
         private void CancelCollisionGraceRoutine()
@@ -382,11 +375,11 @@ namespace ElectricPalletStackers.UI
             CancelCallRoutine();
             _activeConversation = false;
             _phoneNpcImpactOccurred = false;
-            ClearRingingTargetAnchor();
             DespawnPhoneNpc();
             if (_applyCrowdPressureWhileRinging)
                 _npcPopulation?.SetCrowdPressure(false);
             _phoneCallPanel?.HideImmediate();
+            _phonePlacement?.Hide();
         }
 
         private void CancelCallRoutine()

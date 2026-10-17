@@ -40,6 +40,7 @@ namespace ElectricPalletStackers.Gameplay
         private void Awake()
         {
             CacheComposition();
+            ResetConfiguredState();
             TransitionTo(GameState.WaitingToStart);
         }
 
@@ -72,6 +73,7 @@ namespace ElectricPalletStackers.Gameplay
 
         public void RestartRound()
         {
+            ResetToWaitingState();
             StartRound();
         }
 
@@ -93,15 +95,20 @@ namespace ElectricPalletStackers.Gameplay
                     _roundParticipants[index].FinishRound(GameState.Lost);
             }
 
-            for (int index = 0; index < _resettables.Count; index++)
-                _resettables[index].ResetState();
-
-            // Publish every restored pose together before the waiting state or a new
-            // round can observe stale collider transforms from the failed round.
-            Physics.SyncTransforms();
+            ResetConfiguredState();
 
             LastFailureReason = GameFailureReason.Unknown;
             TransitionTo(GameState.WaitingToStart);
+        }
+
+        private void ResetConfiguredState()
+        {
+            for (int index = 0; index < _resettables.Count; index++)
+                _resettables[index].ResetState();
+
+            // Publish every restored pose together before the waiting state, UI, or a
+            // new round can observe stale transforms from the previous/edit-time pose.
+            Physics.SyncTransforms();
         }
 
         [ContextMenu("Start Round")]

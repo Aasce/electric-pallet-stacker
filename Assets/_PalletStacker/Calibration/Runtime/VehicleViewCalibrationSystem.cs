@@ -14,15 +14,18 @@ namespace ElectricPalletStackers.Calibration
         [SerializeField] private Transform _calibrationPanel;
         [SerializeField] private WorldSpacePanelGrab _calibrationPanelGrab;
         [Header("Vehicle Alignment")]
+        [SerializeField] private bool _alignOnStart = true;
         [SerializeField] private Vector3 _headsetPositionRelativeToVehicle = new(0f, 0f, -1f);
         [SerializeField, Min(0f)] private float _cameraHeightAboveGround = 1.7f;
         [Header("Calibration Panel")]
         [SerializeField] private Vector3 _panelHeadsetOffset = new(-0.06f, -0.03f, 0.55f);
         [SerializeField, Min(0.001f)] private float _positionStep = 0.015f;
         private bool _needsInitialPanelPlacement;
+        private bool _needsInitialVehicleAlignment;
 
         private void Awake()
         {
+            _needsInitialVehicleAlignment = _alignOnStart;
             if (_calibrationPanel == null) return;
             _needsInitialPanelPlacement = true;
             _calibrationPanel.SetParent(null, true);
@@ -32,6 +35,12 @@ namespace ElectricPalletStackers.Calibration
         {
             if (_calibrationPanel == null) return;
             if (_headset == null) return;
+
+            if (_needsInitialVehicleAlignment)
+            {
+                AlignToVehicle();
+                _needsInitialVehicleAlignment = false;
+            }
 
             // Wait until LateUpdate so XR origin/follower setup has settled for this frame.
             if (_needsInitialPanelPlacement)

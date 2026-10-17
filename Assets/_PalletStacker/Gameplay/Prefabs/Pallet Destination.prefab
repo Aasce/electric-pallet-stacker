@@ -65,11 +65,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e465056cc945468ea4a427c345a1278a, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Gameplay.PalletDestinationZone
   _trigger: {fileID: 8100000000000000003}
   _confirmationDuration: 1
-  _activeVisual: {fileID: 8100000000000000011}
+  _view: {fileID: 8100000000000000015}
 --- !u!1 &8100000000000000011
 GameObject:
   m_ObjectHideFlags: 0
@@ -81,6 +81,7 @@ GameObject:
   - component: {fileID: 8100000000000000012}
   - component: {fileID: 8100000000000000013}
   - component: {fileID: 8100000000000000014}
+  - component: {fileID: 8100000000000000015}
   m_Layer: 10
   m_Name: Destination Visual
   m_TagString: Untagged
@@ -160,3 +161,17 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &8100000000000000015
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8100000000000000011}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3785106d8dc4a45881fcfa853a510c6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Gameplay.PalletDestinationView
+  _renderers:
+  - {fileID: 8100000000000000014}

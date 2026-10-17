@@ -126,9 +126,6 @@ namespace ElectricPalletStackers.NPCs
 
         internal void RestoreCheckpointPose(CheckpointPose checkpoint)
         {
-            NpcVehicleRammer rammer = GetComponent<NpcVehicleRammer>();
-            if (rammer != null) rammer.CancelApproach();
-
             _roundActive = false;
             _vehicleCollisionReported = false;
             _vehicleCollisionEnabled = false;

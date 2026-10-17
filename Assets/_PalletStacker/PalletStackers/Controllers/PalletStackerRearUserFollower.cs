@@ -24,6 +24,8 @@ namespace ElectricPalletStackers.PalletStackers
 
         [Header("Rig")]
         [SerializeField] private Transform _userRig;
+        [SerializeField] private CharacterController[] _playerControllers;
+        [SerializeField] private Collider[] _vehicleColliders;
         [Tooltip("Optional vehicle child that defines the exact player follow pose. When assigned, it replaces the numeric position and facing offsets below.")]
         [SerializeField] private Transform _followAnchor;
         [Tooltip("Vehicle-local operator position. The vehicle travels along local +Z, so -Z is behind it.")]
@@ -35,7 +37,7 @@ namespace ElectricPalletStackers.PalletStackers
 
         [Header("Rotation comfort")]
         [SerializeField] private RearUserRotationMode _rotationMode = RearUserRotationMode.ComfortFollow;
-        [Tooltip("Tracked HMD. When empty, the first Camera below the user rig is used.")]
+        [Tooltip("Tracked HMD assigned explicitly from the scene.")]
         [SerializeField] private Transform _head;
         [SerializeField, Range(0f, 45f)] private float _rotationDeadZoneDegrees = 10f;
         [SerializeField, Min(0f)] private float _maximumComfortYawSpeed = 25f;
@@ -47,7 +49,7 @@ namespace ElectricPalletStackers.PalletStackers
         [Header("Turn vignette")]
         [Tooltip("Optional comfort vignette. Can also be changed at runtime with SetTurnVignetteEnabled.")]
         [SerializeField] private bool _useTurnVignette = true;
-        [SerializeField] private GameObject _turnVignettePrefab;
+        [SerializeField] private TurnVignetteView _turnVignetteViewPrefab;
         [Tooltip("The vignette closes when the filtered yaw speed rises above this value.")]
         [SerializeField, Min(0f)] private float _vignetteEngageYawSpeed = 8f;
         [Tooltip("The vignette opens only after the filtered yaw speed falls below this lower value.")]
@@ -64,7 +66,7 @@ namespace ElectricPalletStackers.PalletStackers
         private float _lastVehicleYaw;
         private float _comfortYawVelocity;
         private float _snapCooldownRemaining;
-        private GameObject _vignetteInstance;
+        private TurnVignetteView _vignetteInstance;
         private Renderer _vignetteRenderer;
         private MaterialPropertyBlock _vignetteProperties;
         private float _currentVignetteAperture = 1f;
@@ -80,7 +82,6 @@ namespace ElectricPalletStackers.PalletStackers
         private void OnEnable()
         {
             IgnorePlayerVehicleCollisions();
-            ResolveHead();
             EnsureVignette();
             FollowVehicle();
         }
@@ -106,7 +107,6 @@ namespace ElectricPalletStackers.PalletStackers
             if (_ignoredPlayerVehicleCollisions.Count == 0)
                 IgnorePlayerVehicleCollisions();
 
-            ResolveHead();
             Vector3 operatorPosition = GetOperatorPosition();
             if (_followPosition) _userRig.position = operatorPosition;
 
@@ -157,7 +157,6 @@ namespace ElectricPalletStackers.PalletStackers
                 return;
             }
 
-            ResolveHead();
             EnsureVignette();
 
             Vector3 operatorPosition = GetOperatorPosition();
@@ -280,18 +279,16 @@ namespace ElectricPalletStackers.PalletStackers
             RestorePlayerVehicleCollisions();
             if (_userRig == null) return;
 
-            CharacterController[] playerControllers =
-                _userRig.GetComponentsInChildren<CharacterController>(true);
-            Collider[] vehicleColliders = GetComponentsInChildren<Collider>(true);
+            if (_playerControllers == null || _vehicleColliders == null) return;
 
-            for (int playerIndex = 0; playerIndex < playerControllers.Length; playerIndex++)
+            for (int playerIndex = 0; playerIndex < _playerControllers.Length; playerIndex++)
             {
-                CharacterController playerController = playerControllers[playerIndex];
+                CharacterController playerController = _playerControllers[playerIndex];
                 if (playerController == null) continue;
 
-                for (int vehicleIndex = 0; vehicleIndex < vehicleColliders.Length; vehicleIndex++)
+                for (int vehicleIndex = 0; vehicleIndex < _vehicleColliders.Length; vehicleIndex++)
                 {
-                    Collider vehicleCollider = vehicleColliders[vehicleIndex];
+                    Collider vehicleCollider = _vehicleColliders[vehicleIndex];
                     if (vehicleCollider == null || vehicleCollider == playerController) continue;
                     if (Physics.GetIgnoreCollision(playerController, vehicleCollider)) continue;
 
@@ -314,37 +311,21 @@ namespace ElectricPalletStackers.PalletStackers
             _ignoredPlayerVehicleCollisions.Clear();
         }
 
-        private void ResolveHead()
-        {
-            if (_head != null || _userRig == null) return;
-
-            Camera rigCamera = _userRig.GetComponentInChildren<Camera>(true);
-            if (rigCamera != null) _head = rigCamera.transform;
-        }
-
         private void EnsureVignette()
         {
-            if (!_useTurnVignette || _turnVignettePrefab == null || _head == null) return;
+            if (!_useTurnVignette || _turnVignetteViewPrefab == null || _head == null) return;
             if (_vignetteInstance != null)
             {
-                if (!_vignetteInstance.activeSelf) _vignetteInstance.SetActive(true);
+                if (!_vignetteInstance.gameObject.activeSelf)
+                    _vignetteInstance.gameObject.SetActive(true);
                 return;
             }
 
-            _vignetteInstance = Instantiate(_turnVignettePrefab, _head, false);
+            _vignetteInstance = Instantiate(_turnVignetteViewPrefab, _head, false);
             _vignetteInstance.name = "Turn Comfort Vignette";
             _vignetteInstance.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
-
-            // This follower drives the sample material directly, so disable the XRI
-            // controller on the instance to prevent competing material writes.
-            MonoBehaviour[] behaviours = _vignetteInstance.GetComponentsInChildren<MonoBehaviour>(true);
-            foreach (MonoBehaviour behaviour in behaviours)
-            {
-                if (behaviour != null && behaviour.GetType().Name == "TunnelingVignetteController")
-                    behaviour.enabled = false;
-            }
-
-            _vignetteRenderer = _vignetteInstance.GetComponentInChildren<Renderer>(true);
+            _vignetteInstance.DisableSampleController();
+            _vignetteRenderer = _vignetteInstance.TargetRenderer;
             _vignetteProperties = new MaterialPropertyBlock();
             _currentVignetteAperture = 1f;
             SetVignetteAperture(1f);
@@ -354,7 +335,7 @@ namespace ElectricPalletStackers.PalletStackers
         {
             if (!_useTurnVignette)
             {
-                if (_vignetteInstance != null && _vignetteInstance.activeSelf)
+                if (_vignetteInstance != null && _vignetteInstance.gameObject.activeSelf)
                     ResetVignetteState(true);
                 return;
             }
@@ -416,20 +397,7 @@ namespace ElectricPalletStackers.PalletStackers
             SetVignetteAperture(1f);
 
             if (deactivateInstance && _vignetteInstance != null)
-                _vignetteInstance.SetActive(false);
-        }
-
-        private void OnValidate()
-        {
-            _vignetteReleaseYawSpeed = Mathf.Min(
-                _vignetteReleaseYawSpeed,
-                _vignetteEngageYawSpeed);
-            _vignetteFullYawSpeed = Mathf.Max(
-                _vignetteEngageYawSpeed + 0.01f,
-                _vignetteFullYawSpeed);
-            _snapAlignmentThresholdDegrees = Mathf.Max(
-                _rotationDeadZoneDegrees,
-                _snapAlignmentThresholdDegrees);
+                _vignetteInstance.gameObject.SetActive(false);
         }
 
         private readonly struct IgnoredCollisionPair

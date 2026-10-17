@@ -19,13 +19,6 @@ namespace ElectricPalletStackers.Audio
         private Coroutine _engineRoutine;
         private bool _hornActive;
 
-        private void Awake()
-        {
-            if (_hornOutput == null) _hornOutput = GetComponentInChildren<PalletStackerHornOutput>(true);
-            if (_motor == null) _motor = GetComponent<PalletStackerRigidbodyMotor>();
-            if (_followTarget == null) _followTarget = transform;
-        }
-
         private void OnEnable()
         {
             if (_hornOutput != null) _hornOutput.HornChanged += HandleHornChanged;

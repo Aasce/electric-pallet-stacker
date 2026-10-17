@@ -6,30 +6,25 @@ namespace ElectricPalletStackers.Gameplay
     [DisallowMultipleComponent]
     public sealed class RoundPoseResetter : MonoBehaviour, IGameResettable
     {
+        [Header("Vehicle start pose")]
         [SerializeField] private Rigidbody _vehicleBody;
+        [Tooltip("Authoritative start anchor. Move this Transform in the scene to change the reset pose.")]
+        [SerializeField] private Transform _vehicleStartPose;
+
+        [Header("Vehicle state")]
         [SerializeField] private PalletStackerMast _mast;
         [SerializeField] private PalletStackerRearUserFollower _playerFollower;
-
-        private Vector3 _initialVehiclePosition;
-        private Quaternion _initialVehicleRotation;
-
-        private void Awake()
-        {
-            if (_vehicleBody == null) return;
-            _initialVehiclePosition = _vehicleBody.position;
-            _initialVehicleRotation = _vehicleBody.rotation;
-        }
 
         public void ResetState()
         {
             _mast?.ResetToMinimumHeight();
 
-            if (_vehicleBody != null)
+            if (_vehicleBody != null && _vehicleStartPose != null)
             {
                 RigidbodyPoseUtility.Restore(
                     _vehicleBody,
-                    _initialVehiclePosition,
-                    _initialVehicleRotation,
+                    _vehicleStartPose.position,
+                    _vehicleStartPose.rotation,
                     true);
             }
 

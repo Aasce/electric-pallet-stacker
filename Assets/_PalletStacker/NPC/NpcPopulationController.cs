@@ -41,7 +41,6 @@ namespace ElectricPalletStackers.NPCs
         private void OnEnable()
         {
             if (_hornOutput != null) _hornOutput.HornChanged += HandleHornChanged;
-            RebuildPopulationCache();
         }
 
         private void OnDisable()
@@ -106,7 +105,6 @@ namespace ElectricPalletStackers.NPCs
 
         public void CaptureCheckpoint()
         {
-            RebuildPopulationCache();
             NpcAgent.CheckpointPose[] poses = new NpcAgent.CheckpointPose[_npcs.Count];
             bool[] activeStates = new bool[_npcs.Count];
             for (int index = 0; index < _npcs.Count; index++)
@@ -203,7 +201,7 @@ namespace ElectricPalletStackers.NPCs
 
         private void EnsurePopulation(int count)
         {
-            RebuildPopulationCache();
+            _npcs.RemoveAll(npc => npc == null);
             if (_npcPrefab == null || _routes == null || _routes.Length == 0) return;
             Transform parent = _runtimeParent != null ? _runtimeParent : transform;
             while (_npcs.Count < count)
@@ -231,15 +229,6 @@ namespace ElectricPalletStackers.NPCs
                 if (route != null && route.Count > 0) return route;
             }
             return null;
-        }
-
-        private void RebuildPopulationCache()
-        {
-            _npcs.RemoveAll(npc => npc == null);
-            Transform parent = _runtimeParent != null ? _runtimeParent : transform;
-            NpcAgent[] existing = parent.GetComponentsInChildren<NpcAgent>(true);
-            for (int index = 0; index < existing.Length; index++)
-                if (existing[index] != null && !_npcs.Contains(existing[index])) _npcs.Add(existing[index]);
         }
 
         private void ApplyPopulationState()

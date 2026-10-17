@@ -9,21 +9,13 @@ namespace ElectricPalletStackers.Gameplay
     {
         [Tooltip("The single pallet instance placed in the scene.")]
         [SerializeField] private PalletStackerLoad _pallet;
+        [Tooltip("Explicit pose used by ResetPallet. Usually the authored pallet spawn anchor.")]
+        [SerializeField] private Transform _resetPoint;
         [SerializeField] private Transform[] _spawnPoints;
         [SerializeField] private bool _randomizeSpawn;
 
-        private Vector3 _initialPosition;
-        private Quaternion _initialRotation;
-
         public PalletStackerLoad CurrentPallet => _pallet;
         public IReadOnlyList<Transform> SpawnPoints => _spawnPoints;
-
-        private void Awake()
-        {
-            if (_pallet == null) return;
-            _initialPosition = _pallet.transform.position;
-            _initialRotation = _pallet.transform.rotation;
-        }
 
         public PalletStackerLoad SpawnRandom()
         {
@@ -66,20 +58,22 @@ namespace ElectricPalletStackers.Gameplay
 
         public void ResetPallet()
         {
-            if (_pallet == null) return;
+            if (_pallet == null || _resetPoint == null) return;
 
             Rigidbody body = _pallet.Body;
             if (body != null)
             {
                 RigidbodyPoseUtility.Restore(
                     body,
-                    _initialPosition,
-                    _initialRotation,
+                    _resetPoint.position,
+                    _resetPoint.rotation,
                     true);
             }
             else
             {
-                _pallet.transform.SetPositionAndRotation(_initialPosition, _initialRotation);
+                _pallet.transform.SetPositionAndRotation(
+                    _resetPoint.position,
+                    _resetPoint.rotation);
             }
 
             _pallet.ResetSupportTracking();

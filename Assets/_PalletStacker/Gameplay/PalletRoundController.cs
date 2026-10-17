@@ -6,7 +6,11 @@ using UnityEngine;
 namespace ElectricPalletStackers.Gameplay
 {
     [DisallowMultipleComponent]
-    public sealed class PalletRoundController : MonoBehaviour, IGameRoundParticipant, IGameVictorySource, IGameResettable
+    public sealed class PalletRoundController : MonoBehaviour,
+        IGameRoundParticipant,
+        IGameRoundResumable,
+        IGameVictorySource,
+        IGameResettable
     {
         [SerializeField] private PalletSpawner _palletSpawner;
         [SerializeField] private PalletStackerLoadHandler _loadHandler;
@@ -48,7 +52,13 @@ namespace ElectricPalletStackers.Gameplay
                 return;
             }
 
+            _activeDestination.SetPreviewVisible(true);
             if (_armDestinationImmediately) ArmDestination();
+        }
+
+        public void ResumeRound()
+        {
+            _activeDestination?.SetPreviewVisible(true);
         }
 
         public void ArmDestination()
@@ -57,6 +67,15 @@ namespace ElectricPalletStackers.Gameplay
             _activeDestination.DestinationConfirmed -= HandleDestinationConfirmed;
             _activeDestination.DestinationConfirmed += HandleDestinationConfirmed;
             _activeDestination.Arm(ActivePallet, _loadHandler);
+        }
+
+        public void SetPalletVisible(bool visible)
+        {
+            PalletStackerLoad pallet = ActivePallet;
+            if (pallet == null || pallet.gameObject.activeSelf == visible) return;
+            pallet.gameObject.SetActive(visible);
+            if (visible) pallet.ResetSupportTracking();
+            Physics.SyncTransforms();
         }
 
         public void FinishRound(GameState result)
