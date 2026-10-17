@@ -8,6 +8,8 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private Transform _target;
         [SerializeField] private bool _isFollowPosition = true;
         [SerializeField] private bool _isFollowRotation = true;
+        [Tooltip("Follow only the target's heading around world Y, keeping this object upright.")]
+        [SerializeField] private bool _isFollowYawOnly;
         [SerializeField] private Vector3 _positionOffset = Vector3.zero;
 
         private void LateUpdate()
@@ -21,7 +23,16 @@ namespace ElectricPalletStackers.UI
 
             if (_isFollowRotation)
             {
-                transform.rotation = _target.rotation;
+                if (_isFollowYawOnly)
+                {
+                    Vector3 planarForward = Vector3.ProjectOnPlane(_target.forward, Vector3.up);
+                    if (planarForward.sqrMagnitude > 0.0001f)
+                        transform.rotation = Quaternion.LookRotation(planarForward, Vector3.up);
+                }
+                else
+                {
+                    transform.rotation = _target.rotation;
+                }
             }
         }
     }

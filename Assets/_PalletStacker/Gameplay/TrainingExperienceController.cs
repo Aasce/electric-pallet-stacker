@@ -45,6 +45,7 @@ namespace ElectricPalletStackers.Gameplay
 
         public TrainingExperienceStage CurrentStage { get; private set; } =
             TrainingExperienceStage.WaitingToStart;
+        public bool HasCompletedCrossSafety { get; private set; }
         public event Action VictoryRequested;
         public event Action PalletRevealed;
         public event Action<TrainingExperienceStage, TrainingExperienceStage> StageChanged;
@@ -78,6 +79,7 @@ namespace ElectricPalletStackers.Gameplay
 
         public void PrepareRound()
         {
+            HasCompletedCrossSafety = false;
             _crossingVehicle?.ResetVehicle();
             _palletRoundController?.SetPalletVisible(false);
             TransitionTo(TrainingExperienceStage.CollectPallet);
@@ -87,10 +89,8 @@ namespace ElectricPalletStackers.Gameplay
         {
             switch (CurrentStage)
             {
-                case TrainingExperienceStage.PhoneIntersection:
-                    break;
                 case TrainingExperienceStage.PhoneCall:
-                    _phoneCallEvent.RestartIncomingCall();
+                    RestartPhoneCallPhase();
                     break;
                 case TrainingExperienceStage.DeliverPallet:
                     _palletRoundController.ArmDestination();
@@ -105,6 +105,7 @@ namespace ElectricPalletStackers.Gameplay
 
         public void ResetState()
         {
+            HasCompletedCrossSafety = false;
             _crossingVehicle?.ResetVehicle();
             _phoneCallEvent?.ResetState();
             _palletRoundController?.SetPalletVisible(false);
@@ -113,8 +114,30 @@ namespace ElectricPalletStackers.Gameplay
 
         public void RestoreStage(TrainingExperienceStage stage)
         {
-            _phoneCallEvent.ResetState();
-            TransitionTo(stage);
+            _phoneCallEvent?.ResetState();
+            // An interrupted call must be retried from the approach to its zone.
+            TransitionTo(stage == TrainingExperienceStage.PhoneCall
+                ? TrainingExperienceStage.PhoneIntersection
+                : stage);
+        }
+
+        public bool BeginPhoneCall()
+        {
+            if (CurrentStage <= TrainingExperienceStage.WaitingToStart ||
+                CurrentStage >= TrainingExperienceStage.PhoneCall) return false;
+
+            // Save the phone checkpoint before spawning the distraction NPC. The
+            // dedicated Cross flow can reach this zone before the legacy waypoints.
+            TransitionTo(TrainingExperienceStage.PhoneCall);
+            _phoneCallEvent?.RestartIncomingCall();
+            return true;
+        }
+
+        public void CompleteCrossSafetyCheck()
+        {
+            HasCompletedCrossSafety = true;
+            _crossingVehicle?.SuppressVehicle();
+            RevealPallet();
         }
 
         public bool ReachCheckpoint(ExperienceCheckpoint checkpoint)
@@ -134,9 +157,7 @@ namespace ElectricPalletStackers.Gameplay
 
                 case ExperienceCheckpoint.PhoneIntersection
                     when CurrentStage == TrainingExperienceStage.PhoneIntersection:
-                    _phoneCallEvent?.TriggerIncomingCall();
-                    TransitionTo(TrainingExperienceStage.PhoneCall);
-                    return true;
+                    return BeginPhoneCall();
             }
             return false;
         }
@@ -158,8 +179,23 @@ namespace ElectricPalletStackers.Gameplay
         private void HandleCrossingWaypointReached(int waypointIndex)
         {
             if (waypointIndex != _palletRevealWaypointIndex) return;
+            RevealPallet();
+        }
+
+        private void RevealPallet()
+        {
+            if (_palletRoundController == null) return;
+            PalletStackerLoad pallet = _palletRoundController.ActivePallet;
+            bool wasVisible = pallet != null && pallet.gameObject.activeSelf;
             _palletRoundController?.SetPalletVisible(true);
-            PalletRevealed?.Invoke();
+            if (!wasVisible) PalletRevealed?.Invoke();
+        }
+
+        private void RestartPhoneCallPhase()
+        {
+            _phoneCallEvent?.RestartIncomingCall();
+            if (CurrentStage == TrainingExperienceStage.PhoneIntersection)
+                TransitionTo(TrainingExperienceStage.PhoneCall);
         }
 
         private void TransitionTo(TrainingExperienceStage next)

@@ -26,6 +26,7 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private PpeEquipmentPhase _ppeEquipmentPhase;
         [SerializeField] private UICompletedPanel _completedPanel;
         [SerializeField] private UIFailedPanel _failedPanel;
+        [SerializeField] private UIResetGamePanel _resetGamePanel;
 
         public UIFlowState CurrentState { get; private set; } = UIFlowState.CalibrateVehicleView;
         public bool IsInputCaptured => CurrentState != UIFlowState.Hidden;
@@ -41,6 +42,9 @@ namespace ElectricPalletStackers.UI
         /// </summary>
         public event Action ResetRequested;
         public event Action ContinueRequested;
+        public event Action RestartGameRequested;
+        public event Action ContinueGameRequested;
+        public event Action ResetPhaseRequested;
 
         private void Awake()
         {
@@ -69,6 +73,8 @@ namespace ElectricPalletStackers.UI
                 _calibrationPanel.OffsetAdjustmentRequested += HandleOffsetAdjustmentRequested;
             }
             _failedPanel.ActionConfirmed += HandleFailureActionConfirmed;
+            if (_resetGamePanel != null)
+                _resetGamePanel.ActionConfirmed += HandleResetGameActionConfirmed;
 
             _selectLanguagePanel?.HideImmediate();
             _calibrationInfoPanel?.HideImmediate();
@@ -79,6 +85,7 @@ namespace ElectricPalletStackers.UI
             _ppeEquipmentPhase?.EndPhase();
             _completedPanel?.HideImmediate();
             _failedPanel.HideImmediate();
+            _resetGamePanel?.HideImmediate();
 
             CurrentState = UIFlowState.CalibrateVehicleView;
             _inputRouter?.ResetForPanel();
@@ -98,6 +105,7 @@ namespace ElectricPalletStackers.UI
             _inputRouter.NavigateNext += HandleNavigateNext;
             _inputRouter.NavigatePrevious += HandleNavigatePrevious;
             _inputRouter.Confirm += HandleConfirm;
+            _inputRouter.EmergencyStopHeld += HandleEmergencyStopHeld;
         }
 
         private void OnDisable()
@@ -106,6 +114,7 @@ namespace ElectricPalletStackers.UI
             _inputRouter.NavigateNext -= HandleNavigateNext;
             _inputRouter.NavigatePrevious -= HandleNavigatePrevious;
             _inputRouter.Confirm -= HandleConfirm;
+            _inputRouter.EmergencyStopHeld -= HandleEmergencyStopHeld;
         }
 
         private void OnDestroy()
@@ -120,6 +129,8 @@ namespace ElectricPalletStackers.UI
                 _calibrationPanel.OffsetAdjustmentRequested -= HandleOffsetAdjustmentRequested;
             }
             _failedPanel.ActionConfirmed -= HandleFailureActionConfirmed;
+            if (_resetGamePanel != null)
+                _resetGamePanel.ActionConfirmed -= HandleResetGameActionConfirmed;
         }
 
         private void HandleNavigateNext()
@@ -128,6 +139,8 @@ namespace ElectricPalletStackers.UI
                 _selectLanguagePanel.NavigateNext();
             else if (CurrentState == UIFlowState.Failed)
                 _failedPanel.NavigateNext();
+            else if (CurrentState == UIFlowState.ResetGame)
+                _resetGamePanel.NavigateNext();
         }
 
         private void HandleNavigatePrevious()
@@ -136,6 +149,8 @@ namespace ElectricPalletStackers.UI
                 _selectLanguagePanel.NavigatePrevious();
             else if (CurrentState == UIFlowState.Failed)
                 _failedPanel.NavigatePrevious();
+            else if (CurrentState == UIFlowState.ResetGame)
+                _resetGamePanel.NavigatePrevious();
         }
 
         private void HandleConfirm()
@@ -168,6 +183,9 @@ namespace ElectricPalletStackers.UI
                 case UIFlowState.Failed:
                     _failedPanel.ConfirmSelection();
                     break;
+                case UIFlowState.ResetGame:
+                    _resetGamePanel.ConfirmSelection();
+                    break;
             }
         }
 
@@ -199,6 +217,12 @@ namespace ElectricPalletStackers.UI
                 TransitionTo(UIFlowState.Hidden);
         }
 
+        private void HandleEmergencyStopHeld()
+        {
+            if (CurrentState == UIFlowState.Hidden)
+                TransitionTo(UIFlowState.ResetGame);
+        }
+
         private void HandleAlignRequested() => _calibrationSystem?.AlignToVehicle();
         private void HandleOffsetAdjustmentRequested(Vector3 direction) => _calibrationSystem?.AdjustOffset(direction);
         private void TransitionTo(UIFlowState nextState)
@@ -214,6 +238,7 @@ namespace ElectricPalletStackers.UI
             _ppeEquipmentPhase?.EndPhase();
             _completedPanel?.Hide();
             _failedPanel?.Hide();
+            _resetGamePanel?.Hide();
 
             CurrentState = nextState;
             _inputRouter?.ResetForPanel();
@@ -243,6 +268,9 @@ namespace ElectricPalletStackers.UI
                 case UIFlowState.Failed:
                     _failedPanel?.Show();
                     break;
+                case UIFlowState.ResetGame:
+                    _resetGamePanel?.Show();
+                    break;
             }
 
             PanelChanged?.Invoke(nextState);
@@ -261,6 +289,25 @@ namespace ElectricPalletStackers.UI
 
             ResetRequested?.Invoke();
             TransitionTo(UIFlowState.Welcome);
+        }
+
+        private void HandleResetGameActionConfirmed(ResetGameAction action)
+        {
+            switch (action)
+            {
+                case ResetGameAction.Restart:
+                    RestartGameRequested?.Invoke();
+                    TransitionTo(UIFlowState.CalibrateVehicleView);
+                    break;
+                case ResetGameAction.ResetPhase:
+                    ResetPhaseRequested?.Invoke();
+                    TransitionTo(UIFlowState.Hidden);
+                    break;
+                default:
+                    ContinueGameRequested?.Invoke();
+                    TransitionTo(UIFlowState.Hidden);
+                    break;
+            }
         }
 
     }

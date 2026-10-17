@@ -30,15 +30,25 @@ namespace ElectricPalletStackers.Gameplay
         private bool _crossTriggered;
         private bool _phoneTriggered;
         private bool _npcTriggered;
+        private bool _wasInsidePhoneZone;
 
         private void OnEnable()
         {
-            if (_appManager != null) _appManager.RoundStarted += ResetPhase;
+            if (_appManager != null)
+            {
+                _appManager.RoundStarted += ResetPhase;
+                _appManager.StateChanged += HandleGameStateChanged;
+            }
         }
 
         private void OnDisable()
         {
-            if (_appManager != null) _appManager.RoundStarted -= ResetPhase;
+            if (_appManager != null)
+            {
+                _appManager.RoundStarted -= ResetPhase;
+                _appManager.StateChanged -= HandleGameStateChanged;
+            }
+            _wasInsidePhoneZone = false;
         }
 
         private void Update()
@@ -49,7 +59,14 @@ namespace ElectricPalletStackers.Gameplay
             Vector3 vehiclePosition = _playerVehicle.worldCenterOfMass;
             if (_crossSafetyPhase == null && !_crossTriggered && IsNearCross(vehiclePosition))
                 TriggerCross();
-            if (!_phoneTriggered && IsInsideZone(_phoneZone, vehiclePosition)) TriggerPhoneCall();
+            bool isInsidePhoneZone = IsInsideZone(_phoneZone, vehiclePosition);
+            if (isInsidePhoneZone && !_wasInsidePhoneZone)
+                _phoneCallEvent?.CaptureTriggerEntryDirection();
+            _wasInsidePhoneZone = isInsidePhoneZone;
+            if (!_phoneTriggered &&
+                (_trainingExperience == null ||
+                 _trainingExperience.CurrentStage < TrainingExperienceStage.PhoneCall) &&
+                isInsidePhoneZone) TriggerPhoneCall();
             if (!_npcTriggered && IsInsideZone(_npcZone, vehiclePosition)) TriggerNpcArea();
         }
 
@@ -86,11 +103,22 @@ namespace ElectricPalletStackers.Gameplay
 
         private void TriggerPhoneCall()
         {
+            if (_trainingExperience != null)
+            {
+                _phoneTriggered = _trainingExperience.BeginPhoneCall();
+                return;
+            }
+
             _phoneTriggered = true;
-            bool handledByTraining = _trainingExperience != null &&
-                                     _trainingExperience.ReachCheckpoint(
-                                         ExperienceCheckpoint.PhoneIntersection);
-            if (!handledByTraining) _phoneCallEvent?.TriggerIncomingCall();
+            _phoneCallEvent?.TriggerIncomingCall();
+        }
+
+        private void HandleGameStateChanged(GameState previous, GameState next)
+        {
+            if (previous != GameState.Lost || next != GameState.Playing) return;
+            _wasInsidePhoneZone = false;
+            _phoneTriggered = _trainingExperience != null &&
+                              _trainingExperience.CurrentStage >= TrainingExperienceStage.PhoneCall;
         }
 
         private void TriggerNpcArea()
@@ -104,6 +132,7 @@ namespace ElectricPalletStackers.Gameplay
             _crossTriggered = false;
             _phoneTriggered = false;
             _npcTriggered = false;
+            _wasInsidePhoneZone = false;
             _crossingVehicle?.ResetVehicle();
         }
 

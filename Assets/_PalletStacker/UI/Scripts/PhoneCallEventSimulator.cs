@@ -47,6 +47,7 @@ namespace ElectricPalletStackers.UI
         private NpcAgent _activePhoneNpc;
         private bool _activeConversation;
         private bool _phoneNpcImpactOccurred;
+        private bool _hasTriggerEntryDirection;
         private float _callTravelSign = 1f;
 
         public float ConversationDuration => _conversationDuration;
@@ -73,7 +74,14 @@ namespace ElectricPalletStackers.UI
                 _appManager.RoundStarted -= HandleRoundStarted;
                 _appManager.StateChanged -= HandleGameStateChanged;
             }
+            _hasTriggerEntryDirection = false;
             ResetCallState();
+        }
+
+        private void LateUpdate()
+        {
+            if (_activePhoneNpc == null || _activeConversation || !IsRinging) return;
+            UpdatePhoneNpcFollowPose();
         }
 
         public void TriggerIncomingCall()
@@ -85,11 +93,23 @@ namespace ElectricPalletStackers.UI
             BeginIncomingCall();
         }
 
+        public void CaptureTriggerEntryDirection()
+        {
+            // The trigger entry chooses the blocker side. Keep that side while the
+            // vehicle remains in the zone, even if the driver reverses direction.
+            _callTravelSign = ResolveTravelSign(_callTravelSign);
+            _hasTriggerEntryDirection = true;
+
+            if (_activePhoneNpc != null && !_activeConversation && IsRinging)
+                UpdatePhoneNpcFollowPose();
+        }
+
         private void BeginIncomingCall()
         {
             _activeConversation = false;
             _phoneNpcImpactOccurred = false;
-            _callTravelSign = ResolveTravelSign();
+            if (!_hasTriggerEntryDirection)
+                _callTravelSign = ResolveTravelSign(1f);
             if (_spawnBlockerOnIncomingCall) SpawnPhoneNpc();
             _phoneCallPanel?.ShowIncomingCall(_callerDisplay);
             if (_activePhoneNpc != null)
@@ -103,6 +123,7 @@ namespace ElectricPalletStackers.UI
 
         public void ResetState()
         {
+            _hasTriggerEntryDirection = false;
             ResetCallState();
         }
 
@@ -116,6 +137,7 @@ namespace ElectricPalletStackers.UI
         [ContextMenu("Simulate Call Now")]
         private void SimulateCallNow()
         {
+            _hasTriggerEntryDirection = false;
             RestartIncomingCall();
         }
 
@@ -141,11 +163,13 @@ namespace ElectricPalletStackers.UI
 
         private void HandleCallAccepted()
         {
-            if (_activeConversation) return;
+            if (_activeConversation ||
+                (_appManager != null && _appManager.CurrentState != GameState.Playing)) return;
             if (_applyCrowdPressureWhileRinging)
                 _npcPopulation?.SetCrowdPressure(false);
-            _activeConversation = true;
             if (_spawnBlockerOnIncomingCall && _activePhoneNpc == null) SpawnPhoneNpc();
+            UpdatePhoneNpcFollowPose();
+            _activeConversation = true;
             if (_activePhoneNpc != null)
                 _phonePlacement?.ShowOccluding(_activePhoneNpc.transform);
             StartCollisionGrace(_activePhoneNpc);
@@ -157,6 +181,9 @@ namespace ElectricPalletStackers.UI
         {
             yield return new WaitForSecondsRealtime(duration);
             _callRoutine = null;
+            if (!_activeConversation || _phoneNpcImpactOccurred ||
+                (_appManager != null && _appManager.CurrentState != GameState.Playing))
+                yield break;
             _activeConversation = false;
             DespawnPhoneNpc();
             _phoneCallPanel?.FinishCall();
@@ -192,7 +219,17 @@ namespace ElectricPalletStackers.UI
             _activePhoneNpc.SetRoundActive(true);
             _activePhoneNpc.BeginScriptedMovement();
             _activePhoneNpc.SetVehicleCollisionEnabled(false);
+        }
 
+        private void UpdatePhoneNpcFollowPose()
+        {
+            if (_activePhoneNpc == null || _vehicleBody == null) return;
+
+            Vector3 travelDirection = GetVehicleForward() * _callTravelSign;
+            Quaternion rotation = Quaternion.LookRotation(-travelDirection, Vector3.up);
+            _activePhoneNpc.transform.SetPositionAndRotation(
+                CalculateNpcPosition(),
+                rotation);
         }
 
         private void StartCollisionGrace(NpcAgent expectedNpc)
@@ -228,7 +265,7 @@ namespace ElectricPalletStackers.UI
             expectedNpc.SetVehicleCollisionEnabled(true);
         }
 
-        private float ResolveTravelSign()
+        private float ResolveTravelSign(float fallbackSign)
         {
             if (_vehicleMotor != null)
             {
@@ -249,7 +286,7 @@ namespace ElectricPalletStackers.UI
                     return Mathf.Sign(signedVelocity);
             }
 
-            return 1f;
+            return fallbackSign < 0f ? -1f : 1f;
         }
 
         private Vector3 GetVehicleForward()

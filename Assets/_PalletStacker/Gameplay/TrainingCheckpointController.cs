@@ -21,6 +21,10 @@ namespace ElectricPalletStackers.Gameplay
         [SerializeField] private NpcPopulationController _npcPopulation;
         [SerializeField] private CrossingVehicleController _crossingVehicle;
 
+        [Header("Phase Reset Points")]
+        [Tooltip("Optional authored vehicle poses for each stage. When a stage has no entry, the live checkpoint pose is used.")]
+        [SerializeField] private PhaseResetPoint[] _phaseResetPoints;
+
         private CheckpointSnapshot _latest;
         private bool _hasCheckpoint;
         private bool _isRestoring;
@@ -94,6 +98,17 @@ namespace ElectricPalletStackers.Gameplay
             return true;
         }
 
+        public bool ResetCurrentPhase()
+        {
+            if (_appManager == null || _appManager.CurrentState != GameState.Playing)
+                return false;
+            if (!_hasCheckpoint || !_appManager.SuspendRoundForRestore()) return false;
+
+            if (!RestoreLatest()) return false;
+            _appManager.ResumeRound();
+            return true;
+        }
+
         private void HandleRoundStarted()
         {
             Capture(_experience.CurrentStage);
@@ -122,6 +137,14 @@ namespace ElectricPalletStackers.Gameplay
 
         private void Capture(TrainingExperienceStage stage)
         {
+            Transform resetPoint = GetResetPoint(stage);
+            Vector3 vehiclePosition = resetPoint != null
+                ? resetPoint.position
+                : _vehicleBody.position;
+            Quaternion vehicleRotation = resetPoint != null
+                ? resetPoint.rotation
+                : _vehicleBody.rotation;
+
             Rigidbody palletBody = _pallet.Body;
             bool hadAttachedLoad = _loadHandler.HeldLoad == _pallet;
             Transform forks = _mast.Forks;
@@ -134,8 +157,8 @@ namespace ElectricPalletStackers.Gameplay
                 : palletBody.rotation;
             _latest = new CheckpointSnapshot(
                 stage,
-                _vehicleBody.position,
-                _vehicleBody.rotation,
+                vehiclePosition,
+                vehicleRotation,
                 _mast.CurrentHeight,
                 _mast.TargetHeight,
                 palletPosition,
@@ -149,6 +172,29 @@ namespace ElectricPalletStackers.Gameplay
             _npcPopulation?.CaptureCheckpoint();
             _hasCheckpoint = true;
             CheckpointSaved?.Invoke(stage);
+        }
+
+        private Transform GetResetPoint(TrainingExperienceStage stage)
+        {
+            if (_phaseResetPoints == null) return null;
+
+            for (int index = 0; index < _phaseResetPoints.Length; index++)
+            {
+                PhaseResetPoint entry = _phaseResetPoints[index];
+                if (entry != null && entry.Stage == stage && entry.ResetPoint != null)
+                    return entry.ResetPoint;
+            }
+            return null;
+        }
+
+        [Serializable]
+        private sealed class PhaseResetPoint
+        {
+            [SerializeField] private TrainingExperienceStage _stage;
+            [SerializeField] private Transform _resetPoint;
+
+            public TrainingExperienceStage Stage => _stage;
+            public Transform ResetPoint => _resetPoint;
         }
 
         private readonly struct CheckpointSnapshot

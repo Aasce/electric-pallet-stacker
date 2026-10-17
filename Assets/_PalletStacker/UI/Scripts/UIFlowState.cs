@@ -9,6 +9,7 @@ namespace ElectricPalletStackers.UI
         PpeEquipment = 4,
         Hidden = 5,
         Completed = 6,
-        Failed = 7
+        Failed = 7,
+        ResetGame = 8
     }
 }

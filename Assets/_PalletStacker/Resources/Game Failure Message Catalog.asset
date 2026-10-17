@@ -15,73 +15,141 @@ MonoBehaviour:
   _entries:
   - _reason: 0
     _cause:
-      _english: "The training run ended because an unclassified safety violation was detected."
-      _vietnamese: "Lượt huấn luyện đã kết thúc do phát hiện một vi phạm an toàn chưa được phân loại."
-      _japanese: "分類されていない安全違反が検出されたため、訓練を終了しました。"
+      _english: The training run ended because an unclassified safety violation was
+        detected.
+      _vietnamese: "L\u01B0\u1EE3t hu\u1EA5n luy\u1EC7n \u0111\xE3 k\u1EBFt th\xFAc
+        do ph\xE1t hi\u1EC7n m\u1ED9t vi ph\u1EA1m an to\xE0n ch\u01B0a \u0111\u01B0\u1EE3c
+        ph\xE2n lo\u1EA1i."
+      _japanese: "\u5206\u985E\u3055\u308C\u3066\u3044\u306A\u3044\u5B89\u5168\u9055\u53CD\u304C\u691C\u51FA\u3055\u308C\u305F\u305F\u3081\u3001\u8A13\u7DF4\u3092\u7D42\u4E86\u3057\u307E\u3057\u305F\u3002"
     _guidance:
-      _english: "Stop the vehicle, identify the hazard that triggered the stop, and correct it before continuing."
-      _vietnamese: "Hãy dừng xe, xác định mối nguy đã kích hoạt dừng an toàn và khắc phục trước khi tiếp tục."
-      _japanese: "車両を停止し、安全停止を作動させた危険要因を確認して、再開前に是正してください。"
+      _english: Stop the vehicle, identify the hazard that triggered the stop, and
+        correct it before continuing.
+      _vietnamese: "H\xE3y d\u1EEBng xe, x\xE1c \u0111\u1ECBnh m\u1ED1i nguy \u0111\xE3
+        k\xEDch ho\u1EA1t d\u1EEBng an to\xE0n v\xE0 kh\u1EAFc ph\u1EE5c tr\u01B0\u1EDBc
+        khi ti\u1EBFp t\u1EE5c."
+      _japanese: "\u8ECA\u4E21\u3092\u505C\u6B62\u3057\u3001\u5B89\u5168\u505C\u6B62\u3092\u4F5C\u52D5\u3055\u305B\u305F\u5371\u967A\u8981\u56E0\u3092\u78BA\u8A8D\u3057\u3066\u3001\u518D\u958B\u524D\u306B\u662F\u6B63\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
   - _reason: 1
     _cause:
-      _english: "The pallet stacker hit a fixed obstacle because a safe clearance was not maintained."
-      _vietnamese: "Xe nâng tay điện đã va vào chướng ngại vật cố định do không duy trì khoảng cách an toàn."
-      _japanese: "安全な間隔を確保しなかったため、パレットスタッカーが固定障害物に衝突しました。"
+      _english: The pallet stacker hit a fixed obstacle because a safe clearance
+        was not maintained.
+      _vietnamese: "Xe n\xE2ng tay \u0111i\u1EC7n \u0111\xE3 va v\xE0o ch\u01B0\u1EDBng
+        ng\u1EA1i v\u1EADt c\u1ED1 \u0111\u1ECBnh do kh\xF4ng duy tr\xEC kho\u1EA3ng
+        c\xE1ch an to\xE0n."
+      _japanese: "\u5B89\u5168\u306A\u9593\u9694\u3092\u78BA\u4FDD\u3057\u306A\u304B\u3063\u305F\u305F\u3081\u3001\u30D1\u30EC\u30C3\u30C8\u30B9\u30BF\u30C3\u30AB\u30FC\u304C\u56FA\u5B9A\u969C\u5BB3\u7269\u306B\u885D\u7A81\u3057\u307E\u3057\u305F\u3002"
     _guidance:
-      _english: "Stop before narrow passages, check both sides and the fork clearance, then proceed slowly only when the path is clear."
-      _vietnamese: "Hãy dừng trước lối hẹp, kiểm tra hai bên và khoảng hở của càng nâng; chỉ đi chậm khi lối đi đã thông thoáng."
-      _japanese: "狭い通路の手前で停止し、左右とフォークの間隔を確認して、進路が空いてから低速で進んでください。"
+      _english: Stop before narrow passages, check both sides and the fork clearance,
+        then proceed slowly only when the path is clear.
+      _vietnamese: "H\xE3y d\u1EEBng tr\u01B0\u1EDBc l\u1ED1i h\u1EB9p, ki\u1EC3m
+        tra hai b\xEAn v\xE0 kho\u1EA3ng h\u1EDF c\u1EE7a c\xE0ng n\xE2ng; ch\u1EC9
+        \u0111i ch\u1EADm khi l\u1ED1i \u0111i \u0111\xE3 th\xF4ng tho\xE1ng."
+      _japanese: "\u72ED\u3044\u901A\u8DEF\u306E\u624B\u524D\u3067\u505C\u6B62\u3057\u3001\u5DE6\u53F3\u3068\u30D5\u30A9\u30FC\u30AF\u306E\u9593\u9694\u3092\u78BA\u8A8D\u3057\u3066\u3001\u9032\u8DEF\u304C\u7A7A\u3044\u3066\u304B\u3089\u4F4E\u901F\u3067\u9032\u3093\u3067\u304F\u3060\u3055\u3044\u3002"
   - _reason: 2
     _cause:
-      _english: "The operator entered a collision zone and contacted an obstacle while controlling the vehicle."
-      _vietnamese: "Người vận hành đã đi vào vùng có nguy cơ va chạm và chạm phải chướng ngại vật khi điều khiển xe."
-      _japanese: "車両の操作中に作業者が衝突危険範囲へ入り、障害物に接触しました。"
+      _english: The operator entered a collision zone and contacted an obstacle while
+        controlling the vehicle.
+      _vietnamese: "Ng\u01B0\u1EDDi v\u1EADn h\xE0nh \u0111\xE3 \u0111i v\xE0o v\xF9ng
+        c\xF3 nguy c\u01A1 va ch\u1EA1m v\xE0 ch\u1EA1m ph\u1EA3i ch\u01B0\u1EDBng
+        ng\u1EA1i v\u1EADt khi \u0111i\u1EC1u khi\u1EC3n xe."
+      _japanese: "\u8ECA\u4E21\u306E\u64CD\u4F5C\u4E2D\u306B\u4F5C\u696D\u8005\u304C\u885D\u7A81\u5371\u967A\u7BC4\u56F2\u3078\u5165\u308A\u3001\u969C\u5BB3\u7269\u306B\u63A5\u89E6\u3057\u307E\u3057\u305F\u3002"
     _guidance:
-      _english: "Walk in the designated operating position, keep your body outside the travel path, and maintain clearance from walls and equipment."
-      _vietnamese: "Hãy đứng đúng vị trí vận hành, giữ cơ thể ngoài quỹ đạo di chuyển của xe và duy trì khoảng cách với tường, thiết bị."
-      _japanese: "所定の操作位置を歩き、身体を車両の走行経路から外し、壁や設備との間隔を保ってください。"
+      _english: Walk in the designated operating position, keep your body outside
+        the travel path, and maintain clearance from walls and equipment.
+      _vietnamese: "H\xE3y \u0111\u1EE9ng \u0111\xFAng v\u1ECB tr\xED v\u1EADn h\xE0nh,
+        gi\u1EEF c\u01A1 th\u1EC3 ngo\xE0i qu\u1EF9 \u0111\u1EA1o di chuy\u1EC3n
+        c\u1EE7a xe v\xE0 duy tr\xEC kho\u1EA3ng c\xE1ch v\u1EDBi t\u01B0\u1EDDng,
+        thi\u1EBFt b\u1ECB."
+      _japanese: "\u6240\u5B9A\u306E\u64CD\u4F5C\u4F4D\u7F6E\u3092\u6B69\u304D\u3001\u8EAB\u4F53\u3092\u8ECA\u4E21\u306E\u8D70\u884C\u7D4C\u8DEF\u304B\u3089\u5916\u3057\u3001\u58C1\u3084\u8A2D\u5099\u3068\u306E\u9593\u9694\u3092\u4FDD\u3063\u3066\u304F\u3060\u3055\u3044\u3002"
   - _reason: 3
     _cause:
-      _english: "The raised pallet or load struck an obstacle because overhead and side clearances were not checked."
-      _vietnamese: "Pallet hoặc hàng đang nâng đã va vào chướng ngại vật do chưa kiểm tra khoảng hở phía trên và hai bên."
-      _japanese: "上方および側方の間隔を確認しなかったため、持ち上げたパレットまたは荷が障害物に接触しました。"
+      _english: The raised pallet or load struck an obstacle because overhead and
+        side clearances were not checked.
+      _vietnamese: "Pallet ho\u1EB7c h\xE0ng \u0111ang n\xE2ng \u0111\xE3 va v\xE0o
+        ch\u01B0\u1EDBng ng\u1EA1i v\u1EADt do ch\u01B0a ki\u1EC3m tra kho\u1EA3ng
+        h\u1EDF ph\xEDa tr\xEAn v\xE0 hai b\xEAn."
+      _japanese: "\u4E0A\u65B9\u304A\u3088\u3073\u5074\u65B9\u306E\u9593\u9694\u3092\u78BA\u8A8D\u3057\u306A\u304B\u3063\u305F\u305F\u3081\u3001\u6301\u3061\u4E0A\u3052\u305F\u30D1\u30EC\u30C3\u30C8\u307E\u305F\u306F\u8377\u304C\u969C\u5BB3\u7269\u306B\u63A5\u89E6\u3057\u307E\u3057\u305F\u3002"
     _guidance:
-      _english: "Lower the load to the travel position, confirm overhead and side clearances, and move at low speed."
-      _vietnamese: "Hãy hạ tải về vị trí di chuyển, kiểm tra khoảng hở phía trên và hai bên rồi di chuyển ở tốc độ thấp."
-      _japanese: "荷を走行位置まで下げ、上方と側方の間隔を確認してから低速で移動してください。"
+      _english: Lower the load to the travel position, confirm overhead and side
+        clearances, and move at low speed.
+      _vietnamese: "H\xE3y h\u1EA1 t\u1EA3i v\u1EC1 v\u1ECB tr\xED di chuy\u1EC3n,
+        ki\u1EC3m tra kho\u1EA3ng h\u1EDF ph\xEDa tr\xEAn v\xE0 hai b\xEAn r\u1ED3i
+        di chuy\u1EC3n \u1EDF t\u1ED1c \u0111\u1ED9 th\u1EA5p."
+      _japanese: "\u8377\u3092\u8D70\u884C\u4F4D\u7F6E\u307E\u3067\u4E0B\u3052\u3001\u4E0A\u65B9\u3068\u5074\u65B9\u306E\u9593\u9694\u3092\u78BA\u8A8D\u3057\u3066\u304B\u3089\u4F4E\u901F\u3067\u79FB\u52D5\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
   - _reason: 4
     _cause:
-      _english: "The pallet or load fell because it was not stably supported or the lifting connection was overloaded."
-      _vietnamese: "Pallet hoặc hàng đã rơi do không được đỡ ổn định hoặc liên kết nâng bị quá tải."
-      _japanese: "荷が安定して支持されていない、または持ち上げ部に過負荷がかかったため、パレットまたは荷が落下しました。"
+      _english: The pallet or load fell because it was not stably supported or the
+        lifting connection was overloaded.
+      _vietnamese: "Pallet ho\u1EB7c h\xE0ng \u0111\xE3 r\u01A1i do kh\xF4ng \u0111\u01B0\u1EE3c
+        \u0111\u1EE1 \u1ED5n \u0111\u1ECBnh ho\u1EB7c li\xEAn k\u1EBFt n\xE2ng b\u1ECB
+        qu\xE1 t\u1EA3i."
+      _japanese: "\u8377\u304C\u5B89\u5B9A\u3057\u3066\u652F\u6301\u3055\u308C\u3066\u3044\u306A\u3044\u3001\u307E\u305F\u306F\u6301\u3061\u4E0A\u3052\u90E8\u306B\u904E\u8CA0\u8377\u304C\u304B\u304B\u3063\u305F\u305F\u3081\u3001\u30D1\u30EC\u30C3\u30C8\u307E\u305F\u306F\u8377\u304C\u843D\u4E0B\u3057\u307E\u3057\u305F\u3002"
     _guidance:
-      _english: "Insert the forks fully and centrally under the pallet, verify load stability, and avoid sudden travel or mast movements."
-      _vietnamese: "Hãy đưa càng vào hết và đúng tâm pallet, kiểm tra tải ổn định, đồng thời tránh di chuyển hoặc nâng hạ đột ngột."
-      _japanese: "フォークをパレットの中央まで十分に差し込み、荷の安定を確認し、急な走行やマスト操作を避けてください。"
+      _english: Insert the forks fully and centrally under the pallet, verify load
+        stability, and avoid sudden travel or mast movements.
+      _vietnamese: "H\xE3y \u0111\u01B0a c\xE0ng v\xE0o h\u1EBFt v\xE0 \u0111\xFAng
+        t\xE2m pallet, ki\u1EC3m tra t\u1EA3i \u1ED5n \u0111\u1ECBnh, \u0111\u1ED3ng
+        th\u1EDDi tr\xE1nh di chuy\u1EC3n ho\u1EB7c n\xE2ng h\u1EA1 \u0111\u1ED9t
+        ng\u1ED9t."
+      _japanese: "\u30D5\u30A9\u30FC\u30AF\u3092\u30D1\u30EC\u30C3\u30C8\u306E\u4E2D\u592E\u307E\u3067\u5341\u5206\u306B\u5DEE\u3057\u8FBC\u307F\u3001\u8377\u306E\u5B89\u5B9A\u3092\u78BA\u8A8D\u3057\u3001\u6025\u306A\u8D70\u884C\u3084\u30DE\u30B9\u30C8\u64CD\u4F5C\u3092\u907F\u3051\u3066\u304F\u3060\u3055\u3044\u3002"
   - _reason: 5
     _cause:
-      _english: "The pallet stacker collided with a pedestrian because a safe separation distance and right of way were not maintained."
-      _vietnamese: "Xe nâng tay điện đã va chạm với người đi bộ do không giữ khoảng cách an toàn và không nhường đường."
-      _japanese: "安全な離隔距離と歩行者優先を守らなかったため、パレットスタッカーが歩行者に衝突しました。"
+      _english: The pallet stacker collided with a pedestrian because a safe separation
+        distance and right of way were not maintained.
+      _vietnamese: "Xe n\xE2ng tay \u0111i\u1EC7n \u0111\xE3 va ch\u1EA1m v\u1EDBi
+        ng\u01B0\u1EDDi \u0111i b\u1ED9 do kh\xF4ng gi\u1EEF kho\u1EA3ng c\xE1ch
+        an to\xE0n v\xE0 kh\xF4ng nh\u01B0\u1EDDng \u0111\u01B0\u1EDDng."
+      _japanese: "\u5B89\u5168\u306A\u96E2\u9694\u8DDD\u96E2\u3068\u6B69\u884C\u8005\u512A\u5148\u3092\u5B88\u3089\u306A\u304B\u3063\u305F\u305F\u3081\u3001\u30D1\u30EC\u30C3\u30C8\u30B9\u30BF\u30C3\u30AB\u30FC\u304C\u6B69\u884C\u8005\u306B\u885D\u7A81\u3057\u307E\u3057\u305F\u3002"
     _guidance:
-      _english: "Stop, sound the horn, make eye contact with the pedestrian, and move only after the person has completely cleared the travel path."
-      _vietnamese: "Hãy dừng xe, bấm còi, giao tiếp bằng mắt với người đi bộ và chỉ di chuyển khi họ đã ra hoàn toàn khỏi lộ trình của xe."
-      _japanese: "停止して警笛を鳴らし、歩行者と目を合わせ、歩行者が走行経路から完全に離れてから進んでください。"
+      _english: Stop, sound the horn, make eye contact with the pedestrian, and move
+        only after the person has completely cleared the travel path.
+      _vietnamese: "H\xE3y d\u1EEBng xe, b\u1EA5m c\xF2i, giao ti\u1EBFp b\u1EB1ng
+        m\u1EAFt v\u1EDBi ng\u01B0\u1EDDi \u0111i b\u1ED9 v\xE0 ch\u1EC9 di chuy\u1EC3n
+        khi h\u1ECD \u0111\xE3 ra ho\xE0n to\xE0n kh\u1ECFi l\u1ED9 tr\xECnh c\u1EE7a
+        xe."
+      _japanese: "\u505C\u6B62\u3057\u3066\u8B66\u7B1B\u3092\u9CF4\u3089\u3057\u3001\u6B69\u884C\u8005\u3068\u76EE\u3092\u5408\u308F\u305B\u3001\u6B69\u884C\u8005\u304C\u8D70\u884C\u7D4C\u8DEF\u304B\u3089\u5B8C\u5168\u306B\u96E2\u308C\u3066\u304B\u3089\u9032\u3093\u3067\u304F\u3060\u3055\u3044\u3002"
   - _reason: 6
     _cause:
-      _english: "You were involved in a workplace accident because you operated the pallet stacker while talking on the phone and collided with a pedestrian."
-      _vietnamese: "Bạn đã bị tai nạn lao động do vừa điều khiển xe nâng tay điện vừa nghe điện thoại và va chạm với người đi bộ."
-      _japanese: "通話しながらパレットスタッカーを操作して歩行者に衝突したため、労働災害が発生しました。"
+      _english: You were involved in a workplace accident because you operated the
+        pallet stacker while talking on the phone and collided with a pedestrian.
+      _vietnamese: "B\u1EA1n \u0111\xE3 b\u1ECB tai n\u1EA1n lao \u0111\u1ED9ng do
+        v\u1EEBa \u0111i\u1EC1u khi\u1EC3n xe n\xE2ng tay \u0111i\u1EC7n v\u1EEBa
+        nghe \u0111i\u1EC7n tho\u1EA1i v\xE0 va ch\u1EA1m v\u1EDBi ng\u01B0\u1EDDi
+        \u0111i b\u1ED9."
+      _japanese: "\u901A\u8A71\u3057\u306A\u304C\u3089\u30D1\u30EC\u30C3\u30C8\u30B9\u30BF\u30C3\u30AB\u30FC\u3092\u64CD\u4F5C\u3057\u3066\u6B69\u884C\u8005\u306B\u885D\u7A81\u3057\u305F\u305F\u3081\u3001\u52B4\u50CD\u707D\u5BB3\u304C\u767A\u751F\u3057\u307E\u3057\u305F\u3002"
     _guidance:
-      _english: "Never answer or use a phone while the vehicle is moving. Stop completely in a safe place and return the controls to neutral before handling the call."
-      _vietnamese: "Không nghe hoặc sử dụng điện thoại khi xe đang di chuyển. Hãy dừng hẳn xe tại vị trí an toàn và đưa cần điều khiển về trung tính rồi mới xử lý cuộc gọi."
-      _japanese: "走行中は電話に出たり操作したりしないでください。安全な場所で完全に停止し、操作レバーを中立にしてから通話してください。"
+      _english: Never answer or use a phone while the vehicle is moving. Stop completely
+        in a safe place and return the controls to neutral before handling the call.
+      _vietnamese: "Kh\xF4ng nghe ho\u1EB7c s\u1EED d\u1EE5ng \u0111i\u1EC7n tho\u1EA1i
+        khi xe \u0111ang di chuy\u1EC3n. H\xE3y d\u1EEBng h\u1EB3n xe t\u1EA1i v\u1ECB
+        tr\xED an to\xE0n v\xE0 \u0111\u01B0a c\u1EA7n \u0111i\u1EC1u khi\u1EC3n
+        v\u1EC1 trung t\xEDnh r\u1ED3i m\u1EDBi x\u1EED l\xFD cu\u1ED9c g\u1ECDi."
+      _japanese: "\u8D70\u884C\u4E2D\u306F\u96FB\u8A71\u306B\u51FA\u305F\u308A\u64CD\u4F5C\u3057\u305F\u308A\u3057\u306A\u3044\u3067\u304F\u3060\u3055\u3044\u3002\u5B89\u5168\u306A\u5834\u6240\u3067\u5B8C\u5168\u306B\u505C\u6B62\u3057\u3001\u64CD\u4F5C\u30EC\u30D0\u30FC\u3092\u4E2D\u7ACB\u306B\u3057\u3066\u304B\u3089\u901A\u8A71\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
   - _reason: 7
     _cause:
-      _english: "You were involved in a workplace accident because you did not follow intersection safety rules and collided with another vehicle."
-      _vietnamese: "Bạn đã bị tai nạn lao động do không tuân thủ quy tắc an toàn tại góc cua, lối rẽ hoặc ngã tư và va chạm với xe khác."
-      _japanese: "曲がり角、分岐、交差点での安全手順を守らず他の車両と衝突したため、労働災害が発生しました。"
+      _english: You were involved in a workplace accident because you did not follow
+        intersection safety rules and collided with another vehicle.
+      _vietnamese: "B\u1EA1n \u0111\xE3 b\u1ECB tai n\u1EA1n lao \u0111\u1ED9ng do
+        kh\xF4ng tu\xE2n th\u1EE7 quy t\u1EAFc an to\xE0n t\u1EA1i g\xF3c cua, l\u1ED1i
+        r\u1EBD ho\u1EB7c ng\xE3 t\u01B0 v\xE0 va ch\u1EA1m v\u1EDBi xe kh\xE1c."
+      _japanese: "\u66F2\u304C\u308A\u89D2\u3001\u5206\u5C90\u3001\u4EA4\u5DEE\u70B9\u3067\u306E\u5B89\u5168\u624B\u9806\u3092\u5B88\u3089\u305A\u4ED6\u306E\u8ECA\u4E21\u3068\u885D\u7A81\u3057\u305F\u305F\u3081\u3001\u52B4\u50CD\u707D\u5BB3\u304C\u767A\u751F\u3057\u307E\u3057\u305F\u3002"
     _guidance:
-      _english: "Come to a complete stop before every corner, branch, or intersection; look left-right-left, sound the horn when visibility is obstructed, and proceed only when clear."
-      _vietnamese: "Hãy dừng hẳn trước mọi góc cua, lối rẽ hoặc ngã tư; quan sát trái-phải-trái, bấm còi khi tầm nhìn bị che khuất và chỉ đi tiếp khi đường đã an toàn."
-      _japanese: "曲がり角、分岐、交差点の手前で必ず完全停止し、左・右・左を確認してください。見通しが悪い場合は警笛を鳴らし、安全を確認してから進んでください。"
+      _english: Come to a complete stop before every corner, branch, or intersection;
+        look left-right-left, sound the horn when visibility is obstructed, and proceed
+        only when clear.
+      _vietnamese: "H\xE3y d\u1EEBng h\u1EB3n tr\u01B0\u1EDBc m\u1ECDi g\xF3c cua,
+        l\u1ED1i r\u1EBD ho\u1EB7c ng\xE3 t\u01B0; quan s\xE1t tr\xE1i-ph\u1EA3i-tr\xE1i,
+        b\u1EA5m c\xF2i khi t\u1EA7m nh\xECn b\u1ECB che khu\u1EA5t v\xE0 ch\u1EC9
+        \u0111i ti\u1EBFp khi \u0111\u01B0\u1EDDng \u0111\xE3 an to\xE0n."
+      _japanese: "\u66F2\u304C\u308A\u89D2\u3001\u5206\u5C90\u3001\u4EA4\u5DEE\u70B9\u306E\u624B\u524D\u3067\u5FC5\u305A\u5B8C\u5168\u505C\u6B62\u3057\u3001\u5DE6\u30FB\u53F3\u30FB\u5DE6\u3092\u78BA\u8A8D\u3057\u3066\u304F\u3060\u3055\u3044\u3002\u898B\u901A\u3057\u304C\u60AA\u3044\u5834\u5408\u306F\u8B66\u7B1B\u3092\u9CF4\u3089\u3057\u3001\u5B89\u5168\u3092\u78BA\u8A8D\u3057\u3066\u304B\u3089\u9032\u3093\u3067\u304F\u3060\u3055\u3044\u3002"
+  - _reason: 8
+    _cause:
+      _english: The crossing vehicle ran over the operator's foot after an abrupt
+        stop.
+      _vietnamese: "Xe c\u1EAFt ngang \u0111\xE3 c\xE1n qua ch\xE2n ng\u01B0\u1EDDi
+        \u0111i\u1EC1u khi\u1EC3n sau khi d\u1EEBng \u0111\u1ED9t ng\u1ED9t."
+      _japanese: "\u6025\u505C\u6B62\u3057\u305F\u969B\u3001\u4EA4\u5DEE\u8ECA\u4E21\u304C\u4F5C\u696D\u8005\u306E\u8DB3\u3092\u3072\u304D\u307E\u3057\u305F\u3002"
+    _guidance:
+      _english: Stop before entering the intersection and complete every pointing
+        check.
+      _vietnamese: "H\xE3y d\u1EEBng tr\u01B0\u1EDBc giao l\u1ED9 v\xE0 ho\xE0n th\xE0nh
+        \u0111\u1EA7y \u0111\u1EE7 thao t\xE1c ch\u1EC9 tay x\xE1c nh\u1EADn."
+      _japanese: "\u4EA4\u5DEE\u70B9\u306B\u5165\u308B\u524D\u306B\u505C\u6B62\u3057\u3001\u3059\u3079\u3066\u306E\u6307\u5DEE\u3057\u78BA\u8A8D\u3092\u5B8C\u4E86\u3057\u3066\u304F\u3060\u3055\u3044\u3002"

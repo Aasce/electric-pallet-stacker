@@ -1,11 +1,13 @@
+using System;
 using ElectricPalletStackers.PalletStackers;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Video;
 
 namespace ElectricPalletStackers.Gameplay
 {
     [DisallowMultipleComponent]
-    public sealed class CrossSafetyPhaseController : MonoBehaviour
+    public sealed class CrossSafetyPhaseController : MonoBehaviour, IGameFailureSource
     {
         private enum PhaseState
         {
@@ -13,6 +15,7 @@ namespace ElectricPalletStackers.Gameplay
             WaitingForStop,
             ConfirmingDirections,
             HazardActive,
+            FootAccidentCutscene,
             Completed
         }
 
@@ -23,6 +26,7 @@ namespace ElectricPalletStackers.Gameplay
         [Header("Player")]
         [SerializeField] private Rigidbody _playerVehicle;
         [SerializeField] private PalletStackerRigidbodyMotor _playerMotor;
+        [SerializeField] private PalletStackerControlDriver _playerControlDriver;
         [SerializeField] private Transform _playerView;
 
         [Header("Cross zones")]
@@ -37,13 +41,15 @@ namespace ElectricPalletStackers.Gameplay
         [Tooltip("The target GameObjects under Confirm Directions. Supports two or three directions.")]
         [SerializeField] private CrossDirectionPokeTarget[] _directionTargets;
         [Tooltip("Reach distance from the player's view to every poke sphere.")]
-        [SerializeField, Range(0.3f, 0.8f)] private float _targetDistance = 0.45f;
+        [SerializeField, Range(0.3f, 0.8f)] private float _targetDistance = 0.5625f;
         [Tooltip("Vertical offset from the player's view. Negative values place spheres below eye level.")]
         [SerializeField, Range(-0.5f, 0.25f)] private float _targetVerticalOffset = -0.18f;
 
         [Header("Stop validation")]
         [SerializeField, Min(0.01f)] private float _stoppedSpeedThreshold = 0.05f;
         [SerializeField, Min(0f)] private float _stoppedSettleDuration = 0.35f;
+        [Tooltip("Minimum signed travel speed used to remember whether the player was moving forward or reversing before stopping.")]
+        [SerializeField, Min(0.01f)] private float _movementDirectionThreshold = 0.05f;
 
         [Header("Instruction UI")]
         [SerializeField] private GameObject _instructionPanel;
@@ -52,14 +58,23 @@ namespace ElectricPalletStackers.Gameplay
         [Header("Unsafe crossing vehicle")]
         [SerializeField] private CrossingVehicleController _crossingVehicle;
 
+        [Header("Unsafe crossing presentation")]
+        [SerializeField] private GameObject _dangerPanel;
+        [SerializeField] private GameObject _footAccidentCutscenePanel;
+        [SerializeField] private VideoPlayer _footAccidentVideoPlayer;
+        [SerializeField, Min(0.1f)] private float _missingVideoFallbackDuration = 3f;
+
         private PhaseState _state;
         private Vector3[] _fixedDirections;
         private Collider[] _playerColliders;
         private float _stoppedDuration;
+        private float _cutsceneElapsed;
+        private bool _hazardWasReversing;
 
         public bool HasCompleted => _state == PhaseState.Completed;
         public bool IsRunning => _state == PhaseState.WaitingForStop ||
                                  _state == PhaseState.ConfirmingDirections;
+        public event Action<GameFailureReason> FailureRequested;
 
         private void Awake()
         {
@@ -67,7 +82,7 @@ namespace ElectricPalletStackers.Gameplay
                 _playerColliders = _playerVehicle.GetComponentsInChildren<Collider>(true);
             CacheFixedDirections();
             ConfigureTargets();
-            ConfigureInstructionPanel();
+            ConfigurePresentationPanels();
             HidePresentation();
         }
 
@@ -80,6 +95,11 @@ namespace ElectricPalletStackers.Gameplay
             }
             if (_trainingExperience != null)
                 _trainingExperience.StageChanged += HandleStageChanged;
+            if (_footAccidentVideoPlayer != null)
+            {
+                _footAccidentVideoPlayer.loopPointReached += HandleFootAccidentVideoFinished;
+                _footAccidentVideoPlayer.errorReceived += HandleFootAccidentVideoError;
+            }
         }
 
         private void OnDisable()
@@ -91,6 +111,11 @@ namespace ElectricPalletStackers.Gameplay
             }
             if (_trainingExperience != null)
                 _trainingExperience.StageChanged -= HandleStageChanged;
+            if (_footAccidentVideoPlayer != null)
+            {
+                _footAccidentVideoPlayer.loopPointReached -= HandleFootAccidentVideoFinished;
+                _footAccidentVideoPlayer.errorReceived -= HandleFootAccidentVideoError;
+            }
             HidePresentation();
         }
 
@@ -98,8 +123,24 @@ namespace ElectricPalletStackers.Gameplay
         {
             if (_playerVehicle == null ||
                 (_appManager != null && _appManager.CurrentState != GameState.Playing) ||
-                _state == PhaseState.Completed || _state == PhaseState.HazardActive)
+                _state == PhaseState.Completed)
                 return;
+
+            if (_state == PhaseState.FootAccidentCutscene)
+            {
+                UpdateFootAccidentCutscene();
+                return;
+            }
+
+            if (_state == PhaseState.HazardActive)
+            {
+                UpdateHazardTravelDirection();
+                if ((_crossingVehicle == null || _crossingVehicle.IsCrossing) &&
+                    _hazardWasReversing &&
+                    IsVehicleStopped())
+                    BeginFootAccidentCutscene();
+                return;
+            }
 
             if (!IsPhaseEligible()) return;
 
@@ -177,23 +218,83 @@ namespace ElectricPalletStackers.Gameplay
         {
             _state = PhaseState.Completed;
             HidePresentation();
-            _crossingVehicle?.SuppressVehicle();
-
-            if (_trainingExperience == null) return;
-            if (_trainingExperience.CurrentStage == TrainingExperienceStage.NavigateCorner)
-                _trainingExperience.ReachCheckpoint(ExperienceCheckpoint.Corner);
-            if (_trainingExperience.CurrentStage == TrainingExperienceStage.YieldIntersection)
-                _trainingExperience.ReachCheckpoint(ExperienceCheckpoint.YieldIntersection);
+            if (_trainingExperience != null)
+                _trainingExperience.CompleteCrossSafetyCheck();
+            else
+                _crossingVehicle?.SuppressVehicle();
         }
 
         private void TriggerUnsafeCrossing()
         {
             _state = PhaseState.HazardActive;
+            _hazardWasReversing = GetVehicleTravelDirection() < 0;
             HidePresentation();
-            Debug.LogWarning("[Cross Safety] Unsafe crossing detected. Spawning the NPC hazard.", this);
+            if (_dangerPanel != null) _dangerPanel.SetActive(true);
+            Debug.LogWarning(
+                "[Cross Safety] Unsafe crossing detected. Spawning the NPC-driven vehicle hazard.",
+                this);
             if (_crossingVehicle == null || _playerVehicle == null) return;
             _crossingVehicle.SpawnForHazard(_playerVehicle.worldCenterOfMass);
             _crossingVehicle.BeginCrossing();
+        }
+
+        private void BeginFootAccidentCutscene()
+        {
+            _state = PhaseState.FootAccidentCutscene;
+            _cutsceneElapsed = 0f;
+            if (_dangerPanel != null) _dangerPanel.SetActive(false);
+            if (_instructionPanel != null) _instructionPanel.SetActive(false);
+            SetTargetsActive(false, false);
+
+            _playerControlDriver?.SetGameplayInterlock(true);
+            _playerMotor?.StopImmediately();
+            _crossingVehicle?.StopVehicle();
+
+            if (_footAccidentCutscenePanel != null)
+                _footAccidentCutscenePanel.SetActive(true);
+            if (_footAccidentVideoPlayer != null && _footAccidentVideoPlayer.clip != null)
+            {
+                _footAccidentVideoPlayer.time = 0d;
+                _footAccidentVideoPlayer.Play();
+            }
+
+            Debug.LogWarning(
+                "[Cross Safety] The player stopped while reversing after entering the hazard. " +
+                "Playing the operator foot accident cutscene.",
+                this);
+        }
+
+        private void UpdateFootAccidentCutscene()
+        {
+            if (_footAccidentVideoPlayer != null && _footAccidentVideoPlayer.clip != null) return;
+
+            _cutsceneElapsed += Time.deltaTime;
+            if (_cutsceneElapsed >= _missingVideoFallbackDuration)
+                FinishFootAccidentCutscene();
+        }
+
+        private void HandleFootAccidentVideoFinished(VideoPlayer source)
+        {
+            if (source == _footAccidentVideoPlayer) FinishFootAccidentCutscene();
+        }
+
+        private void HandleFootAccidentVideoError(VideoPlayer source, string message)
+        {
+            if (source != _footAccidentVideoPlayer) return;
+            Debug.LogWarning($"[Cross Safety] Cutscene video failed: {message}", this);
+            FinishFootAccidentCutscene();
+        }
+
+        private void FinishFootAccidentCutscene()
+        {
+            if (_state != PhaseState.FootAccidentCutscene) return;
+
+            if (_footAccidentVideoPlayer != null) _footAccidentVideoPlayer.Stop();
+            if (_footAccidentCutscenePanel != null)
+                _footAccidentCutscenePanel.SetActive(false);
+
+            _state = PhaseState.HazardActive;
+            FailureRequested?.Invoke(GameFailureReason.OperatorFootRunOver);
         }
 
         private bool IsVehicleStopped()
@@ -204,9 +305,37 @@ namespace ElectricPalletStackers.Gameplay
                    planarVelocity.sqrMagnitude <= _stoppedSpeedThreshold * _stoppedSpeedThreshold;
         }
 
+        private void UpdateHazardTravelDirection()
+        {
+            int travelDirection = GetVehicleTravelDirection();
+            if (travelDirection < 0)
+                _hazardWasReversing = true;
+            else if (travelDirection > 0)
+                _hazardWasReversing = false;
+        }
+
+        private int GetVehicleTravelDirection()
+        {
+            float signedSpeed = _playerMotor != null ? _playerMotor.CurrentSpeed : 0f;
+            if (Mathf.Abs(signedSpeed) <= _movementDirectionThreshold && _playerVehicle != null)
+            {
+                Vector3 forward = _playerMotor != null
+                    ? _playerMotor.WorldForward
+                    : Vector3.ProjectOnPlane(_playerVehicle.transform.forward, Vector3.up).normalized;
+                signedSpeed = Vector3.Dot(
+                    Vector3.ProjectOnPlane(_playerVehicle.linearVelocity, Vector3.up),
+                    forward);
+            }
+
+            if (signedSpeed < -_movementDirectionThreshold) return -1;
+            if (signedSpeed > _movementDirectionThreshold) return 1;
+            return 0;
+        }
+
         private bool IsPhaseEligible()
         {
             if (_trainingExperience == null) return true;
+            if (_trainingExperience.HasCompletedCrossSafety) return false;
             return _trainingExperience.CurrentStage > TrainingExperienceStage.WaitingToStart &&
                    _trainingExperience.CurrentStage < TrainingExperienceStage.PhoneIntersection;
         }
@@ -239,6 +368,8 @@ namespace ElectricPalletStackers.Gameplay
         {
             _state = PhaseState.Idle;
             _stoppedDuration = 0f;
+            _cutsceneElapsed = 0f;
+            _hazardWasReversing = false;
             HidePresentation();
         }
 
@@ -247,6 +378,7 @@ namespace ElectricPalletStackers.Gameplay
             if (next == GameState.WaitingToStart)
             {
                 _state = PhaseState.Idle;
+                _hazardWasReversing = false;
                 HidePresentation();
                 return;
             }
@@ -277,14 +409,17 @@ namespace ElectricPalletStackers.Gameplay
         private void SynchronizeWithCurrentStage()
         {
             if (_trainingExperience != null &&
-                _trainingExperience.CurrentStage >= TrainingExperienceStage.PhoneIntersection)
+                (_trainingExperience.HasCompletedCrossSafety ||
+                 _trainingExperience.CurrentStage >= TrainingExperienceStage.PhoneIntersection))
             {
                 _state = PhaseState.Completed;
+                _hazardWasReversing = false;
                 _crossingVehicle?.SuppressVehicle();
             }
             else
             {
                 _state = PhaseState.Idle;
+                _hazardWasReversing = false;
                 _crossingVehicle?.ResetVehicle();
             }
             HidePresentation();
@@ -321,13 +456,20 @@ namespace ElectricPalletStackers.Gameplay
         {
             if (_directionTargets == null) return;
             for (int index = 0; index < _directionTargets.Length; index++)
-                _directionTargets[index]?.Configure(this);
+                _directionTargets[index]?.Configure(this, _playerColliders);
         }
 
-        private void ConfigureInstructionPanel()
+        private void ConfigurePresentationPanels()
         {
-            if (_instructionPanel == null) return;
-            Canvas panelCanvas = _instructionPanel.GetComponent<Canvas>();
+            ConfigurePresentationPanel(_instructionPanel);
+            ConfigurePresentationPanel(_dangerPanel);
+            ConfigurePresentationPanel(_footAccidentCutscenePanel);
+        }
+
+        private static void ConfigurePresentationPanel(GameObject panel)
+        {
+            if (panel == null) return;
+            Canvas panelCanvas = panel.GetComponent<Canvas>();
             if (panelCanvas == null) return;
 
             panelCanvas.overrideSorting = true;
@@ -337,6 +479,10 @@ namespace ElectricPalletStackers.Gameplay
         private void HidePresentation()
         {
             if (_instructionPanel != null) _instructionPanel.SetActive(false);
+            if (_dangerPanel != null) _dangerPanel.SetActive(false);
+            if (_footAccidentVideoPlayer != null) _footAccidentVideoPlayer.Stop();
+            if (_footAccidentCutscenePanel != null)
+                _footAccidentCutscenePanel.SetActive(false);
             SetTargetsActive(false, false);
         }
 

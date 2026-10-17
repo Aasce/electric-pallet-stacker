@@ -48,6 +48,7 @@ namespace ElectricPalletStackers.Localization
         public static class CrossSafety
         {
             public const string Instruction = "crossSafety.instruction";
+            public const string Danger = "crossSafety.danger";
         }
 
         public static class Completed
@@ -64,6 +65,15 @@ namespace ElectricPalletStackers.Localization
             public const string ContinueCheckpoint = "failed.continueCheckpoint";
             public const string ExitRestart = "failed.exitRestart";
             public const string NavigationHint = "failed.navigationHint";
+        }
+
+        public static class ResetGame
+        {
+            public const string Title = "resetGame.title";
+            public const string Restart = "resetGame.restart";
+            public const string Continue = "resetGame.continue";
+            public const string ResetPhase = "resetGame.resetPhase";
+            public const string NavigationHint = "resetGame.navigationHint";
         }
 
         public static class Phone

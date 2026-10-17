@@ -87,6 +87,22 @@ namespace ElectricPalletStackers.Gameplay
                 _roundResumables[index].ResumeRound();
         }
 
+        /// <summary>
+        /// Stops active round systems without publishing a failure result so a checkpoint
+        /// owner can restore state and resume through the normal recovery path.
+        /// </summary>
+        public bool SuspendRoundForRestore()
+        {
+            if (CurrentState != GameState.Playing) return false;
+
+            for (int index = 0; index < _roundParticipants.Count; index++)
+                _roundParticipants[index].FinishRound(GameState.Lost);
+
+            LastFailureReason = GameFailureReason.Unknown;
+            TransitionTo(GameState.Lost);
+            return true;
+        }
+
         public void ResetToWaitingState()
         {
             if (CurrentState == GameState.Playing)

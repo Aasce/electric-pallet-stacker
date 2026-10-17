@@ -23,6 +23,9 @@ namespace ElectricPalletStackers.UI
                 _uiController.PanelChanged += HandlePanelChanged;
                 _uiController.ResetRequested += HandleResetRequested;
                 _uiController.ContinueRequested += HandleContinueRequested;
+                _uiController.RestartGameRequested += HandleRestartGameRequested;
+                _uiController.ContinueGameRequested += HandleContinueGameRequested;
+                _uiController.ResetPhaseRequested += HandleResetPhaseRequested;
             }
 
             if (_appManager != null)
@@ -41,6 +44,9 @@ namespace ElectricPalletStackers.UI
                 _uiController.PanelChanged -= HandlePanelChanged;
                 _uiController.ResetRequested -= HandleResetRequested;
                 _uiController.ContinueRequested -= HandleContinueRequested;
+                _uiController.RestartGameRequested -= HandleRestartGameRequested;
+                _uiController.ContinueGameRequested -= HandleContinueGameRequested;
+                _uiController.ResetPhaseRequested -= HandleResetPhaseRequested;
             }
 
             if (_appManager != null)
@@ -89,6 +95,24 @@ namespace ElectricPalletStackers.UI
         {
             _checkpointController.RestoreLatest();
             _appManager.ResumeRound();
+            _hasStarted = true;
+        }
+
+        private void HandleRestartGameRequested()
+        {
+            _hasStarted = false;
+            _appManager?.ResetToWaitingState();
+        }
+
+        private void HandleContinueGameRequested()
+        {
+            // The reset menu only captures vehicle input; the active round remains intact.
+        }
+
+        private void HandleResetPhaseRequested()
+        {
+            if (_checkpointController == null) return;
+            _checkpointController.ResetCurrentPhase();
             _hasStarted = true;
         }
     }

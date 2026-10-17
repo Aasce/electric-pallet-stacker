@@ -11,9 +11,13 @@ namespace ElectricPalletStackers.UI
         [SerializeField, Range(0f, 1f)] private float _navigationEnterThreshold = 0.60f;
         [SerializeField, Range(0f, 1f)] private float _navigationReleaseThreshold = 0.25f;
         [SerializeField, Min(0f)] private float _confirmDebounceSeconds = 0.20f;
+        [SerializeField, Min(0.1f)] private float _resetMenuHoldSeconds = 5f;
 
         private bool _navigationArmed;
         private bool _hasObservedAppliedState;
+        private bool _emergencyStopPressed;
+        private bool _emergencyStopHoldRaised;
+        private float _emergencyStopPressedAt;
         private float _lastConfirmTime = float.NegativeInfinity;
 
         public float LatestTravelAxis { get; private set; }
@@ -21,18 +25,34 @@ namespace ElectricPalletStackers.UI
         public event Action NavigateNext;
         public event Action NavigatePrevious;
         public event Action Confirm;
+        public event Action EmergencyStopHeld;
 
         private void OnEnable()
         {
-            LatestTravelAxis = _stateReceiver != null && _stateReceiver.CurrentState != null
-                ? _stateReceiver.CurrentState.TravelNormalized
+            PalletStackerControlState currentState = _stateReceiver != null
+                ? _stateReceiver.CurrentState
+                : null;
+            LatestTravelAxis = currentState != null
+                ? currentState.TravelNormalized
                 : 0f;
             _navigationArmed = Mathf.Abs(LatestTravelAxis) <= _navigationReleaseThreshold;
             _hasObservedAppliedState = _stateReceiver != null && _stateReceiver.LastAppliedSequence.HasValue;
+            _emergencyStopPressed = currentState != null && currentState.EmergencyStop;
+            _emergencyStopHoldRaised = false;
+            _emergencyStopPressedAt = Time.unscaledTime;
 
             if (_stateReceiver == null) return;
             _stateReceiver.StateApplied += HandleStateApplied;
             _stateReceiver.SourceUnavailable += HandleSourceUnavailable;
+        }
+
+        private void Update()
+        {
+            if (!_emergencyStopPressed || _emergencyStopHoldRaised) return;
+            if (Time.unscaledTime - _emergencyStopPressedAt < _resetMenuHoldSeconds) return;
+
+            _emergencyStopHoldRaised = true;
+            EmergencyStopHeld?.Invoke();
         }
 
         private void OnDisable()
@@ -64,6 +84,17 @@ namespace ElectricPalletStackers.UI
             _hasObservedAppliedState = true;
             if (!mayConfirm || (changedFields & PalletStackerControlFields.EmergencyStop) == 0) return;
 
+            if (!state.EmergencyStop)
+            {
+                _emergencyStopPressed = false;
+                _emergencyStopHoldRaised = false;
+                return;
+            }
+
+            _emergencyStopPressed = true;
+            _emergencyStopHoldRaised = false;
+            _emergencyStopPressedAt = Time.unscaledTime;
+
             float now = Time.unscaledTime;
             if (now - _lastConfirmTime < _confirmDebounceSeconds) return;
 
@@ -93,6 +124,8 @@ namespace ElectricPalletStackers.UI
         {
             LatestTravelAxis = 0f;
             _navigationArmed = true;
+            _emergencyStopPressed = false;
+            _emergencyStopHoldRaised = false;
         }
 
     }
