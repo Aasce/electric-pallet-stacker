@@ -10,6 +10,8 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private bool _isFollowRotation = true;
         [Tooltip("Follow only the target's heading around world Y, keeping this object upright.")]
         [SerializeField] private bool _isFollowYawOnly;
+        [Tooltip("Rotate around local X so the front of a World Space Canvas (-Z) faces the target.")]
+        [SerializeField] private bool _isFaceTargetOnXAxis;
         [SerializeField] private Vector3 _positionOffset = Vector3.zero;
 
         private void LateUpdate()
@@ -32,6 +34,22 @@ namespace ElectricPalletStackers.UI
                 else
                 {
                     transform.rotation = _target.rotation;
+                }
+
+                if (_isFaceTargetOnXAxis)
+                {
+                    Vector3 directionToTarget = _target.position - transform.position;
+                    Vector3 pitchDirection = Vector3.ProjectOnPlane(directionToTarget, transform.right);
+
+                    if (pitchDirection.sqrMagnitude > 0.0001f)
+                    {
+                        float pitch = Vector3.SignedAngle(
+                            -transform.forward,
+                            pitchDirection,
+                            transform.right);
+
+                        transform.Rotate(pitch, 0f, 0f, Space.Self);
+                    }
                 }
             }
         }

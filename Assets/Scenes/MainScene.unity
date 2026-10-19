@@ -3234,10 +3234,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Phone Safety Warning Panel
       objectReference: {fileID: 0}
-    - target: {fileID: 2460511377497929034, guid: 9e99b1b7dab29c44283316dd8ebea4c0, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4613286461989311658, guid: 9e99b1b7dab29c44283316dd8ebea4c0, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -3320,12 +3316,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4945249383155583911, guid: 9e99b1b7dab29c44283316dd8ebea4c0, type: 3}
       propertyPath: m_Camera
-      value:
+      value: 
       objectReference: {fileID: 1856687365}
     - target: {fileID: 7658291888376328569, guid: 9e99b1b7dab29c44283316dd8ebea4c0, type: 3}
       propertyPath: _target
-      value:
+      value: 
       objectReference: {fileID: 1856687371}
+    - target: {fileID: 7658291888376328569, guid: 9e99b1b7dab29c44283316dd8ebea4c0, type: 3}
+      propertyPath: _isFaceTargetOnXAxis
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -8763,21 +8763,13 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cross Safety Danger Panel
       objectReference: {fileID: 0}
-    - target: {fileID: 1308665566548500572, guid: 1219858b1318e934095b08a7c9dc2a0e, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1448387023728086221, guid: 1219858b1318e934095b08a7c9dc2a0e, type: 3}
-      propertyPath: m_SortingOrder
-      value: 1000
-      objectReference: {fileID: 0}
     - target: {fileID: 3559848224970674844, guid: 1219858b1318e934095b08a7c9dc2a0e, type: 3}
       propertyPath: _target
       value: 
       objectReference: {fileID: 1856687371}
     - target: {fileID: 3559848224970674844, guid: 1219858b1318e934095b08a7c9dc2a0e, type: 3}
-      propertyPath: _positionOffset.y
-      value: -0.45
+      propertyPath: _isFaceTargetOnXAxis
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5348443315956836297, guid: 1219858b1318e934095b08a7c9dc2a0e, type: 3}
       propertyPath: m_Pivot.x
@@ -11191,6 +11183,9 @@ MonoBehaviour:
   _playerView: {fileID: 1856687371}
   _applyCrowdPressureWhileRinging: 0
   _spawnBlockerOnIncomingCall: 1
+  _minimumOngoingDuration: 8
+  _maximumOngoingDuration: 10
+  _endedDisplayDuration: 1
   _phoneNpcPrefab: {fileID: 5287491308231157334, guid: 6d9c86d5e16b3714db7031e68a6ace5f, type: 3}
   _npcFrontClearance: 2.75
   _npcBehindPlayerClearance: 2.5
@@ -50911,6 +50906,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 277532280}
     m_Modifications:
+    - target: {fileID: 78052418150589228, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 263836229595810249, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 404714969408021824, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 630016475456356732, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.5
@@ -50951,37 +50958,153 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 910000000000001010, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
-      propertyPath: m_text
-      value: End
+    - target: {fileID: 910000000000001001, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
       objectReference: {fileID: 0}
-    - target: {fileID: 977251618488630603, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
-      propertyPath: m_text
-      value: In call
+    - target: {fileID: 910000000000001007, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1215518422835238938, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1356817059970019137, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1845843941107141475, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1856247952807526306, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1970006784125996538, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 2125259010950424064, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
       propertyPath: _viewer
       value: 
       objectReference: {fileID: 1856687371}
+    - target: {fileID: 2579414013314807536, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2784665078753949779, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2818457694830815397, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2886205357499770160, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 3467639773829085774, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
       propertyPath: _safetyWarningPanel
       value: 
       objectReference: {fileID: 470214638}
-    - target: {fileID: 5362916162763447261, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
-      propertyPath: m_IsActive
-      value: 0
+    - target: {fileID: 4091797585563005530, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
       objectReference: {fileID: 0}
-    - target: {fileID: 6793792770582969680, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
-      propertyPath: m_Alpha
-      value: 0
+    - target: {fileID: 4225586780626407783, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4315563473725900524, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4506476980010511563, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5104260195881187307, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5108332652856414555, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5170024533938161836, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5218923159349155454, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5362916162763447261, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5596084329397370600, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6225337507278431793, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6507876803696632230, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6675582431231948679, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6951275637341189087, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7689402195598503229, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7795039878925138116, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
       propertyPath: m_Name
       value: Phone Call Panel
       objectReference: {fileID: 0}
-    - target: {fileID: 8092116333573094967, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
-      propertyPath: m_text
-      value: In call
+    - target: {fileID: 7795039878925138116, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7795039878925138116, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8047548459485120314, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8078254127690125278, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8155892849079059297, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8666313206310930222, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8786333447453689019, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 8982823457593276562, guid: 00c5bc82ad7879448b2ff77525523922, type: 3}
+      propertyPath: m_Layer
+      value: 5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -51072,7 +51195,7 @@ MonoBehaviour:
   - _stage: 0
     _resetPoint: {fileID: 1741172044}
   - _stage: 1
-    _resetPoint: {fileID: 2080919225}
+    _resetPoint: {fileID: 976744332}
   - _stage: 2
     _resetPoint: {fileID: 976744332}
   - _stage: 3
@@ -52522,7 +52645,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2218496723442559053, guid: d6878e1999eb4b44a9f5a263af86c185, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -32
+      value: -27.29
       objectReference: {fileID: 0}
     - target: {fileID: 2218496723442559053, guid: d6878e1999eb4b44a9f5a263af86c185, type: 3}
       propertyPath: m_LocalPosition.y
@@ -52530,7 +52653,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2218496723442559053, guid: d6878e1999eb4b44a9f5a263af86c185, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -34.5
+      value: -1.729
       objectReference: {fileID: 0}
     - target: {fileID: 2218496723442559053, guid: d6878e1999eb4b44a9f5a263af86c185, type: 3}
       propertyPath: m_LocalRotation.w
@@ -52542,7 +52665,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2218496723442559053, guid: d6878e1999eb4b44a9f5a263af86c185, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.7071068
+      value: -0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 2218496723442559053, guid: d6878e1999eb4b44a9f5a263af86c185, type: 3}
       propertyPath: m_LocalRotation.z
@@ -52554,7 +52677,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2218496723442559053, guid: d6878e1999eb4b44a9f5a263af86c185, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
+      value: -90
       objectReference: {fileID: 0}
     - target: {fileID: 2218496723442559053, guid: d6878e1999eb4b44a9f5a263af86c185, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
@@ -53205,20 +53328,24 @@ PrefabInstance:
       value: Cross Safety Foot Accident Cutscene
       objectReference: {fileID: 0}
     - target: {fileID: 1308665566548500572, guid: a6d13d7a585b27747871ebc4388a3229, type: 3}
-      propertyPath: m_IsActive
-      value: 0
+      propertyPath: m_Layer
+      value: 5
       objectReference: {fileID: 0}
-    - target: {fileID: 1448387023728086221, guid: a6d13d7a585b27747871ebc4388a3229, type: 3}
-      propertyPath: m_SortingOrder
-      value: 1000
+    - target: {fileID: 3245962375667191008, guid: a6d13d7a585b27747871ebc4388a3229, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3305162375333193236, guid: a6d13d7a585b27747871ebc4388a3229, type: 3}
+      propertyPath: m_Layer
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 3559848224970674844, guid: a6d13d7a585b27747871ebc4388a3229, type: 3}
       propertyPath: _target
       value: 
       objectReference: {fileID: 1856687371}
-    - target: {fileID: 3559848224970674844, guid: a6d13d7a585b27747871ebc4388a3229, type: 3}
-      propertyPath: _positionOffset.y
-      value: -0.45
+    - target: {fileID: 4858933644972291359, guid: a6d13d7a585b27747871ebc4388a3229, type: 3}
+      propertyPath: m_Layer
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 5348443315956836297, guid: a6d13d7a585b27747871ebc4388a3229, type: 3}
       propertyPath: m_Pivot.x
@@ -55945,6 +56072,7 @@ MonoBehaviour:
   _isFollowPosition: 1
   _isFollowRotation: 1
   _isFollowYawOnly: 0
+  _isFaceTargetOnXAxis: 0
   _positionOffset: {x: 0, y: 0, z: 0}
 --- !u!4 &2147000001 stripped
 Transform:
@@ -56043,25 +56171,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cross Safety Instruction Panel
       objectReference: {fileID: 0}
-    - target: {fileID: 1308665566548500572, guid: 4b9b7c3c39fbca14b9241b90de3960ca, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 1448387023728086221, guid: 4b9b7c3c39fbca14b9241b90de3960ca, type: 3}
       propertyPath: m_Camera
       value: 
       objectReference: {fileID: 1856687365}
-    - target: {fileID: 1448387023728086221, guid: 4b9b7c3c39fbca14b9241b90de3960ca, type: 3}
-      propertyPath: m_SortingOrder
-      value: 1000
-      objectReference: {fileID: 0}
     - target: {fileID: 3559848224970674844, guid: 4b9b7c3c39fbca14b9241b90de3960ca, type: 3}
       propertyPath: _target
       value: 
       objectReference: {fileID: 1856687371}
     - target: {fileID: 3559848224970674844, guid: 4b9b7c3c39fbca14b9241b90de3960ca, type: 3}
-      propertyPath: _positionOffset.y
-      value: -0.45
+      propertyPath: _isFaceTargetOnXAxis
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5348443315956836297, guid: 4b9b7c3c39fbca14b9241b90de3960ca, type: 3}
       propertyPath: m_Pivot.x

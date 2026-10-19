@@ -82,7 +82,10 @@ namespace ElectricPalletStackers.Gameplay
             HasCompletedCrossSafety = false;
             _crossingVehicle?.ResetVehicle();
             _palletRoundController?.SetPalletVisible(false);
-            TransitionTo(TrainingExperienceStage.CollectPallet);
+            // The authored route starts in the NPC Moving area. CollectPallet is a
+            // legacy stage from the old route and waiting for a held load here would
+            // deadlock the new flow because the pallet is intentionally still hidden.
+            TransitionTo(TrainingExperienceStage.NavigateCorner);
         }
 
         public void ResumeRound()
@@ -123,8 +126,7 @@ namespace ElectricPalletStackers.Gameplay
 
         public bool BeginPhoneCall()
         {
-            if (CurrentStage <= TrainingExperienceStage.WaitingToStart ||
-                CurrentStage >= TrainingExperienceStage.PhoneCall) return false;
+            if (CurrentStage != TrainingExperienceStage.PhoneIntersection) return false;
 
             // Save the phone checkpoint before spawning the distraction NPC. The
             // dedicated Cross flow can reach this zone before the legacy waypoints.
@@ -135,9 +137,20 @@ namespace ElectricPalletStackers.Gameplay
 
         public void CompleteCrossSafetyCheck()
         {
+            if (CurrentStage != TrainingExperienceStage.YieldIntersection) return;
+
             HasCompletedCrossSafety = true;
             _crossingVehicle?.SuppressVehicle();
             RevealPallet();
+            TransitionTo(TrainingExperienceStage.PhoneIntersection);
+        }
+
+        public bool CompleteNpcMovingPhase()
+        {
+            if (CurrentStage != TrainingExperienceStage.NavigateCorner) return false;
+
+            TransitionTo(TrainingExperienceStage.YieldIntersection);
+            return true;
         }
 
         public bool ReachCheckpoint(ExperienceCheckpoint checkpoint)

@@ -11,7 +11,8 @@ namespace ElectricPalletStackers.UI
     {
         Hidden,
         Ringing,
-        InCall
+        InCall,
+        Ended
     }
 
     /// <summary>
@@ -26,11 +27,16 @@ namespace ElectricPalletStackers.UI
         [Header("View References")]
         [SerializeField] private CanvasGroup _canvasGroup;
         [SerializeField] private RectTransform _content;
+        [SerializeField] private GameObject _incomingCallView;
+        [SerializeField] private GameObject _ongoingCallView;
+        [SerializeField] private GameObject _endedCallView;
+        [SerializeField] private TMP_Text _ongoingTimerLabel;
         [SerializeField] private TMP_Text _statusLabel;
         [SerializeField] private TMP_Text _callerLabel;
         [SerializeField] private TMP_Text _hintLabel;
         [SerializeField] private GameObject _incomingActions;
         [SerializeField] private Button _acceptButton;
+        [SerializeField] private Button _declineButton;
         [SerializeField] private Button _endButton;
         [SerializeField] private TMP_Text _endButtonLabel;
         [SerializeField] private GameObject _safetyWarningPanel;
@@ -49,9 +55,12 @@ namespace ElectricPalletStackers.UI
         private ILocalizationService _localization;
         private TMP_FontAsset _statusDefaultFont;
         private TMP_FontAsset _hintDefaultFont;
+        private float _ongoingStartedAt;
+        private int _displayedOngoingSecond = -1;
 
         public bool IsRinging { get; private set; }
         public bool IsInCall { get; private set; }
+        public bool IsVisible => State != PhoneCallState.Hidden;
         public PhoneCallState State { get; private set; }
         public string CallerDisplay => _callerLabel != null ? _callerLabel.text : string.Empty;
 
@@ -75,19 +84,28 @@ namespace ElectricPalletStackers.UI
             SetSafetyWarningVisible(false);
         }
 
+        private void Update()
+        {
+            if (State != PhoneCallState.InCall || _ongoingTimerLabel == null) return;
+
+            int elapsedSeconds = Mathf.Max(
+                0,
+                Mathf.FloorToInt(Time.unscaledTime - _ongoingStartedAt));
+            UpdateOngoingTimer(elapsedSeconds);
+        }
+
         public void ApplyLocalization(ILocalizationService localization)
         {
             _localization = localization;
             CacheLocalizedFonts();
             ApplyLocalizedFonts();
 
-            if (IsInCall)
+            if (State == PhoneCallState.InCall)
             {
                 SetLocalizedText(_statusLabel, LocalizationKeys.Phone.InCall, "In call");
                 SetLocalizedText(_hintLabel, LocalizationKeys.Phone.InCall, "In call");
-                SetLocalizedText(_endButtonLabel, LocalizationKeys.Phone.End, "End");
             }
-            else
+            else if (State == PhoneCallState.Ringing || State == PhoneCallState.Hidden)
             {
                 SetLocalizedText(
                     _statusLabel,
@@ -111,11 +129,15 @@ namespace ElectricPalletStackers.UI
 
         public void ShowIncomingCall()
         {
+            if (!gameObject.activeSelf) gameObject.SetActive(true);
             if (!HasRequiredReferences()) return;
 
+            _content.gameObject.SetActive(true);
+            _canvasGroup.enabled = true;
             SetLocalizedText(_callerLabel, LocalizationKeys.Phone.Boss, "Boss");
             IsRinging = true;
             IsInCall = false;
+            UpdateOngoingTimer(0, true);
             SetState(PhoneCallState.Ringing);
             SetSafetyWarningVisible(true);
             SetRingingVisual();
@@ -142,22 +164,27 @@ namespace ElectricPalletStackers.UI
 
             IsRinging = false;
             IsInCall = true;
+            _ongoingStartedAt = Time.unscaledTime;
+            UpdateOngoingTimer(0, true);
             SetState(PhoneCallState.InCall);
             SetInCallVisual();
             CallAccepted?.Invoke();
         }
 
-        public void FinishCall()
+        public void ShowEnded()
         {
+            if (!IsVisible || State == PhoneCallState.Ended) return;
+
+            IsRinging = false;
             IsInCall = false;
-            Hide();
+            SetState(PhoneCallState.Ended);
+            SetEndedVisual();
         }
 
         public void EndCall()
         {
             if (!IsRinging && !IsInCall) return;
 
-            FinishCall();
             CallEnded?.Invoke();
         }
 
@@ -166,6 +193,7 @@ namespace ElectricPalletStackers.UI
             IsRinging = false;
             IsInCall = false;
             SetState(PhoneCallState.Hidden);
+            SetPhaseVisible(null);
             SetSafetyWarningVisible(false);
             KillTweens();
 
@@ -189,6 +217,7 @@ namespace ElectricPalletStackers.UI
             IsRinging = false;
             IsInCall = false;
             SetState(PhoneCallState.Hidden);
+            SetPhaseVisible(null);
             SetSafetyWarningVisible(false);
             KillTweens();
 
@@ -218,15 +247,17 @@ namespace ElectricPalletStackers.UI
 
         private void BindEndButton()
         {
-            if (_endButton == null || _endButtonBound) return;
-            _endButton.onClick.AddListener(EndCall);
+            if (_endButtonBound) return;
+            if (_declineButton != null) _declineButton.onClick.AddListener(EndCall);
+            if (_endButton != null) _endButton.onClick.AddListener(EndCall);
             _endButtonBound = true;
         }
 
         private void UnbindEndButton()
         {
-            if (_endButton == null || !_endButtonBound) return;
-            _endButton.onClick.RemoveListener(EndCall);
+            if (!_endButtonBound) return;
+            if (_declineButton != null) _declineButton.onClick.RemoveListener(EndCall);
+            if (_endButton != null) _endButton.onClick.RemoveListener(EndCall);
             _endButtonBound = false;
         }
 
@@ -255,6 +286,7 @@ namespace ElectricPalletStackers.UI
 
         private void SetRingingVisual()
         {
+            SetPhaseVisible(_incomingCallView);
             SetLocalizedText(
                 _statusLabel,
                 LocalizationKeys.Phone.IncomingCall,
@@ -265,18 +297,49 @@ namespace ElectricPalletStackers.UI
                 "Accept or decline");
             if (_incomingActions != null) _incomingActions.SetActive(true);
             if (_acceptButton != null) _acceptButton.gameObject.SetActive(true);
-            if (_endButton != null) _endButton.gameObject.SetActive(true);
+            if (_declineButton != null) _declineButton.gameObject.SetActive(true);
             SetLocalizedText(_endButtonLabel, LocalizationKeys.Phone.Decline, "Decline");
         }
 
         private void SetInCallVisual()
         {
+            SetPhaseVisible(_ongoingCallView);
             SetLocalizedText(_statusLabel, LocalizationKeys.Phone.InCall, "In call");
             SetLocalizedText(_hintLabel, LocalizationKeys.Phone.InCall, "In call");
-            if (_incomingActions != null) _incomingActions.SetActive(true);
-            if (_acceptButton != null) _acceptButton.gameObject.SetActive(false);
             if (_endButton != null) _endButton.gameObject.SetActive(true);
-            SetLocalizedText(_endButtonLabel, LocalizationKeys.Phone.End, "End");
+        }
+
+        private void SetEndedVisual()
+        {
+            SetPhaseVisible(_endedCallView);
+            if (_canvasGroup != null)
+            {
+                _canvasGroup.interactable = false;
+                _canvasGroup.blocksRaycasts = false;
+            }
+        }
+
+        private void SetPhaseVisible(GameObject visibleView)
+        {
+            SetViewActive(_incomingCallView, _incomingCallView == visibleView);
+            SetViewActive(_ongoingCallView, _ongoingCallView == visibleView);
+            SetViewActive(_endedCallView, _endedCallView == visibleView);
+        }
+
+        private static void SetViewActive(GameObject view, bool active)
+        {
+            if (view != null && view.activeSelf != active) view.SetActive(active);
+        }
+
+        private void UpdateOngoingTimer(int elapsedSeconds, bool force = false)
+        {
+            if (_ongoingTimerLabel == null ||
+                (!force && elapsedSeconds == _displayedOngoingSecond)) return;
+
+            _displayedOngoingSecond = elapsedSeconds;
+            int minutes = elapsedSeconds / 60;
+            int seconds = elapsedSeconds % 60;
+            _ongoingTimerLabel.text = $"{minutes:00}:{seconds:00}";
         }
 
         private void SetState(PhoneCallState nextState)

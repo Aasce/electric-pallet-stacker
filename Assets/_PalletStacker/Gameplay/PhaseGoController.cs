@@ -120,9 +120,13 @@ namespace ElectricPalletStackers.Gameplay
         private void HandleGameStateChanged(GameState previous, GameState next)
         {
             if (previous != GameState.Lost || next != GameState.Playing) return;
+
             _wasInsidePhoneZone = false;
-            _phoneTriggered = _trainingExperience != null &&
-                              _trainingExperience.CurrentStage >= TrainingExperienceStage.PhoneCall;
+            if (_trainingExperience == null) return;
+
+            TrainingExperienceStage stage = _trainingExperience.CurrentStage;
+            _npcCompleted = stage > TrainingExperienceStage.NavigateCorner;
+            _phoneTriggered = stage >= TrainingExperienceStage.PhoneCall;
         }
 
         private void TriggerNpcArea()
@@ -139,7 +143,7 @@ namespace ElectricPalletStackers.Gameplay
                 return;
             }
 
-            _npcCompleted = _trainingExperience.ReachCheckpoint(ExperienceCheckpoint.Corner) ||
+            _npcCompleted = _trainingExperience.CompleteNpcMovingPhase() ||
                             _trainingExperience.CurrentStage >
                             TrainingExperienceStage.NavigateCorner;
         }
@@ -149,8 +153,7 @@ namespace ElectricPalletStackers.Gameplay
             if (_trainingExperience == null) return _npcCompleted;
 
             TrainingExperienceStage stage = _trainingExperience.CurrentStage;
-            return stage >= TrainingExperienceStage.YieldIntersection &&
-                   stage < TrainingExperienceStage.PhoneCall;
+            return stage == TrainingExperienceStage.PhoneIntersection;
         }
 
         private void ResetPhase()

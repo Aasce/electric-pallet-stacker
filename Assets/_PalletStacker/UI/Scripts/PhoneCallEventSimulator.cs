@@ -27,6 +27,9 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private bool _applyCrowdPressureWhileRinging = true;
         [Tooltip("Spawn the road-blocking NPC as soon as the phone starts ringing.")]
         [SerializeField] private bool _spawnBlockerOnIncomingCall = true;
+        [SerializeField, Min(0f)] private float _minimumOngoingDuration = 8f;
+        [SerializeField, Min(0f)] private float _maximumOngoingDuration = 10f;
+        [SerializeField, Min(0f)] private float _endedDisplayDuration = 1f;
 
         [Header("Phone distraction NPC")]
         [SerializeField] private NpcAgent _phoneNpcPrefab;
@@ -45,6 +48,8 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private LayerMask _groundLayers = ~0;
 
         private Coroutine _collisionDeliveryRoutine;
+        private Coroutine _automaticEndRoutine;
+        private Coroutine _endedDisplayRoutine;
         private NpcAgent _activePhoneNpc;
         private bool _activeConversation;
         private bool _callResolved = true;
@@ -92,14 +97,16 @@ namespace ElectricPalletStackers.UI
         {
             if (_activePhoneNpc == null) return;
 
-            if (_activeConversation)
+            bool movementIsUnsafe = _phoneCallPanel != null &&
+                                    (_phoneCallPanel.State == PhoneCallState.InCall ||
+                                     _phoneCallPanel.State == PhoneCallState.Ended);
+            if (movementIsUnsafe)
             {
                 if (!_collisionDeliveryStarted && TryGetActiveTravelSign(out float travelSign))
                     TriggerAcceptedMovementCollision(travelSign);
-                return;
             }
 
-            if (IsRinging) UpdatePhoneNpcFollowPose();
+            if (IsRinging && !_collisionDeliveryStarted) UpdatePhoneNpcFollowPose();
         }
 
         public void TriggerIncomingCall()
@@ -164,9 +171,10 @@ namespace ElectricPalletStackers.UI
 
         private void HandleGameStateChanged(GameState previousState, GameState nextState)
         {
-            if (nextState == GameState.Lost && _phoneNpcImpactOccurred)
+            if (nextState == GameState.Lost)
             {
-                StopCallKeepingImpactedNpc();
+                if (_phoneNpcImpactOccurred) StopCallKeepingImpactedNpc();
+                else ResetCallState();
                 return;
             }
 
@@ -189,10 +197,48 @@ namespace ElectricPalletStackers.UI
             _activePhoneNpc?.SetVehicleCollisionEnabled(false);
             if (_applyCrowdPressureWhileRinging)
                 _npcPopulation?.SetCrowdPressure(false);
+            StartAutomaticEndTimer();
         }
 
         private void HandleCallEnded()
         {
+            BeginEndedPhase();
+        }
+
+        private void StartAutomaticEndTimer()
+        {
+            CancelAutomaticEndRoutine();
+            float minimum = Mathf.Max(0f, _minimumOngoingDuration);
+            float maximum = Mathf.Max(minimum, _maximumOngoingDuration);
+            _automaticEndRoutine = StartCoroutine(EndAutomaticallyAfter(Random.Range(minimum, maximum)));
+        }
+
+        private IEnumerator EndAutomaticallyAfter(float delay)
+        {
+            yield return new WaitForSecondsRealtime(delay);
+            _automaticEndRoutine = null;
+            BeginEndedPhase();
+        }
+
+        private void BeginEndedPhase()
+        {
+            if (_callResolved || _phoneNpcImpactOccurred ||
+                _phoneCallPanel == null || !_phoneCallPanel.IsVisible ||
+                _phoneCallPanel.State == PhoneCallState.Ended ||
+                (_appManager != null && _appManager.CurrentState != GameState.Playing)) return;
+
+            _activeConversation = false;
+            CancelAutomaticEndRoutine();
+            if (_applyCrowdPressureWhileRinging)
+                _npcPopulation?.SetCrowdPressure(false);
+            _phoneCallPanel.ShowEnded();
+            _endedDisplayRoutine = StartCoroutine(CompleteAfterEndedDisplay());
+        }
+
+        private IEnumerator CompleteAfterEndedDisplay()
+        {
+            yield return new WaitForSecondsRealtime(Mathf.Max(0f, _endedDisplayDuration));
+            _endedDisplayRoutine = null;
             CompleteCall();
         }
 
@@ -203,11 +249,11 @@ namespace ElectricPalletStackers.UI
 
             _callResolved = true;
             _activeConversation = false;
+            CancelCallTimingRoutines();
             DespawnPhoneNpc();
             if (_applyCrowdPressureWhileRinging)
                 _npcPopulation?.SetCrowdPressure(false);
-            if (_phoneCallPanel != null && _phoneCallPanel.State != PhoneCallState.Hidden)
-                _phoneCallPanel.FinishCall();
+            _phoneCallPanel?.HideImmediate();
             _phonePlacement?.Hide();
             CallCompleted?.Invoke();
         }
@@ -527,11 +573,27 @@ namespace ElectricPalletStackers.UI
 
         private void StopCallKeepingImpactedNpc()
         {
+            CancelCallTimingRoutines();
             CancelCollisionDeliveryRoutine();
             _activeConversation = false;
             _activePhoneNpc?.SetVehicleCollisionEnabled(false);
-            _phoneCallPanel?.FinishCall();
+            _phoneCallPanel?.HideImmediate();
             _phonePlacement?.Hide();
+        }
+
+        private void CancelCallTimingRoutines()
+        {
+            CancelAutomaticEndRoutine();
+            if (_endedDisplayRoutine == null) return;
+            StopCoroutine(_endedDisplayRoutine);
+            _endedDisplayRoutine = null;
+        }
+
+        private void CancelAutomaticEndRoutine()
+        {
+            if (_automaticEndRoutine == null) return;
+            StopCoroutine(_automaticEndRoutine);
+            _automaticEndRoutine = null;
         }
 
         private void CancelCollisionDeliveryRoutine()
@@ -543,6 +605,7 @@ namespace ElectricPalletStackers.UI
 
         private void ResetCallState()
         {
+            CancelCallTimingRoutines();
             _activeConversation = false;
             _callResolved = true;
             _phoneNpcImpactOccurred = false;

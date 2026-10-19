@@ -12,13 +12,13 @@ GameObject:
   - component: {fileID: 4945249383155583911}
   - component: {fileID: 405676111475412188}
   - component: {fileID: 7658291888376328569}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Phone Safety Warning Panel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &4613286461989311658
 RectTransform:
   m_ObjectHideFlags: 0
@@ -26,7 +26,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2460511377497929034}
-  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: -34.5}
   m_LocalScale: {x: 0.0015, y: 0.0015, z: 0.0015}
   m_ConstrainProportionsScale: 0
@@ -35,7 +35,7 @@ RectTransform:
   - {fileID: 7168952833891852297}
   - {fileID: 8090902712734530390}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -30.8, y: 1.25}
@@ -102,7 +102,7 @@ MonoBehaviour:
   _target: {fileID: 0}
   _isFollowPosition: 1
   _isFollowRotation: 1
-  _isFollowYawOnly: 1
+  _isFollowYawOnly: 0
   _positionOffset: {x: 0, y: -0.55, z: 1.05}
 --- !u!1 &2864842773118296858
 GameObject:
@@ -115,7 +115,7 @@ GameObject:
   - component: {fileID: 153367311121072389}
   - component: {fileID: 7769911399432272979}
   - component: {fileID: 5168219401283951282}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -191,7 +191,7 @@ GameObject:
   - component: {fileID: 3960621018491435196}
   - component: {fileID: 3752659742004526712}
   - component: {fileID: 2666000500983210031}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Warning
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -342,7 +342,7 @@ GameObject:
   - component: {fileID: 7168952833891852297}
   - component: {fileID: 1682297961208323709}
   - component: {fileID: 3043535228330267980}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Frame
   m_TagString: Untagged
   m_Icon: {fileID: 0}

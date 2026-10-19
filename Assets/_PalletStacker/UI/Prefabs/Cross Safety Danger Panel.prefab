@@ -12,13 +12,13 @@ GameObject:
   - component: {fileID: 1448387023728086221}
   - component: {fileID: 9207442732904455551}
   - component: {fileID: 3559848224970674844}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Cross Safety Danger Panel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &5348443315956836297
 RectTransform:
   m_ObjectHideFlags: 0
@@ -26,7 +26,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1308665566548500572}
-  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: -34.5}
   m_LocalScale: {x: 0.0015, y: 0.0015, z: 0.0015}
   m_ConstrainProportionsScale: 0
@@ -35,7 +35,7 @@ RectTransform:
   - {fileID: 1191569516437530231}
   - {fileID: 1755737161130177468}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -30.8, y: 1.25}
@@ -62,7 +62,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 32767
+  m_SortingOrder: 1000
   m_TargetDisplay: 0
 --- !u!114 &9207442732904455551
 MonoBehaviour:
@@ -102,7 +102,7 @@ MonoBehaviour:
   _target: {fileID: 0}
   _isFollowPosition: 1
   _isFollowRotation: 1
-  _isFollowYawOnly: 1
+  _isFollowYawOnly: 0
   _positionOffset: {x: 0, y: -0.45, z: 1.2}
 --- !u!1 &3245962375667191008
 GameObject:
@@ -115,7 +115,7 @@ GameObject:
   - component: {fileID: 1191569516437530231}
   - component: {fileID: 776026224388831241}
   - component: {fileID: 844297408124162523}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Frame
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -190,7 +190,7 @@ GameObject:
   - component: {fileID: 1067983310042129437}
   - component: {fileID: 5617696212091070684}
   - component: {fileID: 8546349638884987637}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -266,7 +266,7 @@ GameObject:
   - component: {fileID: 1461488889491033994}
   - component: {fileID: 2337029621973863341}
   - component: {fileID: 5281723258032755373}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Instruction
   m_TagString: Untagged
   m_Icon: {fileID: 0}

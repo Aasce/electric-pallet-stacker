@@ -41,7 +41,7 @@ namespace ElectricPalletStackers.Audio
                         PalletStackerAudioKeys.PhoneConversation,
                         _followTarget);
                     break;
-                case PhoneCallState.Hidden when previousState != PhoneCallState.Hidden:
+                case PhoneCallState.Ended:
                     manager.Play(PalletStackerAudioKeys.PhoneHangup, _followTarget);
                     break;
             }
