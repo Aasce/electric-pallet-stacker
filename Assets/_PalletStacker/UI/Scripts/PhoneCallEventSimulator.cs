@@ -24,7 +24,6 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private Transform _playerView;
 
         [Header("Call")]
-        [SerializeField] private string _callerDisplay = "0123456789";
         [SerializeField] private bool _applyCrowdPressureWhileRinging = true;
         [Tooltip("Spawn the road-blocking NPC as soon as the phone starts ringing.")]
         [SerializeField] private bool _spawnBlockerOnIncomingCall = true;
@@ -33,18 +32,24 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private NpcAgent _phoneNpcPrefab;
         [SerializeField, Min(0f)] private float _npcFrontClearance = 4f;
         [SerializeField, Min(0f)] private float _npcBehindPlayerClearance = 4f;
-        [SerializeField, Min(0f)] private float _minimumCollisionGrace = 1f;
-        [SerializeField, Min(0f)] private float _maximumCollisionGrace = 3f;
         [SerializeField, Min(0f)] private float _travelDirectionThreshold = 0.05f;
+        [Tooltip("Smallest signed motor speed/input that counts as movement after answering.")]
+        [SerializeField, Min(0.0001f)] private float _acceptedMovementThreshold = 0.005f;
+        [Tooltip("NPC overlaps the vehicle edge by this amount so contact is reliable without placing it inside the vehicle.")]
+        [SerializeField, Min(0f)] private float _impactOverlap = 0.05f;
+        [Tooltip("Maximum time from movement detection until the phone-distraction failure is reported.")]
+        [SerializeField, Range(0.05f, 0.5f)] private float _acceptedCollisionTimeout = 0.5f;
         [SerializeField, Min(0.1f)] private float _groundProbeHeight = 3f;
         [SerializeField, Min(0.1f)] private float _groundProbeDistance = 8f;
         [SerializeField, Min(0f)] private float _maximumGroundHeightDifference = 0.75f;
         [SerializeField] private LayerMask _groundLayers = ~0;
 
-        private Coroutine _collisionGraceRoutine;
+        private Coroutine _collisionDeliveryRoutine;
         private NpcAgent _activePhoneNpc;
         private bool _activeConversation;
+        private bool _callResolved = true;
         private bool _phoneNpcImpactOccurred;
+        private bool _collisionDeliveryStarted;
         private bool _hasTriggerEntryDirection;
         private float _callTravelSign = 1f;
 
@@ -85,8 +90,16 @@ namespace ElectricPalletStackers.UI
 
         private void LateUpdate()
         {
-            if (_activePhoneNpc == null || _activeConversation || !IsRinging) return;
-            UpdatePhoneNpcFollowPose();
+            if (_activePhoneNpc == null) return;
+
+            if (_activeConversation)
+            {
+                if (!_collisionDeliveryStarted && TryGetActiveTravelSign(out float travelSign))
+                    TriggerAcceptedMovementCollision(travelSign);
+                return;
+            }
+
+            if (IsRinging) UpdatePhoneNpcFollowPose();
         }
 
         public void TriggerIncomingCall()
@@ -112,11 +125,12 @@ namespace ElectricPalletStackers.UI
         private void BeginIncomingCall()
         {
             _activeConversation = false;
+            _callResolved = false;
             _phoneNpcImpactOccurred = false;
             if (!_hasTriggerEntryDirection)
                 _callTravelSign = ResolveTravelSign(1f);
             if (_spawnBlockerOnIncomingCall) SpawnPhoneNpc();
-            _phoneCallPanel?.ShowIncomingCall(_callerDisplay);
+            _phoneCallPanel?.ShowIncomingCall();
             if (_activePhoneNpc != null)
                 _phonePlacement?.ShowOccluding(_activePhoneNpc.transform);
             else
@@ -168,16 +182,13 @@ namespace ElectricPalletStackers.UI
 
         private void HandleCallAccepted()
         {
-            if (_activeConversation ||
+            if (_callResolved ||
                 (_appManager != null && _appManager.CurrentState != GameState.Playing)) return;
+
+            _activeConversation = true;
+            _activePhoneNpc?.SetVehicleCollisionEnabled(false);
             if (_applyCrowdPressureWhileRinging)
                 _npcPopulation?.SetCrowdPressure(false);
-            if (_spawnBlockerOnIncomingCall && _activePhoneNpc == null) SpawnPhoneNpc();
-            UpdatePhoneNpcFollowPose();
-            _activeConversation = true;
-            if (_activePhoneNpc != null)
-                _phonePlacement?.ShowOccluding(_activePhoneNpc.transform);
-            StartCollisionGrace(_activePhoneNpc);
         }
 
         private void HandleCallEnded()
@@ -187,11 +198,14 @@ namespace ElectricPalletStackers.UI
 
         private void CompleteCall()
         {
-            if (!_activeConversation || _phoneNpcImpactOccurred ||
+            if (_callResolved || _phoneNpcImpactOccurred ||
                 (_appManager != null && _appManager.CurrentState != GameState.Playing)) return;
 
+            _callResolved = true;
             _activeConversation = false;
             DespawnPhoneNpc();
+            if (_applyCrowdPressureWhileRinging)
+                _npcPopulation?.SetCrowdPressure(false);
             if (_phoneCallPanel != null && _phoneCallPanel.State != PhoneCallState.Hidden)
                 _phoneCallPanel.FinishCall();
             _phonePlacement?.Hide();
@@ -239,18 +253,25 @@ namespace ElectricPalletStackers.UI
                 rotation);
         }
 
-        private void StartCollisionGrace(NpcAgent expectedNpc)
+        private void TriggerAcceptedMovementCollision(float travelSign)
         {
-            CancelCollisionGraceRoutine();
-            if (expectedNpc == null) return;
+            if (_activePhoneNpc == null || _collisionDeliveryStarted) return;
 
-            expectedNpc.SetVehicleCollisionEnabled(false);
-            float minimumGrace = Mathf.Min(_minimumCollisionGrace, _maximumCollisionGrace);
-            float maximumGrace = Mathf.Max(_minimumCollisionGrace, _maximumCollisionGrace);
-            float graceDuration = Random.Range(minimumGrace, maximumGrace);
-            _collisionGraceRoutine = StartCoroutine(EnableNpcCollisionAfter(
-                graceDuration,
-                expectedNpc));
+            _collisionDeliveryStarted = true;
+            _callTravelSign = travelSign < 0f ? -1f : 1f;
+
+            Vector3 travelDirection = GetVehicleForward() * _callTravelSign;
+            Quaternion impactRotation = Quaternion.LookRotation(-travelDirection, Vector3.up);
+            _activePhoneNpc.transform.rotation = impactRotation;
+            Physics.SyncTransforms();
+            Vector3 impactPosition = CalculateAcceptedImpactPosition(travelDirection);
+            _activePhoneNpc.transform.SetPositionAndRotation(impactPosition, impactRotation);
+            _activePhoneNpc.SetVehicleCollisionEnabled(true);
+            Physics.SyncTransforms();
+
+            CancelCollisionDeliveryRoutine();
+            _collisionDeliveryRoutine = StartCoroutine(
+                GuaranteeAcceptedCallCollision(_activePhoneNpc));
         }
 
         private Vector3 CalculateNpcPosition()
@@ -263,13 +284,119 @@ namespace ElectricPalletStackers.UI
             return position;
         }
 
-        private IEnumerator EnableNpcCollisionAfter(float delay, NpcAgent expectedNpc)
+        private IEnumerator GuaranteeAcceptedCallCollision(NpcAgent expectedNpc)
         {
-            yield return new WaitForSecondsRealtime(delay);
-            _collisionGraceRoutine = null;
-            if (expectedNpc == null || expectedNpc != _activePhoneNpc)
-                yield break;
-            expectedNpc.SetVehicleCollisionEnabled(true);
+            float deadline = Time.realtimeSinceStartup + Mathf.Min(0.5f, _acceptedCollisionTimeout);
+            while (!_phoneNpcImpactOccurred && expectedNpc != null &&
+                   expectedNpc == _activePhoneNpc && Time.realtimeSinceStartup < deadline)
+            {
+                yield return new WaitForFixedUpdate();
+            }
+
+            _collisionDeliveryRoutine = null;
+            if (!_phoneNpcImpactOccurred && expectedNpc != null && expectedNpc == _activePhoneNpc)
+                expectedNpc.TryReportVehicleCollision();
+        }
+
+        private Vector3 CalculateAcceptedImpactPosition(Vector3 travelDirection)
+        {
+            travelDirection = Vector3.ProjectOnPlane(travelDirection, Vector3.up).normalized;
+            if (travelDirection.sqrMagnitude < 0.001f) travelDirection = Vector3.forward;
+
+            Collider npcCollider = FindNpcCollider();
+            float npcExtent = npcCollider != null
+                ? GetProjectedExtent(npcCollider.bounds, travelDirection)
+                : 0.35f;
+            Vector3 npcPlanarCenterOffset = npcCollider != null
+                ? Vector3.ProjectOnPlane(
+                    npcCollider.bounds.center - _activePhoneNpc.transform.position,
+                    Vector3.up)
+                : Vector3.zero;
+
+            Vector3 edgePoint;
+            if (_callTravelSign >= 0f)
+            {
+                edgePoint = GetForkEdgePoint(travelDirection);
+            }
+            else
+            {
+                // The driver stands at the rear of this vehicle, so reverse hazards
+                // are measured from the player rather than from a body-collider bound.
+                edgePoint = _playerView != null ? _playerView.position : _vehicleBody.position;
+                edgePoint.y = GetExpectedGroundHeight();
+            }
+
+            float centerDistance = Mathf.Max(0f, npcExtent - _impactOverlap);
+            Vector3 position = edgePoint + travelDirection * centerDistance - npcPlanarCenterOffset;
+            SnapToGround(ref position);
+            return position;
+        }
+
+        private Collider FindNpcCollider()
+        {
+            if (_activePhoneNpc == null) return null;
+            Collider[] colliders = _activePhoneNpc.GetComponentsInChildren<Collider>(true);
+            for (int index = 0; index < colliders.Length; index++)
+            {
+                Collider candidate = colliders[index];
+                if (candidate != null && candidate.enabled) return candidate;
+            }
+            return null;
+        }
+
+        private Vector3 GetForkEdgePoint(Vector3 travelDirection)
+        {
+            if (_forkCollider != null && _forkCollider.enabled)
+            {
+                Bounds bounds = _forkCollider.bounds;
+                Vector3 edge = bounds.center +
+                               travelDirection * GetProjectedExtent(bounds, travelDirection);
+                edge.y = GetExpectedGroundHeight();
+                return edge;
+            }
+
+            Vector3 fallback = _forkCollisionSensor != null
+                ? _forkCollisionSensor.transform.position
+                : _vehicleBody.position;
+            fallback.y = GetExpectedGroundHeight();
+            return fallback;
+        }
+
+        private static float GetProjectedExtent(Bounds bounds, Vector3 direction)
+        {
+            Vector3 extents = bounds.extents;
+            return Mathf.Abs(direction.x) * extents.x +
+                   Mathf.Abs(direction.y) * extents.y +
+                   Mathf.Abs(direction.z) * extents.z;
+        }
+
+        private bool TryGetActiveTravelSign(out float travelSign)
+        {
+            if (_vehicleMotor != null)
+            {
+                float signedMovement = Mathf.Abs(_vehicleMotor.TargetSpeed) > _acceptedMovementThreshold
+                    ? _vehicleMotor.TargetSpeed
+                    : _vehicleMotor.CurrentSpeed;
+                if (Mathf.Abs(signedMovement) > _acceptedMovementThreshold)
+                {
+                    travelSign = Mathf.Sign(signedMovement);
+                    return true;
+                }
+            }
+
+            if (_vehicleBody != null)
+            {
+                Vector3 planarVelocity = Vector3.ProjectOnPlane(_vehicleBody.linearVelocity, Vector3.up);
+                float signedVelocity = Vector3.Dot(planarVelocity, GetVehicleForward());
+                if (Mathf.Abs(signedVelocity) > _acceptedMovementThreshold)
+                {
+                    travelSign = Mathf.Sign(signedVelocity);
+                    return true;
+                }
+            }
+
+            travelSign = 0f;
+            return false;
         }
 
         private float ResolveTravelSign(float fallbackSign)
@@ -381,7 +508,8 @@ namespace ElectricPalletStackers.UI
 
         private void DespawnPhoneNpc()
         {
-            CancelCollisionGraceRoutine();
+            CancelCollisionDeliveryRoutine();
+            _collisionDeliveryStarted = false;
             if (_activePhoneNpc == null) return;
 
             GameObject npcObject = _activePhoneNpc.gameObject;
@@ -399,24 +527,26 @@ namespace ElectricPalletStackers.UI
 
         private void StopCallKeepingImpactedNpc()
         {
-            CancelCollisionGraceRoutine();
+            CancelCollisionDeliveryRoutine();
             _activeConversation = false;
             _activePhoneNpc?.SetVehicleCollisionEnabled(false);
             _phoneCallPanel?.FinishCall();
             _phonePlacement?.Hide();
         }
 
-        private void CancelCollisionGraceRoutine()
+        private void CancelCollisionDeliveryRoutine()
         {
-            if (_collisionGraceRoutine == null) return;
-            StopCoroutine(_collisionGraceRoutine);
-            _collisionGraceRoutine = null;
+            if (_collisionDeliveryRoutine == null) return;
+            StopCoroutine(_collisionDeliveryRoutine);
+            _collisionDeliveryRoutine = null;
         }
 
         private void ResetCallState()
         {
             _activeConversation = false;
+            _callResolved = true;
             _phoneNpcImpactOccurred = false;
+            _collisionDeliveryStarted = false;
             DespawnPhoneNpc();
             if (_applyCrowdPressureWhileRinging)
                 _npcPopulation?.SetCrowdPressure(false);

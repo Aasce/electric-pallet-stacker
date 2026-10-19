@@ -30,12 +30,12 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private TMP_Text _callerLabel;
         [SerializeField] private TMP_Text _hintLabel;
         [SerializeField] private GameObject _incomingActions;
-        [SerializeField] private GameObject _activeCallActions;
         [SerializeField] private Button _acceptButton;
         [SerializeField] private Button _endButton;
+        [SerializeField] private TMP_Text _endButtonLabel;
+        [SerializeField] private GameObject _safetyWarningPanel;
 
         [Header("Presentation")]
-        [SerializeField] private string _defaultCaller = "0123456789";
         [SerializeField, Min(0f)] private float _transitionDuration = 0.2f;
         [SerializeField, Range(0.01f, 1f)] private float _ringingStartScale = 0.92f;
         [SerializeField, Range(0.01f, 1f)] private float _hiddenScale = 0.94f;
@@ -46,8 +46,6 @@ namespace ElectricPalletStackers.UI
         private bool _acceptButtonBound;
         private bool _endButtonBound;
         private bool _configurationErrorReported;
-        private float _callStartedAt;
-        private int _lastDisplayedCallSecond = -1;
         private ILocalizationService _localization;
         private TMP_FontAsset _statusDefaultFont;
         private TMP_FontAsset _hintDefaultFont;
@@ -74,19 +72,7 @@ namespace ElectricPalletStackers.UI
             UnbindAcceptButton();
             UnbindEndButton();
             KillTweens();
-        }
-
-        private void Update()
-        {
-            if (!IsInCall) return;
-
-            int elapsedSeconds = Mathf.Max(
-                0,
-                Mathf.FloorToInt(Time.realtimeSinceStartup - _callStartedAt));
-            if (elapsedSeconds == _lastDisplayedCallSecond) return;
-
-            _lastDisplayedCallSecond = elapsedSeconds;
-            UpdateCallDuration(elapsedSeconds);
+            SetSafetyWarningVisible(false);
         }
 
         public void ApplyLocalization(ILocalizationService localization)
@@ -98,37 +84,40 @@ namespace ElectricPalletStackers.UI
             if (IsInCall)
             {
                 SetLocalizedText(_statusLabel, LocalizationKeys.Phone.InCall, "In call");
-                if (_lastDisplayedCallSecond >= 0)
-                    UpdateCallDuration(_lastDisplayedCallSecond);
-                return;
+                SetLocalizedText(_hintLabel, LocalizationKeys.Phone.InCall, "In call");
+                SetLocalizedText(_endButtonLabel, LocalizationKeys.Phone.End, "End");
+            }
+            else
+            {
+                SetLocalizedText(
+                    _statusLabel,
+                    LocalizationKeys.Phone.IncomingCall,
+                    "Incoming call");
+                SetLocalizedText(
+                    _hintLabel,
+                    LocalizationKeys.Phone.ChooseAction,
+                    "Accept or decline");
+                SetLocalizedText(_endButtonLabel, LocalizationKeys.Phone.Decline, "Decline");
             }
 
-            SetLocalizedText(
-                _statusLabel,
-                LocalizationKeys.Phone.IncomingCall,
-                "Incoming call");
-            SetLocalizedText(
-                _hintLabel,
-                LocalizationKeys.Phone.TapToAnswer,
-                "Tap to answer");
+            SetLocalizedText(_callerLabel, LocalizationKeys.Phone.Boss, "Boss");
         }
 
         [ContextMenu("Simulate Incoming Call")]
         public void ShowDefaultIncomingCall()
         {
-            ShowIncomingCall(_defaultCaller);
+            ShowIncomingCall();
         }
 
-        public void ShowIncomingCall(string callerDisplay)
+        public void ShowIncomingCall()
         {
             if (!HasRequiredReferences()) return;
 
-            SetCallerDisplay(string.IsNullOrWhiteSpace(callerDisplay)
-                ? _defaultCaller
-                : callerDisplay);
+            SetLocalizedText(_callerLabel, LocalizationKeys.Phone.Boss, "Boss");
             IsRinging = true;
             IsInCall = false;
             SetState(PhoneCallState.Ringing);
+            SetSafetyWarningVisible(true);
             SetRingingVisual();
             KillTweens();
 
@@ -147,11 +136,6 @@ namespace ElectricPalletStackers.UI
                 .SetLink(gameObject);
         }
 
-        public void SetCallerDisplay(string callerDisplay)
-        {
-            if (_callerLabel != null) _callerLabel.text = callerDisplay;
-        }
-
         public void AcceptCall()
         {
             if (!IsRinging) return;
@@ -159,9 +143,7 @@ namespace ElectricPalletStackers.UI
             IsRinging = false;
             IsInCall = true;
             SetState(PhoneCallState.InCall);
-            _callStartedAt = Time.realtimeSinceStartup;
-            _lastDisplayedCallSecond = -1;
-            SetActiveCallVisual();
+            SetInCallVisual();
             CallAccepted?.Invoke();
         }
 
@@ -173,7 +155,7 @@ namespace ElectricPalletStackers.UI
 
         public void EndCall()
         {
-            if (!IsInCall) return;
+            if (!IsRinging && !IsInCall) return;
 
             FinishCall();
             CallEnded?.Invoke();
@@ -184,6 +166,7 @@ namespace ElectricPalletStackers.UI
             IsRinging = false;
             IsInCall = false;
             SetState(PhoneCallState.Hidden);
+            SetSafetyWarningVisible(false);
             KillTweens();
 
             if (!HasRequiredReferences()) return;
@@ -206,6 +189,7 @@ namespace ElectricPalletStackers.UI
             IsRinging = false;
             IsInCall = false;
             SetState(PhoneCallState.Hidden);
+            SetSafetyWarningVisible(false);
             KillTweens();
 
             if (_canvasGroup != null)
@@ -277,30 +261,22 @@ namespace ElectricPalletStackers.UI
                 "Incoming call");
             SetLocalizedText(
                 _hintLabel,
-                LocalizationKeys.Phone.TapToAnswer,
-                "Tap to answer");
+                LocalizationKeys.Phone.ChooseAction,
+                "Accept or decline");
             if (_incomingActions != null) _incomingActions.SetActive(true);
-            if (_activeCallActions != null) _activeCallActions.SetActive(false);
+            if (_acceptButton != null) _acceptButton.gameObject.SetActive(true);
+            if (_endButton != null) _endButton.gameObject.SetActive(true);
+            SetLocalizedText(_endButtonLabel, LocalizationKeys.Phone.Decline, "Decline");
         }
 
-        private void SetActiveCallVisual()
+        private void SetInCallVisual()
         {
             SetLocalizedText(_statusLabel, LocalizationKeys.Phone.InCall, "In call");
-            if (_incomingActions != null) _incomingActions.SetActive(false);
-            if (_activeCallActions != null) _activeCallActions.SetActive(true);
-            UpdateCallDuration(0);
-        }
-
-        private void UpdateCallDuration(int elapsedSeconds)
-        {
-            if (_hintLabel == null) return;
-
-            int hours = elapsedSeconds / 3600;
-            int minutes = elapsedSeconds / 60 % 60;
-            int seconds = elapsedSeconds % 60;
-            _hintLabel.text = hours > 0
-                ? $"{hours:00}:{minutes:00}:{seconds:00}"
-                : $"{minutes:00}:{seconds:00}";
+            SetLocalizedText(_hintLabel, LocalizationKeys.Phone.InCall, "In call");
+            if (_incomingActions != null) _incomingActions.SetActive(true);
+            if (_acceptButton != null) _acceptButton.gameObject.SetActive(false);
+            if (_endButton != null) _endButton.gameObject.SetActive(true);
+            SetLocalizedText(_endButtonLabel, LocalizationKeys.Phone.End, "End");
         }
 
         private void SetState(PhoneCallState nextState)
@@ -309,6 +285,12 @@ namespace ElectricPalletStackers.UI
             PhoneCallState previousState = State;
             State = nextState;
             StateChanged?.Invoke(previousState, nextState);
+        }
+
+        private void SetSafetyWarningVisible(bool visible)
+        {
+            if (_safetyWarningPanel != null && _safetyWarningPanel.activeSelf != visible)
+                _safetyWarningPanel.SetActive(visible);
         }
 
         private void KillTweens()

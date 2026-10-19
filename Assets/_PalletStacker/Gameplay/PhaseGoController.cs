@@ -25,11 +25,14 @@ namespace ElectricPalletStackers.Gameplay
 
         [Header("NPC area")]
         [SerializeField] private Collider _npcZone;
+        [Tooltip("The NPC Moving phase completes only after the player vehicle enters this trigger.")]
+        [SerializeField] private Collider _npcCompletedZone;
         [SerializeField] private NpcPopulationController _npcPopulation;
 
         private bool _crossTriggered;
         private bool _phoneTriggered;
         private bool _npcTriggered;
+        private bool _npcCompleted;
         private bool _wasInsidePhoneZone;
 
         private void OnEnable()
@@ -64,10 +67,11 @@ namespace ElectricPalletStackers.Gameplay
                 _phoneCallEvent?.CaptureTriggerEntryDirection();
             _wasInsidePhoneZone = isInsidePhoneZone;
             if (!_phoneTriggered &&
-                (_trainingExperience == null ||
-                 _trainingExperience.CurrentStage < TrainingExperienceStage.PhoneCall) &&
+                CanTriggerPhoneCall() &&
                 isInsidePhoneZone) TriggerPhoneCall();
             if (!_npcTriggered && IsInsideZone(_npcZone, vehiclePosition)) TriggerNpcArea();
+            if (!_npcCompleted && IsInsideZone(_npcCompletedZone, vehiclePosition))
+                CompleteNpcArea();
         }
 
         private bool IsNearCross(Vector3 vehiclePosition)
@@ -127,11 +131,34 @@ namespace ElectricPalletStackers.Gameplay
             _npcPopulation?.ActivatePopulation();
         }
 
+        private void CompleteNpcArea()
+        {
+            if (_trainingExperience == null)
+            {
+                _npcCompleted = true;
+                return;
+            }
+
+            _npcCompleted = _trainingExperience.ReachCheckpoint(ExperienceCheckpoint.Corner) ||
+                            _trainingExperience.CurrentStage >
+                            TrainingExperienceStage.NavigateCorner;
+        }
+
+        private bool CanTriggerPhoneCall()
+        {
+            if (_trainingExperience == null) return _npcCompleted;
+
+            TrainingExperienceStage stage = _trainingExperience.CurrentStage;
+            return stage >= TrainingExperienceStage.YieldIntersection &&
+                   stage < TrainingExperienceStage.PhoneCall;
+        }
+
         private void ResetPhase()
         {
             _crossTriggered = false;
             _phoneTriggered = false;
             _npcTriggered = false;
+            _npcCompleted = false;
             _wasInsidePhoneZone = false;
             _crossingVehicle?.ResetVehicle();
         }

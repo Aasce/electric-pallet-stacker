@@ -96,9 +96,12 @@ namespace ElectricPalletStackers.Localization
             public const string IncomingCall = "phone.incomingCall";
             public const string InCall = "phone.inCall";
             public const string TapToAnswer = "phone.tapToAnswer";
+            public const string ChooseAction = "phone.chooseAction";
+            public const string Boss = "phone.boss";
             public const string Decline = "phone.decline";
             public const string Accept = "phone.accept";
             public const string End = "phone.end";
+            public const string SafetyWarning = "phone.safetyWarning";
         }
     }
 }

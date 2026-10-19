@@ -3,7 +3,7 @@ using UnityEngine;
 namespace ElectricPalletStackers.UI
 {
     /// <summary>
-    /// Owns only the world pose and grab state of the phone call view.
+    /// Owns the world pose of the phone call panel.
     /// Every scene dependency is assigned explicitly in the Inspector.
     /// </summary>
     [DisallowMultipleComponent]
@@ -12,7 +12,6 @@ namespace ElectricPalletStackers.UI
         [Header("Scene References")]
         [SerializeField] private Transform _panelRoot;
         [SerializeField] private Transform _viewer;
-        [SerializeField] private WorldSpacePanelGrab _panelGrab;
 
         [Header("In Front Of Viewer")]
         [Tooltip("Offset in the viewer's yaw space. Positive Z is in front of the viewer.")]
@@ -56,7 +55,6 @@ namespace ElectricPalletStackers.UI
 
             _occlusionTarget = null;
             _isVisible = true;
-            _panelGrab?.SetEnabled(true);
             PlaceInFrontOfViewer();
         }
 
@@ -75,7 +73,6 @@ namespace ElectricPalletStackers.UI
 
             _occlusionTarget = blockerTarget;
             _isVisible = true;
-            _panelGrab?.SetEnabled(false);
             PlaceBetweenViewerAndBlocker();
         }
 
@@ -83,18 +80,10 @@ namespace ElectricPalletStackers.UI
         {
             _isVisible = false;
             _occlusionTarget = null;
-            _panelGrab?.SetEnabled(false);
         }
 
         private void PlaceInFrontOfViewer()
         {
-            if (_panelGrab != null && _panelGrab.IsGrabbed)
-            {
-                Quaternion inverseYaw = Quaternion.Inverse(GetViewerYawRotation());
-                _viewerYawOffset = inverseYaw * (_panelRoot.position - _viewer.position);
-                return;
-            }
-
             Quaternion viewerYaw = GetViewerYawRotation();
             _panelRoot.SetPositionAndRotation(
                 _viewer.position + viewerYaw * _viewerYawOffset,

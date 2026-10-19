@@ -100,6 +100,14 @@ MonoBehaviour:
     _english: Tap to answer
     _vietnamese: "Ch\u1EA1m \u0111\u1EC3 tr\u1EA3 l\u1EDDi"
     _japanese: "\u30BF\u30C3\u30D7\u3057\u3066\u5FDC\u7B54"
+  - _key: phone.chooseAction
+    _english: Accept or decline
+    _vietnamese: "Ch\u1EA5p nh\u1EADn ho\u1EB7c t\u1EEB ch\u1ED1i"
+    _japanese: "\u5FDC\u7B54\u307E\u305F\u306F\u62D2\u5426"
+  - _key: phone.boss
+    _english: Boss
+    _vietnamese: "S\u1EBFp"
+    _japanese: "\u4E0A\u53F8"
   - _key: phone.decline
     _english: Decline
     _vietnamese: "T\u1EEB ch\u1ED1i"
@@ -112,6 +120,10 @@ MonoBehaviour:
     _english: End
     _vietnamese: "K\u1EBFt th\xFAc"
     _japanese: "\u7D42\u4E86"
+  - _key: phone.safetyWarning
+    _english: Do not use a phone while operating the vehicle
+    _vietnamese: "kh\xF4ng s\u1EED d\u1EE5ng \u0111i\u1EC7n tho\u1EA1i khi \u0111i\u1EC1u khi\u1EC3n xe"
+    _japanese: "\u8ECA\u4E21\u306E\u904B\u8EE2\u4E2D\u306F\u643A\u5E2F\u96FB\u8A71\u3092\u4F7F\u7528\u3057\u306A\u3044\u3067\u304F\u3060\u3055\u3044"
   - _key: ppe.title
     _english: Wear Safety Equipment
     _vietnamese: "Trang b\u1ECB b\u1EA3o h\u1ED9"
