@@ -25,7 +25,6 @@ namespace ElectricPalletStackers.UI
 
         [Header("Call")]
         [SerializeField] private string _callerDisplay = "0123456789";
-        [SerializeField, Min(0.1f)] private float _conversationDuration = 10f;
         [SerializeField] private bool _applyCrowdPressureWhileRinging = true;
         [Tooltip("Spawn the road-blocking NPC as soon as the phone starts ringing.")]
         [SerializeField] private bool _spawnBlockerOnIncomingCall = true;
@@ -42,7 +41,6 @@ namespace ElectricPalletStackers.UI
         [SerializeField, Min(0f)] private float _maximumGroundHeightDifference = 0.75f;
         [SerializeField] private LayerMask _groundLayers = ~0;
 
-        private Coroutine _callRoutine;
         private Coroutine _collisionGraceRoutine;
         private NpcAgent _activePhoneNpc;
         private bool _activeConversation;
@@ -50,7 +48,6 @@ namespace ElectricPalletStackers.UI
         private bool _hasTriggerEntryDirection;
         private float _callTravelSign = 1f;
 
-        public float ConversationDuration => _conversationDuration;
         public bool IsRinging => _phoneCallPanel != null && _phoneCallPanel.IsRinging;
         public bool IsInCall => _activeConversation;
 
@@ -58,7 +55,11 @@ namespace ElectricPalletStackers.UI
 
         private void OnEnable()
         {
-            if (_phoneCallPanel != null) _phoneCallPanel.CallAccepted += HandleCallAccepted;
+            if (_phoneCallPanel != null)
+            {
+                _phoneCallPanel.CallAccepted += HandleCallAccepted;
+                _phoneCallPanel.CallEnded += HandleCallEnded;
+            }
             if (_appManager != null)
             {
                 _appManager.RoundStarted += HandleRoundStarted;
@@ -68,7 +69,11 @@ namespace ElectricPalletStackers.UI
 
         private void OnDisable()
         {
-            if (_phoneCallPanel != null) _phoneCallPanel.CallAccepted -= HandleCallAccepted;
+            if (_phoneCallPanel != null)
+            {
+                _phoneCallPanel.CallAccepted -= HandleCallAccepted;
+                _phoneCallPanel.CallEnded -= HandleCallEnded;
+            }
             if (_appManager != null)
             {
                 _appManager.RoundStarted -= HandleRoundStarted;
@@ -173,20 +178,22 @@ namespace ElectricPalletStackers.UI
             if (_activePhoneNpc != null)
                 _phonePlacement?.ShowOccluding(_activePhoneNpc.transform);
             StartCollisionGrace(_activePhoneNpc);
-            CancelCallRoutine();
-            _callRoutine = StartCoroutine(CompleteConversationAfter(_conversationDuration));
         }
 
-        private IEnumerator CompleteConversationAfter(float duration)
+        private void HandleCallEnded()
         {
-            yield return new WaitForSecondsRealtime(duration);
-            _callRoutine = null;
+            CompleteCall();
+        }
+
+        private void CompleteCall()
+        {
             if (!_activeConversation || _phoneNpcImpactOccurred ||
-                (_appManager != null && _appManager.CurrentState != GameState.Playing))
-                yield break;
+                (_appManager != null && _appManager.CurrentState != GameState.Playing)) return;
+
             _activeConversation = false;
             DespawnPhoneNpc();
-            _phoneCallPanel?.FinishCall();
+            if (_phoneCallPanel != null && _phoneCallPanel.State != PhoneCallState.Hidden)
+                _phoneCallPanel.FinishCall();
             _phonePlacement?.Hide();
             CallCompleted?.Invoke();
         }
@@ -392,7 +399,6 @@ namespace ElectricPalletStackers.UI
 
         private void StopCallKeepingImpactedNpc()
         {
-            CancelCallRoutine();
             CancelCollisionGraceRoutine();
             _activeConversation = false;
             _activePhoneNpc?.SetVehicleCollisionEnabled(false);
@@ -409,7 +415,6 @@ namespace ElectricPalletStackers.UI
 
         private void ResetCallState()
         {
-            CancelCallRoutine();
             _activeConversation = false;
             _phoneNpcImpactOccurred = false;
             DespawnPhoneNpc();
@@ -419,11 +424,5 @@ namespace ElectricPalletStackers.UI
             _phonePlacement?.Hide();
         }
 
-        private void CancelCallRoutine()
-        {
-            if (_callRoutine == null) return;
-            StopCoroutine(_callRoutine);
-            _callRoutine = null;
-        }
     }
 }

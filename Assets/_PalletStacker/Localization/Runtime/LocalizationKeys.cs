@@ -45,6 +45,20 @@ namespace ElectricPalletStackers.Localization
             public const string Description = "ppe.description";
         }
 
+        public static class VehicleChecklist
+        {
+            public const string Title = "vehicleChecklist.title";
+            public const string Instruction = "vehicleChecklist.instruction";
+            public const string ChargingUnit = "vehicleChecklist.chargingUnit";
+            public const string Battery = "vehicleChecklist.battery";
+            public const string ElectricalSystem = "vehicleChecklist.electricalSystem";
+            public const string Forks = "vehicleChecklist.forks";
+            public const string SteeringHandle = "vehicleChecklist.steeringHandle";
+            public const string AcceleratorLever = "vehicleChecklist.acceleratorLever";
+            public const string WarningHorn = "vehicleChecklist.warningHorn";
+            public const string Other = "vehicleChecklist.other";
+        }
+
         public static class CrossSafety
         {
             public const string Instruction = "crossSafety.instruction";

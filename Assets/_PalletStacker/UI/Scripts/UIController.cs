@@ -1,6 +1,7 @@
 using System;
 using ElectricPalletStackers.Calibration;
 using ElectricPalletStackers.Gameplay;
+using ElectricPalletStackers.Gameplay.Checklist;
 using ElectricPalletStackers.Localization;
 using UnityEngine;
 
@@ -24,6 +25,7 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private UIGuidePanel _guidePanel;
         [SerializeField] private UIPpePanel _ppePanel;
         [SerializeField] private PpeEquipmentPhase _ppeEquipmentPhase;
+        [SerializeField] private VehicleChecklistController _vehicleChecklist;
         [SerializeField] private UICompletedPanel _completedPanel;
         [SerializeField] private UIFailedPanel _failedPanel;
         [SerializeField] private UIResetGamePanel _resetGamePanel;
@@ -67,6 +69,7 @@ namespace ElectricPalletStackers.UI
                 _selectLanguagePanel.FocusChanged += HandleLanguageFocusChanged;
             if (_ppeEquipmentPhase != null)
                 _ppeEquipmentPhase.Equipped += HandlePpeEquipped;
+            _vehicleChecklist.Completed += HandleVehicleChecklistCompleted;
             if (_calibrationPanel != null)
             {
                 _calibrationPanel.AlignRequested += HandleAlignRequested;
@@ -83,6 +86,7 @@ namespace ElectricPalletStackers.UI
             _guidePanel?.HideImmediate();
             _ppePanel?.HideImmediate();
             _ppeEquipmentPhase?.EndPhase();
+            _vehicleChecklist.EndPhase();
             _completedPanel?.HideImmediate();
             _failedPanel.HideImmediate();
             _resetGamePanel?.HideImmediate();
@@ -123,6 +127,7 @@ namespace ElectricPalletStackers.UI
                 _selectLanguagePanel.FocusChanged -= HandleLanguageFocusChanged;
             if (_ppeEquipmentPhase != null)
                 _ppeEquipmentPhase.Equipped -= HandlePpeEquipped;
+            _vehicleChecklist.Completed -= HandleVehicleChecklistCompleted;
             if (_calibrationPanel != null)
             {
                 _calibrationPanel.AlignRequested -= HandleAlignRequested;
@@ -214,6 +219,12 @@ namespace ElectricPalletStackers.UI
         private void HandlePpeEquipped()
         {
             if (CurrentState == UIFlowState.PpeEquipment)
+                TransitionTo(UIFlowState.VehicleChecklist);
+        }
+
+        private void HandleVehicleChecklistCompleted()
+        {
+            if (CurrentState == UIFlowState.VehicleChecklist)
                 TransitionTo(UIFlowState.Hidden);
         }
 
@@ -236,6 +247,7 @@ namespace ElectricPalletStackers.UI
             _guidePanel?.Hide();
             _ppePanel?.Hide();
             _ppeEquipmentPhase?.EndPhase();
+            _vehicleChecklist.EndPhase();
             _completedPanel?.Hide();
             _failedPanel?.Hide();
             _resetGamePanel?.Hide();
@@ -261,6 +273,9 @@ namespace ElectricPalletStackers.UI
                 case UIFlowState.PpeEquipment:
                     _ppePanel?.Show();
                     _ppeEquipmentPhase?.BeginPhase();
+                    break;
+                case UIFlowState.VehicleChecklist:
+                    _vehicleChecklist.BeginPhase();
                     break;
                 case UIFlowState.Completed:
                     _completedPanel?.Show();

@@ -2,6 +2,7 @@ using System;
 using ElectricPalletStackers.PalletStackers;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.Video;
 
 namespace ElectricPalletStackers.Gameplay
@@ -31,8 +32,11 @@ namespace ElectricPalletStackers.Gameplay
         [SerializeField] private Transform _playerView;
 
         [Header("Cross zones")]
-        [Tooltip("Entering this trigger displays the stop-and-check instruction.")]
-        [SerializeField] private Collider _instructionZone;
+        [Tooltip("Entering this trigger displays the stop-and-check instruction panel.")]
+        [SerializeField] private Collider _panelZone;
+        [Tooltip("Entering this trigger starts the stop-and-direction-confirmation flow.")]
+        [FormerlySerializedAs("_instructionZone")]
+        [SerializeField] private Collider _safetyConfirmZone;
         [Tooltip("Entering this trigger before confirmation spawns the crossing vehicle hazard.")]
         [SerializeField] private Collider _dangerZone;
 
@@ -171,8 +175,15 @@ namespace ElectricPalletStackers.Gameplay
                 return;
             }
 
-            if (_state == PhaseState.Idle && IsVehicleInsideZone(_instructionZone))
-                BeginSafetyCheck();
+            if (_state == PhaseState.Idle)
+            {
+                if (IsVehicleInsideZone(_panelZone) &&
+                    _instructionPanel != null && !_instructionPanel.activeSelf)
+                    _instructionPanel.SetActive(true);
+
+                if (IsVehicleInsideZone(_safetyConfirmZone))
+                    BeginSafetyCheck();
+            }
 
             if (_state == PhaseState.WaitingForStop)
             {
@@ -243,15 +254,15 @@ namespace ElectricPalletStackers.Gameplay
         {
             _state = PhaseState.WaitingForStop;
             _stoppedDuration = 0f;
-            if (_instructionPanel != null) _instructionPanel.SetActive(true);
             SetTargetsActive(false, true);
-            Debug.Log("[Cross Safety] Entered instruction zone. Waiting for the player to stop.", this);
+            Debug.Log("[Cross Safety] Entered safety-confirm zone. Waiting for the player to stop.", this);
         }
 
         private void ShowDirectionTargets()
         {
             _state = PhaseState.ConfirmingDirections;
             SetTargetsActive(true, true);
+            if (_instructionPanel != null) _instructionPanel.SetActive(false);
             ShowFirstDirectionPrompt();
             Debug.Log("[Cross Safety] Vehicle stopped. Direction targets are now active.", this);
         }
@@ -573,10 +584,17 @@ namespace ElectricPalletStackers.Gameplay
 
         private void OnDrawGizmosSelected()
         {
-            if (_instructionZone != null)
+            if (_panelZone != null)
             {
                 Gizmos.color = new Color(0.1f, 0.75f, 1f, 0.8f);
-                Gizmos.DrawWireCube(_instructionZone.bounds.center, _instructionZone.bounds.size);
+                Gizmos.DrawWireCube(_panelZone.bounds.center, _panelZone.bounds.size);
+            }
+            if (_safetyConfirmZone != null)
+            {
+                Gizmos.color = new Color(0.3f, 1f, 0.35f, 0.8f);
+                Gizmos.DrawWireCube(
+                    _safetyConfirmZone.bounds.center,
+                    _safetyConfirmZone.bounds.size);
             }
             if (_dangerZone != null)
             {

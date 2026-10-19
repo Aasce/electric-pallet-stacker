@@ -27,7 +27,8 @@ MonoBehaviour:
     _japanese: "\u8ECA\u4E21\u30AD\u30E3\u30EA\u30D6\u30EC\u30FC\u30B7\u30E7\u30F3"
   - _key: calibration.description
     _english: Adjust the controls until your view is aligned with the vehicle.
-    _vietnamese: "\u0110i\u1EC1u ch\u1EC9nh c\u00E1c n\u00FAt \u0111\u1EBFn khi g\u00F3c nh\u00ECn c\u1EE7a b\u1EA1n kh\u1EDBp v\u1EDBi xe."
+    _vietnamese: "\u0110i\u1EC1u ch\u1EC9nh c\xE1c n\xFAt \u0111\u1EBFn khi g\xF3c
+      nh\xECn c\u1EE7a b\u1EA1n kh\u1EDBp v\u1EDBi xe."
     _japanese: "\u8996\u70B9\u304C\u8ECA\u4E21\u306B\u5408\u3046\u3088\u3046\u306B\u64CD\u4F5C\u30DC\u30BF\u30F3\u3067\u8ABF\u6574\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
   - _key: language.english
     _english: English
@@ -116,14 +117,14 @@ MonoBehaviour:
     _vietnamese: "Trang b\u1ECB b\u1EA3o h\u1ED9"
     _japanese: "\u4FDD\u8B77\u5177\u3092\u7740\u7528"
   - _key: ppe.description
-    _english: Touch the safety helmet floating to your left before operating the
-      vehicle.
-    _vietnamese: "Ch\u1EA1m v\xE0o n\xF3n b\u1EA3o h\u1ED9 \u0111ang l\u01A1 l\u1EEDng
-      b\xEAn tr\xE1i tr\u01B0\u1EDBc khi v\u1EADn h\xE0nh xe."
-    _japanese: "\u8ECA\u4E21\u3092\u64CD\u4F5C\u3059\u308B\u524D\u306B\u3001\u5DE6\u5074\u306B\u6D6E\u304B\u3093\u3067\u3044\u308B\u5B89\u5168\u30D8\u30EB\u30E1\u30C3\u30C8\u306B\u89E6\u308C\u3066\u304F\u3060\u3055\u3044\u3002"
+    _english: Touch the safety equipment to put it on.
+    _vietnamese: "Ch\u1EA1m v\xE0o c\xE1c \u0111\u1ED3 b\u1EA3o h\u1ED9 \u0111\u1EC3
+      m\u1EB7c ch\xFAng"
+    _japanese: "\u4FDD\u8B77\u5177\u306B\u89E6\u308C\u3066\u7740\u7528\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
   - _key: crossSafety.instruction
     _english: Stop, point, and confirm it is safe to proceed.
-    _vietnamese: "H\xE3y d\u1EEBng l\u1EA1i, ch\u1EC9 tay \u0111\u1EC3 x\xE1c nh\u1EADn an to\xE0n"
+    _vietnamese: "H\xE3y d\u1EEBng l\u1EA1i, ch\u1EC9 tay \u0111\u1EC3 x\xE1c nh\u1EADn
+      an to\xE0n"
     _japanese: "\u505C\u6B62\u3057\u3001\u6307\u5DEE\u3057\u78BA\u8A8D\u3067\u5B89\u5168\u3092\u78BA\u8A8D\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
   - _key: crossSafety.danger
     _english: Danger! Stop the vehicle immediately.
@@ -172,6 +173,47 @@ MonoBehaviour:
     _vietnamese: "D\xF9ng Travel \u0111\u1EC3 ch\u1ECDn \u2022 Nh\u1EA5n E-Stop \u0111\u1EC3
       x\xE1c nh\u1EADn"
     _japanese: "\u8D70\u884C\u30EC\u30D0\u30FC\u3067\u9078\u629E \u2022 \u975E\u5E38\u505C\u6B62\u30DC\u30BF\u30F3\u3067\u6C7A\u5B9A"
+  - _key: vehicleChecklist.title
+    _english: Pre-operation Checklist
+    _vietnamese: "Danh s\xE1ch ki\u1EC3m tra tr\u01B0\u1EDBc v\u1EADn h\xE0nh"
+    _japanese: "\u59CB\u696D\u524D\u70B9\u691C\u30C1\u30A7\u30C3\u30AF\u30EA\u30B9\u30C8"
+  - _key: vehicleChecklist.instruction
+    _english: Touch every checkbox before operating the vehicle.
+    _vietnamese: "Ch\u1EA1m v\xE0o t\u1EEBng \xF4 ki\u1EC3m tra tr\u01B0\u1EDBc khi
+      v\u1EADn h\xE0nh xe."
+    _japanese: "\u8ECA\u4E21\u3092\u64CD\u4F5C\u3059\u308B\u524D\u306B\u3001\u3059\u3079\u3066\u306E\u30C1\u30A7\u30C3\u30AF\u6B04\u306B\u89E6\u308C\u3066\u304F\u3060\u3055\u3044\u3002"
+  - _key: vehicleChecklist.chargingUnit
+    _english: Charging unit
+    _vietnamese: "B\u1ED9 ph\u1EADn s\u1EA1c \u0111i\u1EC7n"
+    _japanese: "\u5145\u96FB\u88C5\u7F6E"
+  - _key: vehicleChecklist.battery
+    _english: Battery
+    _vietnamese: "B\xECnh s\u1EA1c \u0111i\u1EC7n"
+    _japanese: "\u30D0\u30C3\u30C6\u30EA\u30FC"
+  - _key: vehicleChecklist.electricalSystem
+    _english: Electrical system
+    _vietnamese: "H\u1EC7 th\u1ED1ng \u0111i\u1EC7n"
+    _japanese: "\u96FB\u6C17\u7CFB\u7D71"
+  - _key: vehicleChecklist.forks
+    _english: Forks
+    _vietnamese: "C\xE0ng n\xE2ng"
+    _japanese: "\u30D5\u30A9\u30FC\u30AF"
+  - _key: vehicleChecklist.steeringHandle
+    _english: Steering handle
+    _vietnamese: "Tay l\xE1i"
+    _japanese: "\u64CD\u4F5C\u30CF\u30F3\u30C9\u30EB"
+  - _key: vehicleChecklist.acceleratorLever
+    _english: Accelerator lever
+    _vietnamese: Tay ga
+    _japanese: "\u30A2\u30AF\u30BB\u30EB\u30EC\u30D0\u30FC"
+  - _key: vehicleChecklist.warningHorn
+    _english: Warning horn
+    _vietnamese: "C\xF2i b\xE1o \u0111\u1ED9ng"
+    _japanese: "\u8B66\u5831\u30DB\u30FC\u30F3"
+  - _key: vehicleChecklist.other
+    _english: Other
+    _vietnamese: "Kh\xE1c"
+    _japanese: "\u305D\u306E\u4ED6"
   _languageProfiles:
   - _language: 0
     _fontOverride: {fileID: 11400000, guid: e9a1fec3604a5864db7480e450e7c93f, type: 2}

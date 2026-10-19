@@ -1516,7 +1516,7 @@ GameObject:
   - component: {fileID: 5956514189153081814}
   - component: {fileID: 7591241513433745616}
   - component: {fileID: 2922604502266303521}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Calibration Panel
   m_TagString: Untagged
   m_Icon: {fileID: 0}

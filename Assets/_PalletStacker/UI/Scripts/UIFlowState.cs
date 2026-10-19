@@ -10,6 +10,7 @@ namespace ElectricPalletStackers.UI
         Hidden = 5,
         Completed = 6,
         Failed = 7,
-        ResetGame = 8
+        ResetGame = 8,
+        VehicleChecklist = 9
     }
 }

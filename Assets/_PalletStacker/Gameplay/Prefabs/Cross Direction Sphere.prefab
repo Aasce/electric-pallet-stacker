@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 7373995767787957575}
   - component: {fileID: 5347550083977000402}
   - component: {fileID: 5548964799047317735}
-  m_Layer: 0
+  m_Layer: 14
   m_Name: Cross Direction Sphere
   m_TagString: Untagged
   m_Icon: {fileID: 0}

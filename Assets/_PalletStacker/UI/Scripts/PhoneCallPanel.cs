@@ -32,6 +32,7 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private GameObject _incomingActions;
         [SerializeField] private GameObject _activeCallActions;
         [SerializeField] private Button _acceptButton;
+        [SerializeField] private Button _endButton;
 
         [Header("Presentation")]
         [SerializeField] private string _defaultCaller = "0123456789";
@@ -43,6 +44,7 @@ namespace ElectricPalletStackers.UI
         private Vector3 _shownScale = Vector3.one;
         private bool _scaleCaptured;
         private bool _acceptButtonBound;
+        private bool _endButtonBound;
         private bool _configurationErrorReported;
         private float _callStartedAt;
         private int _lastDisplayedCallSecond = -1;
@@ -56,18 +58,21 @@ namespace ElectricPalletStackers.UI
         public string CallerDisplay => _callerLabel != null ? _callerLabel.text : string.Empty;
 
         public event Action CallAccepted;
+        public event Action CallEnded;
         public event Action<PhoneCallState, PhoneCallState> StateChanged;
 
         private void OnEnable()
         {
             CaptureAuthoredScale();
             BindAcceptButton();
+            BindEndButton();
             if (_startHidden && State == PhoneCallState.Hidden) HideImmediate();
         }
 
         private void OnDisable()
         {
             UnbindAcceptButton();
+            UnbindEndButton();
             KillTweens();
         }
 
@@ -166,6 +171,14 @@ namespace ElectricPalletStackers.UI
             Hide();
         }
 
+        public void EndCall()
+        {
+            if (!IsInCall) return;
+
+            FinishCall();
+            CallEnded?.Invoke();
+        }
+
         public void Hide()
         {
             IsRinging = false;
@@ -217,6 +230,20 @@ namespace ElectricPalletStackers.UI
             if (_acceptButton == null || !_acceptButtonBound) return;
             _acceptButton.onClick.RemoveListener(AcceptCall);
             _acceptButtonBound = false;
+        }
+
+        private void BindEndButton()
+        {
+            if (_endButton == null || _endButtonBound) return;
+            _endButton.onClick.AddListener(EndCall);
+            _endButtonBound = true;
+        }
+
+        private void UnbindEndButton()
+        {
+            if (_endButton == null || !_endButtonBound) return;
+            _endButton.onClick.RemoveListener(EndCall);
+            _endButtonBound = false;
         }
 
         private void CaptureAuthoredScale()
