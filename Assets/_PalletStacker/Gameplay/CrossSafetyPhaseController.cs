@@ -1,4 +1,5 @@
 using System;
+using ElectricPalletStackers.Localization;
 using ElectricPalletStackers.PalletStackers;
 using TMPro;
 using UnityEngine;
@@ -37,7 +38,7 @@ namespace ElectricPalletStackers.Gameplay
         [Tooltip("Entering this trigger starts the stop-and-direction-confirmation flow.")]
         [FormerlySerializedAs("_instructionZone")]
         [SerializeField] private Collider _safetyConfirmZone;
-        [Tooltip("Entering this trigger before confirmation spawns the crossing vehicle hazard.")]
+        [Tooltip("Entering this trigger before confirmation starts the waiting pedestrian crossing hazard.")]
         [SerializeField] private Collider _dangerZone;
 
         [Header("Direction confirmation")]
@@ -61,14 +62,11 @@ namespace ElectricPalletStackers.Gameplay
         [Header("Stop validation")]
         [SerializeField, Min(0.01f)] private float _stoppedSpeedThreshold = 0.05f;
         [SerializeField, Min(0f)] private float _stoppedSettleDuration = 0.35f;
-        [Tooltip("Minimum signed travel speed used to remember whether the player was moving forward or reversing before stopping.")]
-        [SerializeField, Min(0.01f)] private float _movementDirectionThreshold = 0.05f;
-
         [Header("Instruction UI")]
         [SerializeField] private GameObject _instructionPanel;
         [SerializeField] private TMP_Text _instructionText;
 
-        [Header("Unsafe crossing vehicle")]
+        [Header("Unsafe crossing pedestrian")]
         [SerializeField] private CrossingVehicleController _crossingVehicle;
 
         [Header("Unsafe crossing presentation")]
@@ -83,7 +81,6 @@ namespace ElectricPalletStackers.Gameplay
         private float _stoppedDuration;
         private float _finalConfirmationElapsed;
         private float _cutsceneElapsed;
-        private bool _hazardWasReversing;
         private int _promptedDirectionIndex;
 
         public bool HasCompleted => _state == PhaseState.Completed;
@@ -159,11 +156,19 @@ namespace ElectricPalletStackers.Gameplay
 
             if (_state == PhaseState.HazardActive)
             {
-                UpdateHazardTravelDirection();
-                if ((_crossingVehicle == null || _crossingVehicle.IsCrossing) &&
-                    _hazardWasReversing &&
+                if (_crossingVehicle != null && _crossingVehicle.IsCrossing &&
                     IsVehicleStopped())
+                {
                     BeginFootAccidentCutscene();
+                    return;
+                }
+
+                if (_crossingVehicle != null &&
+                    _crossingVehicle.IsTouchingAny(_playerColliders))
+                {
+                    _crossingVehicle.StopVehicle();
+                    FailureRequested?.Invoke(GameFailureReason.PedestrianCollision);
+                }
                 return;
             }
 
@@ -179,7 +184,12 @@ namespace ElectricPalletStackers.Gameplay
             {
                 if (IsVehicleInsideZone(_panelZone) &&
                     _instructionPanel != null && !_instructionPanel.activeSelf)
+                {
+                    SetInstruction(
+                        LocalizationKeys.CrossSafety.ApproachInstruction,
+                        "Intersection ahead. Slow down and prepare to stop for a safety check.");
                     _instructionPanel.SetActive(true);
+                }
 
                 if (IsVehicleInsideZone(_safetyConfirmZone))
                     BeginSafetyCheck();
@@ -255,7 +265,31 @@ namespace ElectricPalletStackers.Gameplay
             _state = PhaseState.WaitingForStop;
             _stoppedDuration = 0f;
             SetTargetsActive(false, true);
+            SetInstruction(
+                LocalizationKeys.CrossSafety.Instruction,
+                "Stop, point, and confirm it is safe to proceed.");
+            if (_instructionPanel != null) _instructionPanel.SetActive(true);
             Debug.Log("[Cross Safety] Entered safety-confirm zone. Waiting for the player to stop.", this);
+        }
+
+        private void SetInstruction(string localizationKey, string fallback)
+        {
+            if (_instructionText == null) return;
+
+            LocalizationManager localizationManager =
+                FindFirstObjectByType<LocalizationManager>();
+            ILocalizationService localization = localizationManager?.Service;
+            LocalizedText localizedText = _instructionText.GetComponent<LocalizedText>();
+            if (localizedText != null)
+            {
+                localizedText.SetKey(localizationKey, localization);
+                if (localization == null) _instructionText.text = fallback;
+                return;
+            }
+
+            _instructionText.text = localization != null
+                ? localization.GetText(localizationKey)
+                : fallback;
         }
 
         private void ShowDirectionTargets()
@@ -309,14 +343,13 @@ namespace ElectricPalletStackers.Gameplay
         private void TriggerUnsafeCrossing()
         {
             _state = PhaseState.HazardActive;
-            _hazardWasReversing = GetVehicleTravelDirection() < 0;
             HidePresentation();
             if (_dangerPanel != null) _dangerPanel.SetActive(true);
             Debug.LogWarning(
-                "[Cross Safety] Unsafe crossing detected. Spawning the NPC-driven vehicle hazard.",
+                "[Cross Safety] Unsafe crossing detected. The waiting pedestrian is crossing.",
                 this);
             if (_crossingVehicle == null || _playerVehicle == null) return;
-            _crossingVehicle.SpawnForHazard(_playerVehicle.worldCenterOfMass);
+            _crossingVehicle.ArmForHazard();
             _crossingVehicle.BeginCrossing();
         }
 
@@ -341,8 +374,8 @@ namespace ElectricPalletStackers.Gameplay
             }
 
             Debug.LogWarning(
-                "[Cross Safety] The player stopped while reversing after entering the hazard. " +
-                "Playing the operator foot accident cutscene.",
+                "[Cross Safety] The player stopped after entering the pedestrian hazard. " +
+                "Playing the accident cutscene.",
                 this);
         }
 
@@ -387,33 +420,6 @@ namespace ElectricPalletStackers.Gameplay
                    planarVelocity.sqrMagnitude <= _stoppedSpeedThreshold * _stoppedSpeedThreshold;
         }
 
-        private void UpdateHazardTravelDirection()
-        {
-            int travelDirection = GetVehicleTravelDirection();
-            if (travelDirection < 0)
-                _hazardWasReversing = true;
-            else if (travelDirection > 0)
-                _hazardWasReversing = false;
-        }
-
-        private int GetVehicleTravelDirection()
-        {
-            float signedSpeed = _playerMotor != null ? _playerMotor.CurrentSpeed : 0f;
-            if (Mathf.Abs(signedSpeed) <= _movementDirectionThreshold && _playerVehicle != null)
-            {
-                Vector3 forward = _playerMotor != null
-                    ? _playerMotor.WorldForward
-                    : Vector3.ProjectOnPlane(_playerVehicle.transform.forward, Vector3.up).normalized;
-                signedSpeed = Vector3.Dot(
-                    Vector3.ProjectOnPlane(_playerVehicle.linearVelocity, Vector3.up),
-                    forward);
-            }
-
-            if (signedSpeed < -_movementDirectionThreshold) return -1;
-            if (signedSpeed > _movementDirectionThreshold) return 1;
-            return 0;
-        }
-
         private bool IsPhaseEligible()
         {
             if (_trainingExperience == null) return true;
@@ -452,7 +458,6 @@ namespace ElectricPalletStackers.Gameplay
             _stoppedDuration = 0f;
             _finalConfirmationElapsed = 0f;
             _cutsceneElapsed = 0f;
-            _hazardWasReversing = false;
             HidePresentation();
         }
 
@@ -461,7 +466,6 @@ namespace ElectricPalletStackers.Gameplay
             if (next == GameState.WaitingToStart)
             {
                 _state = PhaseState.Idle;
-                _hazardWasReversing = false;
                 HidePresentation();
                 return;
             }
@@ -496,13 +500,11 @@ namespace ElectricPalletStackers.Gameplay
                  _trainingExperience.CurrentStage >= TrainingExperienceStage.PhoneIntersection))
             {
                 _state = PhaseState.Completed;
-                _hazardWasReversing = false;
                 _crossingVehicle?.SuppressVehicle();
             }
             else
             {
                 _state = PhaseState.Idle;
-                _hazardWasReversing = false;
                 _crossingVehicle?.ResetVehicle();
             }
             HidePresentation();

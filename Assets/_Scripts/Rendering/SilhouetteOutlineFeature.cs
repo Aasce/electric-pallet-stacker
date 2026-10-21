@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.RenderGraphModule;
+using UnityEngine.Rendering.RenderGraphModule.Util;
 using UnityEngine.Rendering.Universal;
 
 namespace PalletStackerRendering
@@ -79,7 +80,6 @@ namespace PalletStackerRendering
         {
             private const string MaskPassName = "Pallet Silhouette Mask";
             private const string CompositePassName = "Pallet Silhouette Composite";
-            private static readonly int MaskTextureId = Shader.PropertyToID("_SilhouetteMaskTexture");
             private static readonly int OutlineColorId = Shader.PropertyToID("_OutlineColor");
             private static readonly int OutlineThicknessId = Shader.PropertyToID("_OutlineThickness");
 
@@ -98,15 +98,6 @@ namespace PalletStackerRendering
             private sealed class MaskPassData
             {
                 public RendererListHandle rendererList;
-            }
-
-            private sealed class CompositePassData
-            {
-                public TextureHandle source;
-                public TextureHandle mask;
-                public Material material;
-                public Color color;
-                public float thickness;
             }
 
             public SilhouetteOutlinePass(Material maskMaterial, Material compositeMaterial, Settings settings)
@@ -145,14 +136,7 @@ namespace PalletStackerRendering
                 TextureHandle mask = renderGraph.CreateTexture(maskDescriptor);
 
                 RecordMaskPass(renderGraph, frameData, mask, depth);
-
-                TextureDesc destinationDescriptor = renderGraph.GetTextureDesc(source);
-                destinationDescriptor.name = "CameraColor-PalletSilhouette";
-                destinationDescriptor.clearBuffer = false;
-                TextureHandle destination = renderGraph.CreateTexture(destinationDescriptor);
-
-                RecordCompositePass(renderGraph, source, mask, destination);
-                resourceData.cameraColor = destination;
+                RecordCompositePass(renderGraph, mask, source);
             }
 
             private void RecordMaskPass(
@@ -189,6 +173,11 @@ namespace PalletStackerRendering
                 builder.UseRendererList(rendererList);
                 builder.SetRenderAttachment(mask, 0, AccessFlags.Write);
                 builder.SetRenderAttachmentDepth(depth, AccessFlags.Read);
+                if (cameraData.xr.enabled)
+                {
+                    builder.SetExtendedFeatureFlags(ExtendedFeatureFlags.MultiviewRenderRegionsCompatible);
+                }
+
                 builder.SetRenderFunc(static (MaskPassData data, RasterGraphContext context) =>
                 {
                     context.cmd.DrawRendererList(data.rendererList);
@@ -197,35 +186,24 @@ namespace PalletStackerRendering
 
             private void RecordCompositePass(
                 RenderGraph renderGraph,
-                TextureHandle source,
                 TextureHandle mask,
                 TextureHandle destination)
             {
-                using IRasterRenderGraphBuilder builder = renderGraph.AddRasterRenderPass<CompositePassData>(
-                    CompositePassName,
-                    out CompositePassData passData);
+                MaterialPropertyBlock properties = new MaterialPropertyBlock();
+                properties.SetColor(OutlineColorId, settings.outlineColor);
+                properties.SetFloat(OutlineThicknessId, Mathf.Max(0.5f, settings.thickness));
 
-                passData.source = source;
-                passData.mask = mask;
-                passData.material = compositeMaterial;
-                passData.color = settings.outlineColor;
-                passData.thickness = Mathf.Max(0.5f, settings.thickness);
+                RenderGraphUtils.BlitMaterialParameters parameters = new RenderGraphUtils.BlitMaterialParameters(
+                    mask,
+                    destination,
+                    compositeMaterial,
+                    0,
+                    properties,
+                    RenderGraphUtils.FullScreenGeometryType.ProceduralTriangle);
 
-                builder.UseTexture(source, AccessFlags.Read);
-                builder.UseTexture(mask, AccessFlags.Read);
-                builder.SetRenderAttachment(destination, 0, AccessFlags.Write);
-                builder.SetRenderFunc(static (CompositePassData data, RasterGraphContext context) =>
-                {
-                    data.material.SetTexture(MaskTextureId, data.mask);
-                    data.material.SetColor(OutlineColorId, data.color);
-                    data.material.SetFloat(OutlineThicknessId, data.thickness);
-                    Blitter.BlitTexture(
-                        context.cmd,
-                        data.source,
-                        new Vector4(1f, 1f, 0f, 0f),
-                        data.material,
-                        0);
-                });
+                // The RenderGraph blit utility binds every XR texture-array slice. A direct
+                // Blitter call from a raster pass does not provide that guarantee in SPI mode.
+                renderGraph.AddBlitPass(parameters, CompositePassName);
             }
         }
     }

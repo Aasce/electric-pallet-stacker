@@ -10,6 +10,7 @@ namespace ElectricPalletStackers.Gameplay
         [Header("Round")]
         [SerializeField] private AppManager _appManager;
         [SerializeField] private TrainingExperienceController _trainingExperience;
+        [SerializeField] private TrainingCheckpointController _checkpointController;
         [SerializeField] private Rigidbody _playerVehicle;
 
         [Header("Cross")]
@@ -34,6 +35,12 @@ namespace ElectricPalletStackers.Gameplay
         private bool _npcTriggered;
         private bool _npcCompleted;
         private bool _wasInsidePhoneZone;
+
+        private void Awake()
+        {
+            if (_checkpointController == null)
+                _checkpointController = FindFirstObjectByType<TrainingCheckpointController>();
+        }
 
         private void OnEnable()
         {
@@ -103,6 +110,7 @@ namespace ElectricPalletStackers.Gameplay
                         ExperienceCheckpoint.YieldIntersection);
             }
             if (!handledByTraining) _crossingVehicle?.BeginCrossing();
+            _checkpointController?.CapturePhaseEntryDirection();
         }
 
         private void TriggerPhoneCall()
@@ -110,11 +118,14 @@ namespace ElectricPalletStackers.Gameplay
             if (_trainingExperience != null)
             {
                 _phoneTriggered = _trainingExperience.BeginPhoneCall();
+                if (_phoneTriggered)
+                    _checkpointController?.CapturePhaseEntryDirection();
                 return;
             }
 
             _phoneTriggered = true;
             _phoneCallEvent?.TriggerIncomingCall();
+            _checkpointController?.CapturePhaseEntryDirection();
         }
 
         private void HandleGameStateChanged(GameState previous, GameState next)
@@ -125,12 +136,17 @@ namespace ElectricPalletStackers.Gameplay
             if (_trainingExperience == null) return;
 
             TrainingExperienceStage stage = _trainingExperience.CurrentStage;
+            // The NavigateCorner checkpoint is captured before the player enters the
+            // NPC zone, so restoring it correctly deactivates the population. Re-arm
+            // the zone trigger as well or those NPCs can never be activated again.
+            _npcTriggered = stage > TrainingExperienceStage.NavigateCorner;
             _npcCompleted = stage > TrainingExperienceStage.NavigateCorner;
             _phoneTriggered = stage >= TrainingExperienceStage.PhoneCall;
         }
 
         private void TriggerNpcArea()
         {
+            _checkpointController?.CapturePhaseEntryDirection();
             _npcTriggered = true;
             _npcPopulation?.ActivatePopulation();
         }
@@ -140,12 +156,15 @@ namespace ElectricPalletStackers.Gameplay
             if (_trainingExperience == null)
             {
                 _npcCompleted = true;
+                _checkpointController?.CapturePhaseEntryDirection();
                 return;
             }
 
             _npcCompleted = _trainingExperience.CompleteNpcMovingPhase() ||
                             _trainingExperience.CurrentStage >
                             TrainingExperienceStage.NavigateCorner;
+            if (_npcCompleted)
+                _checkpointController?.CapturePhaseEntryDirection();
         }
 
         private bool CanTriggerPhoneCall()

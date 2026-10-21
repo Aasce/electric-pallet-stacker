@@ -120,10 +120,6 @@ MonoBehaviour:
     _english: End
     _vietnamese: "K\u1EBFt th\xFAc"
     _japanese: "\u7D42\u4E86"
-  - _key: phone.safetyWarning
-    _english: Do not use a phone while operating the vehicle
-    _vietnamese: "kh\xF4ng s\u1EED d\u1EE5ng \u0111i\u1EC7n tho\u1EA1i khi \u0111i\u1EC1u khi\u1EC3n xe"
-    _japanese: "\u8ECA\u4E21\u306E\u904B\u8EE2\u4E2D\u306F\u643A\u5E2F\u96FB\u8A71\u3092\u4F7F\u7528\u3057\u306A\u3044\u3067\u304F\u3060\u3055\u3044"
   - _key: ppe.title
     _english: Wear Safety Equipment
     _vietnamese: "Trang b\u1ECB b\u1EA3o h\u1ED9"
@@ -133,6 +129,11 @@ MonoBehaviour:
     _vietnamese: "Ch\u1EA1m v\xE0o c\xE1c \u0111\u1ED3 b\u1EA3o h\u1ED9 \u0111\u1EC3
       m\u1EB7c ch\xFAng"
     _japanese: "\u4FDD\u8B77\u5177\u306B\u89E6\u308C\u3066\u7740\u7528\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
+  - _key: crossSafety.approachInstruction
+    _english: Intersection ahead. Slow down and prepare to stop for a safety check.
+    _vietnamese: "S\u1EAFp \u0111\u1EBFn ng\u00E3 r\u1EBD. H\u00E3y gi\u1EA3m t\u1ED1c v\u00E0 chu\u1EA9n
+      b\u1ECB d\u1EEBng \u0111\u1EC3 ki\u1EC3m tra an to\u00E0n."
+    _japanese: "\u4EA4\u5DEE\u70B9\u304C\u8FD1\u3065\u3044\u3066\u3044\u307E\u3059\u3002\u6E1B\u901F\u3057\u3001\u5B89\u5168\u78BA\u8A8D\u306E\u305F\u3081\u306B\u505C\u6B62\u3059\u308B\u6E96\u5099\u3092\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
   - _key: crossSafety.instruction
     _english: Stop, point, and confirm it is safe to proceed.
     _vietnamese: "H\xE3y d\u1EEBng l\u1EA1i, ch\u1EC9 tay \u0111\u1EC3 x\xE1c nh\u1EADn

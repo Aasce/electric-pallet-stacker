@@ -15,13 +15,13 @@ TagManager:
   - 
   - 
   - Environment
-  - PalletLoad
+  - Highlight
   - Destination
   - Vehicle
   - Ground
   - Always On Top
   - Pokable
-  - 
+  - PalletLoad
   - 
   - 
   - 

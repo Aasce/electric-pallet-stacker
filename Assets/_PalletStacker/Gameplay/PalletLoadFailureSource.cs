@@ -5,7 +5,11 @@ using UnityEngine;
 namespace ElectricPalletStackers.Gameplay
 {
     [DisallowMultipleComponent]
-    public sealed class PalletLoadFailureSource : MonoBehaviour, IGameFailureSource, IGameRoundParticipant, IGameRoundResumable
+    public sealed class PalletLoadFailureSource : MonoBehaviour,
+        IGameFailureSource,
+        IGameFailureReasonProvider,
+        IGameRoundParticipant,
+        IGameRoundResumable
     {
         [SerializeField] private PalletStackerLoad _load;
         [SerializeField] private PalletStackerLoadHandler _loadHandler;
@@ -19,18 +23,25 @@ namespace ElectricPalletStackers.Gameplay
 
         private bool _roundActive;
 
+        public GameFailureReason FailureReason => GameFailureReason.LoadCollision;
         public event Action<GameFailureReason> FailureRequested;
 
         private void OnEnable()
         {
             if (_loadHandler != null)
+            {
                 _loadHandler.LoadJointBroken += HandleLoadJointBroken;
+                _loadHandler.UnsafePickupAttempted += HandleUnsafePickupAttempted;
+            }
         }
 
         private void OnDisable()
         {
             if (_loadHandler != null)
+            {
                 _loadHandler.LoadJointBroken -= HandleLoadJointBroken;
+                _loadHandler.UnsafePickupAttempted -= HandleUnsafePickupAttempted;
+            }
             _roundActive = false;
         }
 
@@ -69,6 +80,14 @@ namespace ElectricPalletStackers.Gameplay
         {
             if (!_roundActive || brokenLoad != _load) return;
             ReportFailure(GameFailureReason.LoadDropped, "load joint broke unexpectedly");
+        }
+
+        private void HandleUnsafePickupAttempted(PalletStackerLoad attemptedLoad)
+        {
+            if (!_roundActive || attemptedLoad != _load) return;
+            ReportFailure(
+                GameFailureReason.LoadDropped,
+                "forks were raised before they were fully inserted and centered");
         }
 
         private bool IsHeldLoad()

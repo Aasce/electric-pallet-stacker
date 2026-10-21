@@ -35,6 +35,7 @@ namespace ElectricPalletStackers.Gameplay
             }
 
             if (!_pallet.gameObject.activeSelf) _pallet.gameObject.SetActive(true);
+            _pallet.SetHighlighted(true);
 
             Rigidbody body = _pallet.Body;
             if (body != null)
@@ -60,6 +61,7 @@ namespace ElectricPalletStackers.Gameplay
         {
             if (_pallet == null || _resetPoint == null) return;
 
+            _pallet.SetHighlighted(true);
             Rigidbody body = _pallet.Body;
             if (body != null)
             {

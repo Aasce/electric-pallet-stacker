@@ -320,7 +320,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Stop, point, and confirm it is safe to proceed.
+  m_text: Intersection ahead. Slow down and prepare to stop for a safety check.
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: e9a1fec3604a5864db7480e450e7c93f, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 47b70e31bcb8e0742ab3bd2cc7af54ea, type: 2}
@@ -405,4 +405,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Localization.LocalizedText
   _target: {fileID: 2337029621973863341}
-  _key: crossSafety.instruction
+  _key: crossSafety.approachInstruction

@@ -61,6 +61,7 @@ namespace ElectricPalletStackers.Localization
 
         public static class CrossSafety
         {
+            public const string ApproachInstruction = "crossSafety.approachInstruction";
             public const string Instruction = "crossSafety.instruction";
             public const string Danger = "crossSafety.danger";
             public const string PointThisWay = "crossSafety.pointThisWay";
@@ -101,7 +102,6 @@ namespace ElectricPalletStackers.Localization
             public const string Decline = "phone.decline";
             public const string Accept = "phone.accept";
             public const string End = "phone.end";
-            public const string SafetyWarning = "phone.safetyWarning";
         }
     }
 }

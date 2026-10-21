@@ -5,14 +5,15 @@ namespace ElectricPalletStackers.Ble
 {
     /// <summary>
     /// Adds a trigger that follows the moving fork mesh and forwards unsafe
-    /// contacts to the vehicle collision reporter. PalletStackerLoad cargo is
-    /// intentionally allowed so the forks can enter and lift it.
+    /// contacts to the vehicle collision reporter. A pallet may only overlap
+    /// the forks after the load handler has accepted and attached it.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class PalletStackerForkCollisionSensor : MonoBehaviour
     {
         [SerializeField] private BoxCollider _sensor;
         [SerializeField] private PalletStackerCollisionReporter _collisionReporter;
+        [SerializeField] private PalletStackerLoadHandler _loadHandler;
         [SerializeField] private Transform _vehicleRoot;
         [SerializeField] private LayerMask _collisionLayers = ~0;
         [Tooltip("Ignores a support surface whose top is level with the bottom of the forks.")]
@@ -37,7 +38,17 @@ namespace ElectricPalletStackers.Ble
             int layerMask = 1 << other.gameObject.layer;
             if ((_collisionLayers.value & layerMask) == 0) return true;
             if (IsVehicleCollider(other)) return true;
-            if (other.GetComponentInParent<PalletStackerLoad>() != null) return true;
+
+            PalletStackerLoad load = other.GetComponentInParent<PalletStackerLoad>();
+            if (load != null)
+            {
+                if (!load.OwnsCollider(other)) return true;
+                if (_loadHandler != null && _loadHandler.HeldLoad == load) return true;
+
+                // Fork contact with the pallet body is expected while entering the
+                // pocket or supporting it from below/above. Only a base strike is unsafe.
+                return !load.IsForkHazardCollider(other);
+            }
 
             return _ignoreGroundLikeContacts && IsGroundLikeContact(other);
         }

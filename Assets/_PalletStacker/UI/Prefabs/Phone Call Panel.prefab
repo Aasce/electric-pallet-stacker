@@ -2804,7 +2804,6 @@ MonoBehaviour:
   _declineButton: {fileID: 910000000000001006}
   _endButton: {fileID: 4254364655294899708}
   _endButtonLabel: {fileID: 910000000000001010}
-  _safetyWarningPanel: {fileID: 0}
   _transitionDuration: 0.2
   _ringingStartScale: 0.92
   _hiddenScale: 0.94

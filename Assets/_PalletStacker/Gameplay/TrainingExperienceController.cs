@@ -40,22 +40,17 @@ namespace ElectricPalletStackers.Gameplay
         [SerializeField] private CrossingVehicleController _crossingVehicle;
         [Tooltip("Phone event service assigned from the scene Gameplay Manager.")]
         [SerializeField] private PhoneCallEventSimulator _phoneCallEvent;
-        [Tooltip("The crossing-vehicle waypoint that reveals the training pallet. Zero-based; Waypoint 03 is index 2.")]
-        [SerializeField, Min(1)] private int _palletRevealWaypointIndex = 2;
 
         public TrainingExperienceStage CurrentStage { get; private set; } =
             TrainingExperienceStage.WaitingToStart;
         public bool HasCompletedCrossSafety { get; private set; }
         public event Action VictoryRequested;
-        public event Action PalletRevealed;
         public event Action<TrainingExperienceStage, TrainingExperienceStage> StageChanged;
 
         private void OnEnable()
         {
             if (_palletRoundController != null)
                 _palletRoundController.VictoryRequested += HandleDestinationConfirmed;
-            if (_crossingVehicle != null)
-                _crossingVehicle.WaypointReached += HandleCrossingWaypointReached;
             if (_phoneCallEvent != null)
                 _phoneCallEvent.CallCompleted += HandlePhoneCallCompleted;
         }
@@ -64,8 +59,6 @@ namespace ElectricPalletStackers.Gameplay
         {
             if (_palletRoundController != null)
                 _palletRoundController.VictoryRequested -= HandleDestinationConfirmed;
-            if (_crossingVehicle != null)
-                _crossingVehicle.WaypointReached -= HandleCrossingWaypointReached;
             if (_phoneCallEvent != null)
                 _phoneCallEvent.CallCompleted -= HandlePhoneCallCompleted;
         }
@@ -81,10 +74,9 @@ namespace ElectricPalletStackers.Gameplay
         {
             HasCompletedCrossSafety = false;
             _crossingVehicle?.ResetVehicle();
-            _palletRoundController?.SetPalletVisible(false);
+            _palletRoundController?.SetPalletVisible(true);
             // The authored route starts in the NPC Moving area. CollectPallet is a
-            // legacy stage from the old route and waiting for a held load here would
-            // deadlock the new flow because the pallet is intentionally still hidden.
+            // legacy stage from the old route, so the experience begins at the corner.
             TransitionTo(TrainingExperienceStage.NavigateCorner);
         }
 
@@ -111,7 +103,7 @@ namespace ElectricPalletStackers.Gameplay
             HasCompletedCrossSafety = false;
             _crossingVehicle?.ResetVehicle();
             _phoneCallEvent?.ResetState();
-            _palletRoundController?.SetPalletVisible(false);
+            _palletRoundController?.SetPalletVisible(true);
             TransitionTo(TrainingExperienceStage.WaitingToStart);
         }
 
@@ -141,7 +133,6 @@ namespace ElectricPalletStackers.Gameplay
 
             HasCompletedCrossSafety = true;
             _crossingVehicle?.SuppressVehicle();
-            RevealPallet();
             TransitionTo(TrainingExperienceStage.PhoneIntersection);
         }
 
@@ -187,21 +178,6 @@ namespace ElectricPalletStackers.Gameplay
             if (CurrentStage != TrainingExperienceStage.PhoneCall) return;
             _palletRoundController?.ArmDestination();
             TransitionTo(TrainingExperienceStage.DeliverPallet);
-        }
-
-        private void HandleCrossingWaypointReached(int waypointIndex)
-        {
-            if (waypointIndex != _palletRevealWaypointIndex) return;
-            RevealPallet();
-        }
-
-        private void RevealPallet()
-        {
-            if (_palletRoundController == null) return;
-            PalletStackerLoad pallet = _palletRoundController.ActivePallet;
-            bool wasVisible = pallet != null && pallet.gameObject.activeSelf;
-            _palletRoundController?.SetPalletVisible(true);
-            if (!wasVisible) PalletRevealed?.Invoke();
         }
 
         private void RestartPhoneCallPhase()

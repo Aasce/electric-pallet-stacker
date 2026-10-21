@@ -14,6 +14,8 @@ Shader "Hidden/PalletStacker/SilhouetteOutline"
             Cull Off
             ZTest Always
             ZWrite Off
+            Blend One One
+            ColorMask RGB
 
             HLSLPROGRAM
             #pragma target 3.0
@@ -23,14 +25,12 @@ Shader "Hidden/PalletStacker/SilhouetteOutline"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.core/Runtime/Utilities/Blit.hlsl"
 
-            TEXTURE2D_X(_SilhouetteMaskTexture);
-
             half4 _OutlineColor;
             float _OutlineThickness;
 
             float SampleMask(float2 uv)
             {
-                return SAMPLE_TEXTURE2D_X(_SilhouetteMaskTexture, sampler_LinearClamp, uv).r;
+                return SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv).r;
             }
 
             half4 Frag(Varyings input) : SV_Target
@@ -38,7 +38,6 @@ Shader "Hidden/PalletStacker/SilhouetteOutline"
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
                 float2 uv = input.texcoord;
-                half4 source = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv);
                 float center = SampleMask(uv);
                 float2 radius = _BlitTexture_TexelSize.xy * max(_OutlineThickness, 0.5);
 
@@ -65,8 +64,8 @@ Shader "Hidden/PalletStacker/SilhouetteOutline"
                 }
 
                 float outsideOutline = saturate(expanded - center);
-                half3 color = source.rgb + _OutlineColor.rgb * outsideOutline * _OutlineColor.a;
-                return half4(color, source.a);
+                half3 color = _OutlineColor.rgb * outsideOutline * _OutlineColor.a;
+                return half4(color, 0.0h);
             }
             ENDHLSL
         }

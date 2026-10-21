@@ -14,6 +14,7 @@ namespace ElectricPalletStackers.Gameplay
 
         [Header("Snapshot Targets")]
         [SerializeField] private Rigidbody _vehicleBody;
+        [SerializeField] private PalletStackerRigidbodyMotor _vehicleMotor;
         [SerializeField] private PalletStackerMast _mast;
         [SerializeField] private PalletStackerLoadHandler _loadHandler;
         [SerializeField] private PalletStackerLoad _pallet;
@@ -25,9 +26,16 @@ namespace ElectricPalletStackers.Gameplay
         [Tooltip("Optional authored vehicle poses for each stage. When a stage has no entry, the live checkpoint pose is used.")]
         [SerializeField] private PhaseResetPoint[] _phaseResetPoints;
 
+        [Header("Direction-Aware Restore")]
+        [Tooltip("Minimum signed vehicle speed used to determine whether the vehicle entered a phase forwards or in reverse.")]
+        [SerializeField, Min(0f)] private float _travelDirectionThreshold = 0.01f;
+
         private CheckpointSnapshot _latest;
         private bool _hasCheckpoint;
         private bool _isRestoring;
+        private bool _hasCheckpointEntryDirection;
+        private bool _checkpointEnteredInReverse;
+        private bool _isWaitingForEntryDirection;
 
         public bool HasCheckpoint => _hasCheckpoint;
         public TrainingExperienceStage LatestStage => _latest.Stage;
@@ -40,7 +48,6 @@ namespace ElectricPalletStackers.Gameplay
             _appManager.RoundStarted += HandleRoundStarted;
             _appManager.StateChanged += HandleGameStateChanged;
             _experience.StageChanged += HandleStageChanged;
-            _experience.PalletRevealed += HandlePalletRevealed;
         }
 
         private void OnDisable()
@@ -48,7 +55,31 @@ namespace ElectricPalletStackers.Gameplay
             _appManager.RoundStarted -= HandleRoundStarted;
             _appManager.StateChanged -= HandleGameStateChanged;
             _experience.StageChanged -= HandleStageChanged;
-            _experience.PalletRevealed -= HandlePalletRevealed;
+        }
+
+        private void Update()
+        {
+            if (!_isWaitingForEntryDirection ||
+                _appManager == null ||
+                _appManager.CurrentState != GameState.Playing) return;
+
+            if (TryGetEnteredInReverse(out bool enteredInReverse))
+                SaveCheckpointEntryDirection(enteredInReverse);
+        }
+
+        /// <summary>
+        /// Freezes the forward/reverse mode the first time the vehicle enters the
+        /// current phase. If it is stationary on the trigger frame, capture is deferred
+        /// until the first actual movement rather than guessing a direction.
+        /// </summary>
+        public void CapturePhaseEntryDirection()
+        {
+            if (!_hasCheckpoint || _hasCheckpointEntryDirection) return;
+
+            if (TryGetEnteredInReverse(out bool enteredInReverse))
+                SaveCheckpointEntryDirection(enteredInReverse);
+            else
+                _isWaitingForEntryDirection = true;
         }
 
         public bool RestoreLatest()
@@ -61,13 +92,14 @@ namespace ElectricPalletStackers.Gameplay
             RigidbodyPoseUtility.Restore(
                 _vehicleBody,
                 _latest.VehiclePosition,
-                _latest.VehicleRotation,
+                GetRestoreVehicleRotation(),
                 true);
 
             _mast.RestoreHeight(_latest.MastHeight, _latest.MastTargetHeight);
 
             if (_pallet.gameObject.activeSelf != _latest.PalletWasActive)
                 _pallet.gameObject.SetActive(_latest.PalletWasActive);
+            _pallet.SetHighlighted(_latest.PalletWasHighlighted);
 
             Rigidbody palletBody = _pallet.Body;
             Vector3 palletPosition = _latest.PalletPoseIsForkRelative
@@ -111,6 +143,9 @@ namespace ElectricPalletStackers.Gameplay
 
         private void HandleRoundStarted()
         {
+            _hasCheckpointEntryDirection = false;
+            _checkpointEnteredInReverse = false;
+            _isWaitingForEntryDirection = false;
             Capture(_experience.CurrentStage);
         }
 
@@ -124,15 +159,12 @@ namespace ElectricPalletStackers.Gameplay
 
         private void HandleGameStateChanged(GameState previous, GameState next)
         {
-            if (next == GameState.WaitingToStart) _hasCheckpoint = false;
-        }
+            if (next != GameState.WaitingToStart) return;
 
-        private void HandlePalletRevealed()
-        {
-            if (_isRestoring || _appManager.CurrentState != GameState.Playing) return;
-            if (_experience.CurrentStage == TrainingExperienceStage.NavigateCorner ||
-                _experience.CurrentStage == TrainingExperienceStage.YieldIntersection) return;
-            Capture(_experience.CurrentStage);
+            _hasCheckpoint = false;
+            _hasCheckpointEntryDirection = false;
+            _checkpointEnteredInReverse = false;
+            _isWaitingForEntryDirection = false;
         }
 
         private void Capture(TrainingExperienceStage stage)
@@ -155,6 +187,10 @@ namespace ElectricPalletStackers.Gameplay
             Quaternion palletRotation = palletPoseIsForkRelative
                 ? Quaternion.Inverse(forks.rotation) * palletBody.rotation
                 : palletBody.rotation;
+
+            _hasCheckpointEntryDirection =
+                TryGetEnteredInReverse(out _checkpointEnteredInReverse);
+            _isWaitingForEntryDirection = false;
             _latest = new CheckpointSnapshot(
                 stage,
                 vehiclePosition,
@@ -166,6 +202,7 @@ namespace ElectricPalletStackers.Gameplay
                 hadAttachedLoad,
                 palletPoseIsForkRelative,
                 _pallet.gameObject.activeSelf,
+                _pallet.IsHighlighted,
                 _crossingVehicle != null
                     ? _crossingVehicle.CaptureCheckpointState()
                     : default);
@@ -185,6 +222,50 @@ namespace ElectricPalletStackers.Gameplay
                     return entry.ResetPoint;
             }
             return null;
+        }
+
+        private Quaternion GetRestoreVehicleRotation()
+        {
+            Quaternion rotation = _latest.VehicleRotation;
+            if (!_hasCheckpointEntryDirection || !_checkpointEnteredInReverse ||
+                GetResetPoint(_latest.Stage) == null) return rotation;
+
+            return Quaternion.AngleAxis(180f, Vector3.up) * rotation;
+        }
+
+        private bool TryGetEnteredInReverse(out bool enteredInReverse)
+        {
+            enteredInReverse = false;
+            if (_vehicleMotor != null)
+            {
+                float signedSpeed = _vehicleMotor.CurrentSpeed;
+                if (Mathf.Abs(signedSpeed) <= _travelDirectionThreshold) return false;
+
+                enteredInReverse = signedSpeed < 0f;
+                return true;
+            }
+
+            if (_vehicleBody == null) return false;
+            Vector3 planarVelocity = Vector3.ProjectOnPlane(
+                _vehicleBody.linearVelocity,
+                Vector3.up);
+            if (planarVelocity.sqrMagnitude <=
+                _travelDirectionThreshold * _travelDirectionThreshold) return false;
+
+            Vector3 vehicleForward = Vector3.ProjectOnPlane(
+                _vehicleBody.transform.forward,
+                Vector3.up);
+            if (vehicleForward.sqrMagnitude <= Mathf.Epsilon) return false;
+
+            enteredInReverse = Vector3.Dot(planarVelocity, vehicleForward) < 0f;
+            return true;
+        }
+
+        private void SaveCheckpointEntryDirection(bool enteredInReverse)
+        {
+            _checkpointEnteredInReverse = enteredInReverse;
+            _hasCheckpointEntryDirection = true;
+            _isWaitingForEntryDirection = false;
         }
 
         [Serializable]
@@ -210,6 +291,7 @@ namespace ElectricPalletStackers.Gameplay
                 bool hadAttachedLoad,
                 bool palletPoseIsForkRelative,
                 bool palletWasActive,
+                bool palletWasHighlighted,
                 CrossingVehicleController.CheckpointState crossingVehicleState)
             {
                 Stage = stage;
@@ -222,6 +304,7 @@ namespace ElectricPalletStackers.Gameplay
                 HadAttachedLoad = hadAttachedLoad;
                 PalletPoseIsForkRelative = palletPoseIsForkRelative;
                 PalletWasActive = palletWasActive;
+                PalletWasHighlighted = palletWasHighlighted;
                 CrossingVehicleState = crossingVehicleState;
             }
 
@@ -235,6 +318,7 @@ namespace ElectricPalletStackers.Gameplay
             public bool HadAttachedLoad { get; }
             public bool PalletPoseIsForkRelative { get; }
             public bool PalletWasActive { get; }
+            public bool PalletWasHighlighted { get; }
             public CrossingVehicleController.CheckpointState CrossingVehicleState { get; }
         }
     }

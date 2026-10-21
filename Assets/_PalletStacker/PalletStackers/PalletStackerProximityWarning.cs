@@ -1,94 +1,87 @@
 using System.Collections.Generic;
+using ElectricPalletStackers.NPCs;
+using ElectricPalletStackers.UI;
 using UnityEngine;
-using UnityEngine.Rendering.Universal;
-using UnityEngine.UI;
 
 namespace ElectricPalletStackers.PalletStackers
 {
     /// <summary>
-    /// Detects environment colliders around the vehicle and displays their horizontal
-    /// directions on a camera-space HUD. The HUD is rendered by a URP overlay camera so
-    /// world geometry can never occlude it.
+    /// Detects environment colliders around the vehicle and drives the centered,
+    /// camera-relative collision-warning HUD authored under WorldUIs.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class PalletStackerProximityWarning : MonoBehaviour
     {
-        private const string AlwaysOnTopLayerName = "Always On Top";
-        private const string OverlayCameraName = "Always On Top UI Camera";
         private const float SameDirectionDotThreshold = 0.94f;
+        private const int MaximumWarnings = 3;
 
         [Header("Detection")]
         [SerializeField] private BoxCollider _warningTrigger;
         [SerializeField] private LayerMask _environmentLayers = 1 << 8;
+        [Tooltip("Vehicle body and fork colliders used to place Hue 10 at the real contact edge.")]
+        [SerializeField] private Collider[] _vehicleColliders;
+        [Tooltip("Fallback contact distance when no vehicle collider intersects a warning direction.")]
+        [SerializeField, Range(0f, 0.95f)] private float _collisionDistanceRatio = 0.45f;
 
         [Header("HUD")]
-        [SerializeField, Range(1, 3)] private int _maximumWarnings = 3;
-        [SerializeField, Range(0.05f, 0.48f)] private float _screenRadius = 0.34f;
-        [SerializeField] private Vector2 _warningImageSize = new(56f, 84f);
-        [SerializeField] private Color _warningColor = new(1f, 0.35f, 0.08f, 0.9f);
+        [Tooltip("Optional scene override. When empty, the view is resolved from WorldUIs automatically.")]
+        [SerializeField] private CollisionWarningHudView _warningHud;
 
         private readonly HashSet<Collider> _contacts = new();
         private readonly List<WarningCandidate> _candidates = new();
-        private readonly List<Vector2> _visibleDirections = new(3);
-        private CollisionWarningHud _hud;
+        private readonly List<Vector2> _visibleDirections = new(MaximumWarnings);
+        private readonly List<float> _visibleProximities = new(MaximumWarnings);
 
         private readonly struct WarningCandidate
         {
-            public WarningCandidate(Vector2 direction, float distanceSquared)
+            public WarningCandidate(Vector2 direction, float distanceSquared, float proximity)
             {
                 Direction = direction;
                 DistanceSquared = distanceSquared;
+                Proximity = proximity;
             }
 
             public Vector2 Direction { get; }
             public float DistanceSquared { get; }
+            public float Proximity { get; }
         }
 
         private void Awake()
         {
             ResolveTrigger();
+            ResolveHud();
         }
 
         private void LateUpdate()
         {
             if (_warningTrigger == null) return;
 
+            RemoveInvalidContacts();
+            ResolveHud();
+
+            if (_warningHud == null) return;
+
             Camera viewCamera = Camera.main;
             if (viewCamera == null)
             {
-                _hud?.HideAll();
+                _warningHud.SetVisible(false);
                 return;
             }
 
-            if (_hud == null || _hud.BaseCamera != viewCamera)
-            {
-                _hud?.Destroy();
-                _hud = CollisionWarningHud.Create(
-                    viewCamera,
-                    _maximumWarnings,
-                    _warningImageSize,
-                    _warningColor,
-                    AlwaysOnTopLayerName,
-                    OverlayCameraName);
-            }
-
-            if (_hud == null) return;
-
-            RemoveInvalidContacts();
-            BuildVisibleDirections(viewCamera);
-            _hud.SetDirections(_visibleDirections, _screenRadius);
+            BuildVisibleWarnings(viewCamera);
+            _warningHud.ConfigureFor(viewCamera);
+            _warningHud.SetWarnings(_visibleDirections, _visibleProximities);
         }
 
         private void OnDisable()
         {
             _contacts.Clear();
-            _hud?.HideAll();
+            _warningHud?.SetVisible(false);
         }
 
         private void OnDestroy()
         {
-            _hud?.Destroy();
-            _hud = null;
+            _warningHud?.SetVisible(false);
         }
 
         private void OnTriggerEnter(Collider other)
@@ -109,11 +102,7 @@ namespace ElectricPalletStackers.PalletStackers
 
         private void OnValidate()
         {
-            _maximumWarnings = Mathf.Clamp(_maximumWarnings, 1, 3);
-            _screenRadius = Mathf.Clamp(_screenRadius, 0.05f, 0.48f);
-            _warningImageSize.x = Mathf.Max(1f, _warningImageSize.x);
-            _warningImageSize.y = Mathf.Max(1f, _warningImageSize.y);
-
+            _collisionDistanceRatio = Mathf.Clamp(_collisionDistanceRatio, 0f, 0.95f);
             ResolveTrigger();
             if (_warningTrigger != null) _warningTrigger.isTrigger = true;
         }
@@ -125,7 +114,7 @@ namespace ElectricPalletStackers.PalletStackers
             Matrix4x4 oldMatrix = Gizmos.matrix;
             Color oldColor = Gizmos.color;
             Gizmos.matrix = _warningTrigger.transform.localToWorldMatrix;
-            Gizmos.color = new Color(_warningColor.r, _warningColor.g, _warningColor.b, 0.35f);
+            Gizmos.color = new Color(1f, 0.35f, 0.08f, 0.35f);
             Gizmos.DrawWireCube(_warningTrigger.center, _warningTrigger.size);
             Gizmos.matrix = oldMatrix;
             Gizmos.color = oldColor;
@@ -144,37 +133,60 @@ namespace ElectricPalletStackers.PalletStackers
             }
         }
 
+        private void ResolveHud()
+        {
+            if (_warningHud != null) return;
+            _warningHud = FindAnyObjectByType<CollisionWarningHudView>(FindObjectsInactive.Include);
+        }
+
         private void Track(Collider other)
         {
             if (other == null || other == _warningTrigger) return;
-            int otherLayerMask = 1 << other.gameObject.layer;
-            if ((_environmentLayers.value & otherLayerMask) == 0) return;
+            if (!IsWarningTarget(other)) return;
             _contacts.Add(other);
         }
 
         private void RemoveInvalidContacts()
         {
+            Bounds warningBounds = _warningTrigger.bounds;
             _contacts.RemoveWhere(contact =>
                 contact == null
                 || !contact.enabled
                 || !contact.gameObject.activeInHierarchy
-                || (_environmentLayers.value & (1 << contact.gameObject.layer)) == 0);
+                || !IsWarningTarget(contact)
+                // Teleporting the vehicle or an NPC during checkpoint restore does not
+                // guarantee OnTriggerExit. Cull contacts that are no longer even inside
+                // the trigger's world-space bounds so stale warnings cannot survive reset.
+                || !warningBounds.Intersects(contact.bounds));
         }
 
-        private void BuildVisibleDirections(Camera viewCamera)
+        private bool IsWarningTarget(Collider contact)
+        {
+            int contactLayerMask = 1 << contact.gameObject.layer;
+            if ((_environmentLayers.value & contactLayerMask) != 0) return true;
+
+            // NPC colliders intentionally remain on Default because their movement and
+            // vehicle-contact logic is component-driven. Recognise them explicitly so
+            // unrelated Default-layer triggers never become collision warnings.
+            return contact.GetComponentInParent<NpcAgent>() != null;
+        }
+
+        private void BuildVisibleWarnings(Camera viewCamera)
         {
             _candidates.Clear();
             _visibleDirections.Clear();
+            _visibleProximities.Clear();
             if (_contacts.Count == 0) return;
 
-            Vector3 origin = _warningTrigger.transform.TransformPoint(_warningTrigger.center);
+            Vector3 origin = CalculateWarningOrigin();
             Vector3 cameraForward = Vector3.ProjectOnPlane(viewCamera.transform.forward, Vector3.up);
-            Vector3 cameraRight = Vector3.ProjectOnPlane(viewCamera.transform.right, Vector3.up);
+            if (cameraForward.sqrMagnitude < 0.0001f)
+                cameraForward = Vector3.ProjectOnPlane(transform.forward, Vector3.up);
+            if (cameraForward.sqrMagnitude < 0.0001f)
+                cameraForward = Vector3.forward;
 
-            if (cameraForward.sqrMagnitude < 0.0001f) cameraForward = transform.forward;
-            if (cameraRight.sqrMagnitude < 0.0001f) cameraRight = transform.right;
             cameraForward.Normalize();
-            cameraRight.Normalize();
+            Vector3 cameraRight = Vector3.Cross(Vector3.up, cameraForward).normalized;
 
             foreach (Collider contact in _contacts)
             {
@@ -186,18 +198,28 @@ namespace ElectricPalletStackers.PalletStackers
                 Vector3 horizontalOffset = Vector3.ProjectOnPlane(offset, Vector3.up);
                 if (horizontalOffset.sqrMagnitude < 0.0001f) continue;
 
-                float distanceSquared = horizontalOffset.sqrMagnitude;
-                horizontalOffset.Normalize();
-                Vector2 screenDirection = new(
-                    Vector3.Dot(horizontalOffset, cameraRight),
-                    Vector3.Dot(horizontalOffset, cameraForward));
-                if (screenDirection.sqrMagnitude < 0.0001f) continue;
+                float distance = horizontalOffset.magnitude;
+                Vector3 worldDirection = horizontalOffset / distance;
+                Vector2 hudDirection = new(
+                    Vector3.Dot(worldDirection, cameraRight),
+                    Vector3.Dot(worldDirection, cameraForward));
+                if (hudDirection.sqrMagnitude < 0.0001f) continue;
 
-                _candidates.Add(new WarningCandidate(screenDirection.normalized, distanceSquared));
+                float maximumDistance = CalculateTriggerEdgeDistance(origin, worldDirection);
+                float collisionDistance = CalculateCollisionEdgeDistance(
+                    origin,
+                    worldDirection,
+                    maximumDistance);
+                float proximity = 1f - Mathf.InverseLerp(collisionDistance, maximumDistance, distance);
+
+                _candidates.Add(new WarningCandidate(
+                    hudDirection.normalized,
+                    horizontalOffset.sqrMagnitude,
+                    proximity));
             }
 
+            // Keep the closest obstacle when multiple contacts occupy the same HUD direction.
             _candidates.Sort((left, right) => left.DistanceSquared.CompareTo(right.DistanceSquared));
-            int count = Mathf.Min(_maximumWarnings, 3);
             foreach (WarningCandidate candidate in _candidates)
             {
                 bool duplicatesVisibleDirection = false;
@@ -209,158 +231,194 @@ namespace ElectricPalletStackers.PalletStackers
                 }
 
                 if (duplicatesVisibleDirection) continue;
+
                 _visibleDirections.Add(candidate.Direction);
-                if (_visibleDirections.Count >= count) break;
+                _visibleProximities.Add(candidate.Proximity);
+                if (_visibleDirections.Count >= MaximumWarnings) break;
             }
         }
 
-        private sealed class CollisionWarningHud
+        private Vector3 CalculateWarningOrigin()
         {
-            private readonly GameObject _root;
-            private readonly RectTransform _canvasRect;
-            private readonly RectTransform[] _warningRects;
+            Vector3 triggerCenter = _warningTrigger.transform.TransformPoint(_warningTrigger.center);
+            if (_vehicleColliders == null || _vehicleColliders.Length == 0 ||
+                _vehicleColliders[0] == null) return triggerCenter;
 
-            private CollisionWarningHud(
-                Camera baseCamera,
-                GameObject root,
-                RectTransform canvasRect,
-                RectTransform[] warningRects)
+            Collider bodyCollider = _vehicleColliders[0];
+            Vector3 bodyCenter = bodyCollider is BoxCollider bodyBox
+                ? bodyBox.transform.TransformPoint(bodyBox.center)
+                : bodyCollider.bounds.center;
+
+            // Keep the query at the trigger's authored height while using the body centre
+            // for stable front/back directions. The trigger itself is offset forward to
+            // leave warning space beyond the tips of the forks.
+            bodyCenter.y = triggerCenter.y;
+            return bodyCenter;
+        }
+
+        private float CalculateTriggerEdgeDistance(
+            Vector3 worldOrigin,
+            Vector3 horizontalWorldDirection)
+        {
+            Vector3 localOrigin3 = _warningTrigger.transform.InverseTransformPoint(worldOrigin);
+            Vector3 localDirectionPerWorldUnit =
+                _warningTrigger.transform.InverseTransformVector(horizontalWorldDirection.normalized);
+            Vector3 extents = _warningTrigger.size * 0.5f;
+            Vector2 center = new(_warningTrigger.center.x, _warningTrigger.center.z);
+            Vector2 planarExtents = new(extents.x, extents.z);
+            return TryGetRayExitDistance(
+                new Vector2(localOrigin3.x, localOrigin3.z),
+                new Vector2(localDirectionPerWorldUnit.x, localDirectionPerWorldUnit.z),
+                center - planarExtents,
+                center + planarExtents,
+                out float exitDistance)
+                ? exitDistance
+                : Mathf.Max(extents.x, extents.z);
+        }
+
+        private float CalculateCollisionEdgeDistance(
+            Vector3 worldOrigin,
+            Vector3 horizontalWorldDirection,
+            float maximumDistance)
+        {
+            float fallbackDistance = maximumDistance * _collisionDistanceRatio;
+            if (_vehicleColliders == null || _vehicleColliders.Length == 0)
+                return fallbackDistance;
+
+            Transform triggerTransform = _warningTrigger.transform;
+            Vector3 localOrigin = triggerTransform.InverseTransformPoint(worldOrigin);
+            Vector3 localDirectionPerWorldUnit =
+                triggerTransform.InverseTransformVector(horizontalWorldDirection.normalized);
+            Vector2 rayDirection = new(
+                localDirectionPerWorldUnit.x,
+                localDirectionPerWorldUnit.z);
+            if (rayDirection.sqrMagnitude < 0.0001f) return fallbackDistance;
+
+            float collisionDistance = 0f;
+            foreach (Collider vehicleCollider in _vehicleColliders)
             {
-                BaseCamera = baseCamera;
-                _root = root;
-                _canvasRect = canvasRect;
-                _warningRects = warningRects;
+                if (vehicleCollider == null || !vehicleCollider.enabled) continue;
+                GetPlanarBoundsInTriggerSpace(
+                    vehicleCollider,
+                    triggerTransform,
+                    out Vector2 minimum,
+                    out Vector2 maximum);
+                if (!TryGetRayExitDistance(
+                        new Vector2(localOrigin.x, localOrigin.z),
+                        rayDirection,
+                        minimum,
+                        maximum,
+                        out float exitDistance)) continue;
+
+                collisionDistance = Mathf.Max(collisionDistance, exitDistance);
             }
 
-            public Camera BaseCamera { get; }
+            if (collisionDistance <= 0f) return fallbackDistance;
+            return Mathf.Min(collisionDistance, maximumDistance - 0.001f);
+        }
 
-            public static CollisionWarningHud Create(
-                Camera baseCamera,
-                int warningCount,
-                Vector2 warningSize,
-                Color warningColor,
-                string layerName,
-                string overlayCameraName)
+        private static void GetPlanarBoundsInTriggerSpace(
+            Collider source,
+            Transform triggerTransform,
+            out Vector2 minimum,
+            out Vector2 maximum)
+        {
+            minimum = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+            maximum = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+
+            if (source is BoxCollider boxCollider)
             {
-                int uiLayer = LayerMask.NameToLayer(layerName);
-                if (uiLayer < 0)
+                Vector3 extents = boxCollider.size * 0.5f;
+                for (int x = -1; x <= 1; x += 2)
+                for (int y = -1; y <= 1; y += 2)
+                for (int z = -1; z <= 1; z += 2)
                 {
-                    Debug.LogError($"Collision warning HUD requires a '{layerName}' layer.");
-                    return null;
+                    Vector3 sourcePoint = boxCollider.center + Vector3.Scale(
+                        extents,
+                        new Vector3(x, y, z));
+                    EncapsulatePlanarPoint(
+                        triggerTransform.InverseTransformPoint(
+                            boxCollider.transform.TransformPoint(sourcePoint)),
+                        ref minimum,
+                        ref maximum);
                 }
-
-                Camera overlayCamera = CreateOverlayCamera(baseCamera, uiLayer, overlayCameraName);
-                if (overlayCamera == null) return null;
-
-                GameObject canvasObject = new("Collision Warning Canvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
-                canvasObject.layer = uiLayer;
-                canvasObject.transform.SetParent(overlayCamera.transform, false);
-
-                Canvas canvas = canvasObject.GetComponent<Canvas>();
-                canvas.renderMode = RenderMode.ScreenSpaceCamera;
-                canvas.worldCamera = overlayCamera;
-                canvas.planeDistance = Mathf.Max(overlayCamera.nearClipPlane + 0.01f, 0.05f);
-                canvas.overrideSorting = true;
-                canvas.sortingOrder = short.MaxValue;
-
-                CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
-                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                scaler.referenceResolution = new Vector2(1920f, 1080f);
-                scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-                scaler.matchWidthOrHeight = 0.5f;
-
-                RectTransform canvasRect = canvasObject.GetComponent<RectTransform>();
-                RectTransform[] warningRects = new RectTransform[Mathf.Clamp(warningCount, 1, 3)];
-                for (int index = 0; index < warningRects.Length; index++)
-                {
-                    GameObject warningObject = new($"Collision Warning {index + 1}", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-                    warningObject.layer = uiLayer;
-                    warningObject.transform.SetParent(canvasRect, false);
-
-                    RectTransform warningRect = warningObject.GetComponent<RectTransform>();
-                    warningRect.anchorMin = new Vector2(0.5f, 0.5f);
-                    warningRect.anchorMax = new Vector2(0.5f, 0.5f);
-                    warningRect.pivot = new Vector2(0.5f, 0.5f);
-                    warningRect.sizeDelta = warningSize;
-
-                    Image warningImage = warningObject.GetComponent<Image>();
-                    warningImage.sprite = null;
-                    warningImage.color = warningColor;
-                    warningImage.raycastTarget = false;
-                    warningObject.SetActive(false);
-                    warningRects[index] = warningRect;
-                }
-
-                return new CollisionWarningHud(baseCamera, canvasObject, canvasRect, warningRects);
+                return;
             }
 
-            public void SetDirections(IReadOnlyList<Vector2> directions, float normalizedRadius)
+            Bounds bounds = source.bounds;
+            Vector3 boundsExtents = bounds.extents;
+            for (int x = -1; x <= 1; x += 2)
+            for (int y = -1; y <= 1; y += 2)
+            for (int z = -1; z <= 1; z += 2)
             {
-                float width = _canvasRect.rect.width;
-                float height = _canvasRect.rect.height;
-                float radius = Mathf.Min(width, height) * normalizedRadius;
-                if (radius <= 0f) radius = 1080f * normalizedRadius;
-
-                for (int index = 0; index < _warningRects.Length; index++)
-                {
-                    RectTransform warningRect = _warningRects[index];
-                    bool isVisible = index < directions.Count;
-                    warningRect.gameObject.SetActive(isVisible);
-                    if (!isVisible) continue;
-
-                    Vector2 direction = directions[index];
-                    warningRect.anchoredPosition = direction * radius;
-                    warningRect.localEulerAngles = new Vector3(0f, 0f, Vector2.SignedAngle(Vector2.up, direction));
-                }
+                Vector3 worldPoint = bounds.center + Vector3.Scale(
+                    boundsExtents,
+                    new Vector3(x, y, z));
+                EncapsulatePlanarPoint(
+                    triggerTransform.InverseTransformPoint(worldPoint),
+                    ref minimum,
+                    ref maximum);
             }
+        }
 
-            public void HideAll()
-            {
-                foreach (RectTransform warningRect in _warningRects)
-                    if (warningRect != null) warningRect.gameObject.SetActive(false);
-            }
+        private static void EncapsulatePlanarPoint(
+            Vector3 point,
+            ref Vector2 minimum,
+            ref Vector2 maximum)
+        {
+            Vector2 planarPoint = new(point.x, point.z);
+            minimum = Vector2.Min(minimum, planarPoint);
+            maximum = Vector2.Max(maximum, planarPoint);
+        }
 
-            public void Destroy()
-            {
-                if (_root != null) Object.Destroy(_root);
-            }
+        private static bool TryGetRayExitDistance(
+            Vector2 origin,
+            Vector2 directionPerWorldUnit,
+            Vector2 minimum,
+            Vector2 maximum,
+            out float exitDistance)
+        {
+            float enterDistance = 0f;
+            exitDistance = float.PositiveInfinity;
 
-            private static Camera CreateOverlayCamera(Camera baseCamera, int uiLayer, string cameraName)
-            {
-                Transform existing = baseCamera.transform.Find(cameraName);
-                Camera overlayCamera = existing != null ? existing.GetComponent<Camera>() : null;
+            if (!ClipRayAxis(
+                    origin.x,
+                    directionPerWorldUnit.x,
+                    minimum.x,
+                    maximum.x,
+                    ref enterDistance,
+                    ref exitDistance)
+                || !ClipRayAxis(
+                    origin.y,
+                    directionPerWorldUnit.y,
+                    minimum.y,
+                    maximum.y,
+                    ref enterDistance,
+                    ref exitDistance))
+                return false;
 
-                if (overlayCamera == null)
-                {
-                    GameObject cameraObject = new(cameraName, typeof(Camera));
-                    cameraObject.transform.SetParent(baseCamera.transform, false);
-                    overlayCamera = cameraObject.GetComponent<Camera>();
-                    overlayCamera.CopyFrom(baseCamera);
-                }
+            return exitDistance >= Mathf.Max(0f, enterDistance)
+                   && !float.IsInfinity(exitDistance);
+        }
 
-                overlayCamera.gameObject.layer = uiLayer;
-                overlayCamera.cullingMask = 1 << uiLayer;
-                overlayCamera.clearFlags = CameraClearFlags.Nothing;
-                overlayCamera.useOcclusionCulling = false;
-                overlayCamera.enabled = true;
+        private static bool ClipRayAxis(
+            float origin,
+            float direction,
+            float minimum,
+            float maximum,
+            ref float enterDistance,
+            ref float exitDistance)
+        {
+            if (Mathf.Abs(direction) < 0.0001f)
+                return origin >= minimum && origin <= maximum;
 
-                UniversalAdditionalCameraData overlayData = overlayCamera.GetComponent<UniversalAdditionalCameraData>();
-                if (overlayData == null)
-                    overlayData = overlayCamera.gameObject.AddComponent<UniversalAdditionalCameraData>();
-                overlayData.renderType = CameraRenderType.Overlay;
-                overlayData.renderShadows = false;
+            float first = (minimum - origin) / direction;
+            float second = (maximum - origin) / direction;
+            if (first > second) (first, second) = (second, first);
 
-                UniversalAdditionalCameraData baseData = baseCamera.GetComponent<UniversalAdditionalCameraData>();
-                if (baseData == null)
-                    baseData = baseCamera.gameObject.AddComponent<UniversalAdditionalCameraData>();
-                if (!baseData.cameraStack.Contains(overlayCamera))
-                    baseData.cameraStack.Add(overlayCamera);
-
-                // The base camera renders the world; this dedicated layer is rendered only
-                // by the final overlay camera, after depth from the world has been resolved.
-                baseCamera.cullingMask &= ~(1 << uiLayer);
-                return overlayCamera;
-            }
+            enterDistance = Mathf.Max(enterDistance, first);
+            exitDistance = Mathf.Min(exitDistance, second);
+            return enterDistance <= exitDistance;
         }
     }
 }

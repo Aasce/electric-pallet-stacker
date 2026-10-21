@@ -1916,8 +1916,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Gameplay.PlayerCollisionFailureSource
   _collisionLayers:
     serializedVersion: 2
-    m_Bits: 768
+    m_Bits: 4294967295
   _groundNormalDotThreshold: 0.7
+  _contactPadding: 0.02
 --- !u!1001 &722901472887534297
 PrefabInstance:
   m_ObjectHideFlags: 0

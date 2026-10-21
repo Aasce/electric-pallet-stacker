@@ -16,6 +16,7 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private PhoneCallWorldPlacement _phonePlacement;
         [SerializeField] private PalletStackerRigidbodyMotor _vehicleMotor;
         [SerializeField] private Rigidbody _vehicleBody;
+        [SerializeField] private PalletStackerCollisionReporter _collisionReporter;
         [SerializeField] private NpcPopulationController _npcPopulation;
         [SerializeField] private PalletStackerForkCollisionSensor _forkCollisionSensor;
         [Tooltip("Collider on the fork sensor. Assigned explicitly so runtime code never searches for it.")]
@@ -25,8 +26,6 @@ namespace ElectricPalletStackers.UI
 
         [Header("Call")]
         [SerializeField] private bool _applyCrowdPressureWhileRinging = true;
-        [Tooltip("Spawn the road-blocking NPC as soon as the phone starts ringing.")]
-        [SerializeField] private bool _spawnBlockerOnIncomingCall = true;
         [SerializeField, Min(0f)] private float _minimumOngoingDuration = 8f;
         [SerializeField, Min(0f)] private float _maximumOngoingDuration = 10f;
         [SerializeField, Min(0f)] private float _endedDisplayDuration = 1f;
@@ -38,23 +37,20 @@ namespace ElectricPalletStackers.UI
         [SerializeField, Min(0f)] private float _travelDirectionThreshold = 0.05f;
         [Tooltip("Smallest signed motor speed/input that counts as movement after answering.")]
         [SerializeField, Min(0.0001f)] private float _acceptedMovementThreshold = 0.005f;
-        [Tooltip("NPC overlaps the vehicle edge by this amount so contact is reliable without placing it inside the vehicle.")]
+        [Tooltip("NPC overlaps the fork edge by this amount to visually communicate the forward impact.")]
         [SerializeField, Min(0f)] private float _impactOverlap = 0.05f;
-        [Tooltip("Maximum time from movement detection until the phone-distraction failure is reported.")]
-        [SerializeField, Range(0.05f, 0.5f)] private float _acceptedCollisionTimeout = 0.5f;
         [SerializeField, Min(0.1f)] private float _groundProbeHeight = 3f;
         [SerializeField, Min(0.1f)] private float _groundProbeDistance = 8f;
         [SerializeField, Min(0f)] private float _maximumGroundHeightDifference = 0.75f;
         [SerializeField] private LayerMask _groundLayers = ~0;
 
-        private Coroutine _collisionDeliveryRoutine;
         private Coroutine _automaticEndRoutine;
         private Coroutine _endedDisplayRoutine;
         private NpcAgent _activePhoneNpc;
         private bool _activeConversation;
         private bool _callResolved = true;
-        private bool _phoneNpcImpactOccurred;
-        private bool _collisionDeliveryStarted;
+        private bool _phoneMovementFailureOccurred;
+        private bool _movementFailureStarted;
         private bool _hasTriggerEntryDirection;
         private float _callTravelSign = 1f;
 
@@ -95,18 +91,12 @@ namespace ElectricPalletStackers.UI
 
         private void LateUpdate()
         {
-            if (_activePhoneNpc == null) return;
-
-            bool movementIsUnsafe = _phoneCallPanel != null &&
-                                    (_phoneCallPanel.State == PhoneCallState.InCall ||
-                                     _phoneCallPanel.State == PhoneCallState.Ended);
-            if (movementIsUnsafe)
-            {
-                if (!_collisionDeliveryStarted && TryGetActiveTravelSign(out float travelSign))
-                    TriggerAcceptedMovementCollision(travelSign);
-            }
-
-            if (IsRinging && !_collisionDeliveryStarted) UpdatePhoneNpcFollowPose();
+            bool movementIsUnsafe = _activeConversation &&
+                                    _phoneCallPanel != null &&
+                                    _phoneCallPanel.State == PhoneCallState.InCall;
+            if (movementIsUnsafe && !_movementFailureStarted &&
+                TryGetActiveTravelSign(out float travelSign))
+                TriggerAcceptedMovementFailure(travelSign);
         }
 
         public void TriggerIncomingCall()
@@ -120,28 +110,21 @@ namespace ElectricPalletStackers.UI
 
         public void CaptureTriggerEntryDirection()
         {
-            // The trigger entry chooses the blocker side. Keep that side while the
-            // vehicle remains in the zone, even if the driver reverses direction.
+            // Keep the entry direction only as a fallback. The actual movement after
+            // answering decides which side receives the failure NPC.
             _callTravelSign = ResolveTravelSign(_callTravelSign);
             _hasTriggerEntryDirection = true;
-
-            if (_activePhoneNpc != null && !_activeConversation && IsRinging)
-                UpdatePhoneNpcFollowPose();
         }
 
         private void BeginIncomingCall()
         {
             _activeConversation = false;
             _callResolved = false;
-            _phoneNpcImpactOccurred = false;
+            _phoneMovementFailureOccurred = false;
             if (!_hasTriggerEntryDirection)
                 _callTravelSign = ResolveTravelSign(1f);
-            if (_spawnBlockerOnIncomingCall) SpawnPhoneNpc();
             _phoneCallPanel?.ShowIncomingCall();
-            if (_activePhoneNpc != null)
-                _phonePlacement?.ShowOccluding(_activePhoneNpc.transform);
-            else
-                _phonePlacement?.ShowInFrontOfViewer();
+            _phonePlacement?.ShowInFrontOfViewer();
             // An unanswered call intentionally rings forever and raises pedestrian pressure.
             if (_applyCrowdPressureWhileRinging)
                 _npcPopulation?.SetCrowdPressure(true);
@@ -173,7 +156,7 @@ namespace ElectricPalletStackers.UI
         {
             if (nextState == GameState.Lost)
             {
-                if (_phoneNpcImpactOccurred) StopCallKeepingImpactedNpc();
+                if (_phoneMovementFailureOccurred) StopCallKeepingFailureNpc();
                 else ResetCallState();
                 return;
             }
@@ -222,7 +205,7 @@ namespace ElectricPalletStackers.UI
 
         private void BeginEndedPhase()
         {
-            if (_callResolved || _phoneNpcImpactOccurred ||
+            if (_callResolved || _phoneMovementFailureOccurred ||
                 _phoneCallPanel == null || !_phoneCallPanel.IsVisible ||
                 _phoneCallPanel.State == PhoneCallState.Ended ||
                 (_appManager != null && _appManager.CurrentState != GameState.Playing)) return;
@@ -244,7 +227,7 @@ namespace ElectricPalletStackers.UI
 
         private void CompleteCall()
         {
-            if (_callResolved || _phoneNpcImpactOccurred ||
+            if (_callResolved || _phoneMovementFailureOccurred ||
                 (_appManager != null && _appManager.CurrentState != GameState.Playing)) return;
 
             _callResolved = true;
@@ -277,7 +260,6 @@ namespace ElectricPalletStackers.UI
             _activePhoneNpc = Instantiate(prefab, spawnPosition, spawnRotation, transform);
             _activePhoneNpc.name = "Phone Call Hazard NPC";
             _activePhoneNpc.SetCollisionFailureReason(GameFailureReason.PhoneDistractionCollision);
-            _activePhoneNpc.VehicleCollisionStarted += HandlePhoneNpcCollisionStarted;
             _activePhoneNpc.Initialize(
                 null,
                 _npcPopulation != null ? _npcPopulation.VehicleTarget : null,
@@ -288,36 +270,30 @@ namespace ElectricPalletStackers.UI
             _activePhoneNpc.SetVehicleCollisionEnabled(false);
         }
 
-        private void UpdatePhoneNpcFollowPose()
+        private void TriggerAcceptedMovementFailure(float travelSign)
         {
-            if (_activePhoneNpc == null || _vehicleBody == null) return;
+            if (_movementFailureStarted) return;
 
-            Vector3 travelDirection = GetVehicleForward() * _callTravelSign;
-            Quaternion rotation = Quaternion.LookRotation(-travelDirection, Vector3.up);
-            _activePhoneNpc.transform.SetPositionAndRotation(
-                CalculateNpcPosition(),
-                rotation);
-        }
-
-        private void TriggerAcceptedMovementCollision(float travelSign)
-        {
-            if (_activePhoneNpc == null || _collisionDeliveryStarted) return;
-
-            _collisionDeliveryStarted = true;
             _callTravelSign = travelSign < 0f ? -1f : 1f;
+            SpawnPhoneNpc();
+            _movementFailureStarted = true;
+            if (_activePhoneNpc == null) return;
 
             Vector3 travelDirection = GetVehicleForward() * _callTravelSign;
             Quaternion impactRotation = Quaternion.LookRotation(-travelDirection, Vector3.up);
-            _activePhoneNpc.transform.rotation = impactRotation;
-            Physics.SyncTransforms();
-            Vector3 impactPosition = CalculateAcceptedImpactPosition(travelDirection);
-            _activePhoneNpc.transform.SetPositionAndRotation(impactPosition, impactRotation);
-            _activePhoneNpc.SetVehicleCollisionEnabled(true);
+            Vector3 displayPosition = _callTravelSign >= 0f
+                ? CalculateForwardImpactPosition(travelDirection)
+                : GetPointBehindPlayer(GetVehicleForward());
+            SnapToGround(ref displayPosition);
+            _activePhoneNpc.transform.SetPositionAndRotation(displayPosition, impactRotation);
             Physics.SyncTransforms();
 
-            CancelCollisionDeliveryRoutine();
-            _collisionDeliveryRoutine = StartCoroutine(
-                GuaranteeAcceptedCallCollision(_activePhoneNpc));
+            _phoneMovementFailureOccurred = true;
+            StopCallKeepingFailureNpc();
+            if (_collisionReporter != null)
+                _collisionReporter.ReportCollision(GameFailureReason.PhoneDistractionCollision);
+            else
+                Debug.LogError("Phone distraction requires a collision reporter to force the failure.", this);
         }
 
         private Vector3 CalculateNpcPosition()
@@ -330,21 +306,7 @@ namespace ElectricPalletStackers.UI
             return position;
         }
 
-        private IEnumerator GuaranteeAcceptedCallCollision(NpcAgent expectedNpc)
-        {
-            float deadline = Time.realtimeSinceStartup + Mathf.Min(0.5f, _acceptedCollisionTimeout);
-            while (!_phoneNpcImpactOccurred && expectedNpc != null &&
-                   expectedNpc == _activePhoneNpc && Time.realtimeSinceStartup < deadline)
-            {
-                yield return new WaitForFixedUpdate();
-            }
-
-            _collisionDeliveryRoutine = null;
-            if (!_phoneNpcImpactOccurred && expectedNpc != null && expectedNpc == _activePhoneNpc)
-                expectedNpc.TryReportVehicleCollision();
-        }
-
-        private Vector3 CalculateAcceptedImpactPosition(Vector3 travelDirection)
+        private Vector3 CalculateForwardImpactPosition(Vector3 travelDirection)
         {
             travelDirection = Vector3.ProjectOnPlane(travelDirection, Vector3.up).normalized;
             if (travelDirection.sqrMagnitude < 0.001f) travelDirection = Vector3.forward;
@@ -359,19 +321,7 @@ namespace ElectricPalletStackers.UI
                     Vector3.up)
                 : Vector3.zero;
 
-            Vector3 edgePoint;
-            if (_callTravelSign >= 0f)
-            {
-                edgePoint = GetForkEdgePoint(travelDirection);
-            }
-            else
-            {
-                // The driver stands at the rear of this vehicle, so reverse hazards
-                // are measured from the player rather than from a body-collider bound.
-                edgePoint = _playerView != null ? _playerView.position : _vehicleBody.position;
-                edgePoint.y = GetExpectedGroundHeight();
-            }
-
+            Vector3 edgePoint = GetForkEdgePoint(travelDirection);
             float centerDistance = Mathf.Max(0f, npcExtent - _impactOverlap);
             Vector3 position = edgePoint + travelDirection * centerDistance - npcPlanarCenterOffset;
             SnapToGround(ref position);
@@ -554,27 +504,18 @@ namespace ElectricPalletStackers.UI
 
         private void DespawnPhoneNpc()
         {
-            CancelCollisionDeliveryRoutine();
-            _collisionDeliveryStarted = false;
+            _movementFailureStarted = false;
             if (_activePhoneNpc == null) return;
 
             GameObject npcObject = _activePhoneNpc.gameObject;
-            _activePhoneNpc.VehicleCollisionStarted -= HandlePhoneNpcCollisionStarted;
             _activePhoneNpc = null;
             npcObject.SetActive(false);
             Destroy(npcObject);
         }
 
-        private void HandlePhoneNpcCollisionStarted()
-        {
-            _phoneNpcImpactOccurred = true;
-            StopCallKeepingImpactedNpc();
-        }
-
-        private void StopCallKeepingImpactedNpc()
+        private void StopCallKeepingFailureNpc()
         {
             CancelCallTimingRoutines();
-            CancelCollisionDeliveryRoutine();
             _activeConversation = false;
             _activePhoneNpc?.SetVehicleCollisionEnabled(false);
             _phoneCallPanel?.HideImmediate();
@@ -596,20 +537,13 @@ namespace ElectricPalletStackers.UI
             _automaticEndRoutine = null;
         }
 
-        private void CancelCollisionDeliveryRoutine()
-        {
-            if (_collisionDeliveryRoutine == null) return;
-            StopCoroutine(_collisionDeliveryRoutine);
-            _collisionDeliveryRoutine = null;
-        }
-
         private void ResetCallState()
         {
             CancelCallTimingRoutines();
             _activeConversation = false;
             _callResolved = true;
-            _phoneNpcImpactOccurred = false;
-            _collisionDeliveryStarted = false;
+            _phoneMovementFailureOccurred = false;
+            _movementFailureStarted = false;
             DespawnPhoneNpc();
             if (_applyCrowdPressureWhileRinging)
                 _npcPopulation?.SetCrowdPressure(false);

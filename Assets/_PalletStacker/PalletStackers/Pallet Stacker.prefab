@@ -240,7 +240,11 @@ MonoBehaviour:
   _detectionSize: {x: 1.15, y: 0.7, z: 0.9}
   _loadLayers:
     serializedVersion: 2
-    m_Bits: 512
+    m_Bits: 32768
+  _minimumInsertionDepth: 0.7
+  _maximumLateralOffset: 0.15
+  _maximumYawError: 12
+  _unsafePickupLiftImpulse: 0.35
   _breakForce: 100000
   _breakTorque: 100000
   _releaseAtMinimumHeightTolerance: 0.03
@@ -327,10 +331,11 @@ MonoBehaviour:
   _environmentLayers:
     serializedVersion: 2
     m_Bits: 256
-  _maximumWarnings: 3
-  _screenRadius: 0.34
-  _warningImageSize: {x: 56, y: 84}
-  _warningColor: {r: 1, g: 0.35, b: 0.08, a: 0.9}
+  _vehicleColliders:
+  - {fileID: 5342792113791399360}
+  - {fileID: 780000000000000001}
+  _collisionDistanceRatio: 0.45
+  _warningHud: {fileID: 0}
 --- !u!65 &910000000000000003
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -350,8 +355,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2.6, y: 2.4, z: 4.4}
-  m_Center: {x: 0, y: 1.1, z: 0.32}
+  m_Size: {x: 2.6, y: 2.4, z: 5.6}
+  m_Center: {x: 0, y: 1.1, z: 0.92}
 --- !u!1 &1335071189924356054
 GameObject:
   m_ObjectHideFlags: 0
@@ -616,7 +621,7 @@ MonoBehaviour:
   _targetHeightNormalized: 0
   _obstructionLayers:
     serializedVersion: 2
-    m_Bits: 768
+    m_Bits: 33024
   _obstructionSkin: 0.01
   _obstructionHorizontalPadding: 0.01
 --- !u!1 &3056795375731626486
@@ -1477,10 +1482,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Ble.PalletStackerForkCollisionSensor
   _sensor: {fileID: 780000000000000001}
   _collisionReporter: {fileID: 6482732429717059144}
+  _loadHandler: {fileID: 8991475523401287712}
   _vehicleRoot: {fileID: 550797599305683205}
   _collisionLayers:
     serializedVersion: 2
-    m_Bits: 768
+    m_Bits: 33024
   _ignoreGroundLikeContacts: 1
   _groundClearance: 0.03
 --- !u!1 &4643567231942210315

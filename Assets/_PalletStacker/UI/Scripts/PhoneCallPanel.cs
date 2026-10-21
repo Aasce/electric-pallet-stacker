@@ -39,7 +39,6 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private Button _declineButton;
         [SerializeField] private Button _endButton;
         [SerializeField] private TMP_Text _endButtonLabel;
-        [SerializeField] private GameObject _safetyWarningPanel;
 
         [Header("Presentation")]
         [SerializeField, Min(0f)] private float _transitionDuration = 0.2f;
@@ -81,7 +80,6 @@ namespace ElectricPalletStackers.UI
             UnbindAcceptButton();
             UnbindEndButton();
             KillTweens();
-            SetSafetyWarningVisible(false);
         }
 
         private void Update()
@@ -139,7 +137,6 @@ namespace ElectricPalletStackers.UI
             IsInCall = false;
             UpdateOngoingTimer(0, true);
             SetState(PhoneCallState.Ringing);
-            SetSafetyWarningVisible(true);
             SetRingingVisual();
             KillTweens();
 
@@ -194,7 +191,6 @@ namespace ElectricPalletStackers.UI
             IsInCall = false;
             SetState(PhoneCallState.Hidden);
             SetPhaseVisible(null);
-            SetSafetyWarningVisible(false);
             KillTweens();
 
             if (!HasRequiredReferences()) return;
@@ -218,7 +214,6 @@ namespace ElectricPalletStackers.UI
             IsInCall = false;
             SetState(PhoneCallState.Hidden);
             SetPhaseVisible(null);
-            SetSafetyWarningVisible(false);
             KillTweens();
 
             if (_canvasGroup != null)
@@ -348,12 +343,6 @@ namespace ElectricPalletStackers.UI
             PhoneCallState previousState = State;
             State = nextState;
             StateChanged?.Invoke(previousState, nextState);
-        }
-
-        private void SetSafetyWarningVisible(bool visible)
-        {
-            if (_safetyWarningPanel != null && _safetyWarningPanel.activeSelf != visible)
-                _safetyWarningPanel.SetActive(visible);
         }
 
         private void KillTweens()
