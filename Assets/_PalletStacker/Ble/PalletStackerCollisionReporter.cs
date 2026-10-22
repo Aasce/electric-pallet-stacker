@@ -1,4 +1,5 @@
 using System;
+using ElectricPalletStackers.Audio;
 using ElectricPalletStackers.Gameplay;
 using ElectricPalletStackers.PalletStackers;
 using UnityEngine;
@@ -104,6 +105,7 @@ namespace ElectricPalletStackers.Ble
         public void ReportCollision(GameFailureReason reason)
         {
             // Local gameplay stops before BLE confirmation to avoid network latency in the safety path.
+            AudioManager.Instance?.Play(PalletStackerAudioKeys.CollisionAccident, transform);
             CollisionDetected?.Invoke(reason);
             _onLocalCollisionDetected?.Invoke();
             _collisionSender?.SendCollision();

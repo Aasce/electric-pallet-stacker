@@ -43,21 +43,6 @@ MonoBehaviour:
       _spread: 0
       _spatialize: 0
       _priority: 80
-  - _key: phone.conversation
-    _config:
-      _clip: {fileID: 8300000, guid: afc5cb00632d4034985981440533f30d, type: 3}
-      _output: {fileID: 0}
-      _volume: 0.75
-      _pitchRange: {x: 1, y: 1}
-      _loop: 0
-      _spatialBlend: 1
-      _minDistance: 0.5
-      _maxDistance: 8
-      _rolloffMode: 0
-      _dopplerLevel: 0
-      _spread: 0
-      _spatialize: 0
-      _priority: 80
   - _key: vehicle.horn.start
     _config:
       _clip: {fileID: 8300000, guid: 127cc44608ca15a478e828401f615574, type: 3}
@@ -107,7 +92,7 @@ MonoBehaviour:
     _config:
       _clip: {fileID: 8300000, guid: 5efa4b8ab74b9c9448b6c6cf9ae6d180, type: 3}
       _output: {fileID: 0}
-      _volume: 0.8
+      _volume: 1
       _pitchRange: {x: 1, y: 1}
       _loop: 0
       _spatialBlend: 1
@@ -122,7 +107,7 @@ MonoBehaviour:
     _config:
       _clip: {fileID: 8300000, guid: 0c091c99a3286eb44999849717f8a03f, type: 3}
       _output: {fileID: 0}
-      _volume: 0.6
+      _volume: 1
       _pitchRange: {x: 1, y: 1}
       _loop: 1
       _spatialBlend: 1
@@ -133,3 +118,93 @@ MonoBehaviour:
       _spread: 0
       _spatialize: 0
       _priority: 128
+  - _key: impact.collision.accident
+    _config:
+      _clip: {fileID: 8300000, guid: d26897dca9c1752439658c666c639cde, type: 3}
+      _output: {fileID: 0}
+      _volume: 0.9
+      _pitchRange: {x: 0.97, y: 1.03}
+      _loop: 0
+      _spatialBlend: 1
+      _minDistance: 1
+      _maxDistance: 30
+      _rolloffMode: 0
+      _dopplerLevel: 0
+      _spread: 0
+      _spatialize: 0
+      _priority: 48
+  - _key: human.scream
+    _config:
+      _clip: {fileID: 8300000, guid: d87f880022ad6a74d9849954c739da37, type: 3}
+      _output: {fileID: 0}
+      _volume: 1
+      _pitchRange: {x: 1, y: 1}
+      _loop: 0
+      _spatialBlend: 0
+      _minDistance: 1
+      _maxDistance: 25
+      _rolloffMode: 0
+      _dopplerLevel: 0
+      _spread: 0
+      _spatialize: 0
+      _priority: 32
+  - _key: human.walking
+    _config:
+      _clip: {fileID: 8300000, guid: 8fe474733d4e1724490c8dfcbc3c7b3a, type: 3}
+      _output: {fileID: 0}
+      _volume: 0.4125
+      _pitchRange: {x: 0.94, y: 1.06}
+      _loop: 0
+      _spatialBlend: 1
+      _minDistance: 0.75
+      _maxDistance: 12
+      _rolloffMode: 0
+      _dopplerLevel: 0
+      _spread: 0
+      _spatialize: 0
+      _priority: 160
+  - _key: interaction.equip.protection
+    _config:
+      _clip: {fileID: 8300000, guid: 56f3d9072d6bf1c47bf52b31b8da93e6, type: 3}
+      _output: {fileID: 0}
+      _volume: 0.8
+      _pitchRange: {x: 1, y: 1}
+      _loop: 0
+      _spatialBlend: 0
+      _minDistance: 1
+      _maxDistance: 25
+      _rolloffMode: 0
+      _dopplerLevel: 0
+      _spread: 0
+      _spatialize: 0
+      _priority: 96
+  - _key: interaction.pen.check
+    _config:
+      _clip: {fileID: 8300000, guid: 1438add510612a14287fd7508b3d630d, type: 3}
+      _output: {fileID: 0}
+      _volume: 0.9
+      _pitchRange: {x: 0.98, y: 1.02}
+      _loop: 0
+      _spatialBlend: 0
+      _minDistance: 1
+      _maxDistance: 25
+      _rolloffMode: 0
+      _dopplerLevel: 0
+      _spread: 0
+      _spatialize: 0
+      _priority: 96
+  - _key: ui.completed
+    _config:
+      _clip: {fileID: 8300000, guid: 88ddf21506e474d43827b86eddc5fe47, type: 3}
+      _output: {fileID: 0}
+      _volume: 1
+      _pitchRange: {x: 1, y: 1}
+      _loop: 0
+      _spatialBlend: 0
+      _minDistance: 1
+      _maxDistance: 25
+      _rolloffMode: 0
+      _dopplerLevel: 0
+      _spread: 0
+      _spatialize: 0
+      _priority: 32

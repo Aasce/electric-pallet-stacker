@@ -39,6 +39,10 @@ Shader "Electric Pallet Stackers/UI/Always On Top"
         Lighting Off
         ZWrite Off
         ZTest Always
+        // Preserve the alpha channel from both the UI tint and the source sprite.
+        // The Cross Frame texture contains transparent cut-outs and decorative
+        // arrows; forcing opaque output turns the whole panel aqua/red and hides
+        // those details.
         Blend SrcAlpha OneMinusSrcAlpha
         ColorMask [_ColorMask]
 

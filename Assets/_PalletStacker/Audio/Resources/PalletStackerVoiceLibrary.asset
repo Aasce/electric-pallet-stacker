@@ -1,0 +1,123 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1158cfe36e6035e4e98993212e28eb20, type: 3}
+  m_Name: PalletStackerVoiceLibrary
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Audio.VoiceClipLibrary
+  _entries:
+  - _id: welcome.introduction
+    _category: experience_intro
+    _priority: P1
+    _vietnamese: {fileID: 8300000, guid: 2b73070f411241878f8094875e62b2de, type: 3}
+    _english: {fileID: 8300000, guid: a1215afd015c4962996c41126dbaa4cf, type: 3}
+    _japanese: {fileID: 8300000, guid: 3f38f91b4d3542a8bbeefa8b680b36c5, type: 3}
+  - _id: calibration.description
+    _category: training_instruction
+    _priority: P1
+    _vietnamese: {fileID: 8300000, guid: 27a565c3b00569444a592793f50c3186, type: 3}
+    _english: {fileID: 8300000, guid: 4a8201c520661de41a06e403fb31fd64, type: 3}
+    _japanese: {fileID: 8300000, guid: dcedc46cb46969e48aba0f2703894428, type: 3}
+  - _id: ppe.description
+    _category: safety_instruction
+    _priority: P1
+    _vietnamese: {fileID: 8300000, guid: b592ddd2e55ac3c479dd90993d92b871, type: 3}
+    _english: {fileID: 8300000, guid: 652a8653b1db1e64e90793c4d4d41c60, type: 3}
+    _japanese: {fileID: 8300000, guid: d418f42191b09744b9a29f2bbba72fc8, type: 3}
+  - _id: vehicleChecklist.instruction
+    _category: safety_instruction
+    _priority: P1
+    _vietnamese: {fileID: 8300000, guid: 32b39eb56f9d9444495f725da2b16554, type: 3}
+    _english: {fileID: 8300000, guid: 7a8de85cd6589e241b8c79b6f797a013, type: 3}
+    _japanese: {fileID: 8300000, guid: 26250befa0517d34f9ae8ecdc40d1600, type: 3}
+  - _id: crossSafety.approachInstruction
+    _category: critical_safety_instruction
+    _priority: P0
+    _vietnamese: {fileID: 8300000, guid: 7c52f9ef31bc8514991672659c200b54, type: 3}
+    _english: {fileID: 8300000, guid: 9075d16c238386e44b0804ba1d0de6c6, type: 3}
+    _japanese: {fileID: 8300000, guid: 50b493a8a15a28f4da8ecfe1997f27b5, type: 3}
+  - _id: crossSafety.instruction
+    _category: critical_safety_instruction
+    _priority: P0
+    _vietnamese: {fileID: 8300000, guid: bc6b23cc7083f634792cf748555372bb, type: 3}
+    _english: {fileID: 8300000, guid: 50398d1c92b7d2d45bc5e8940a25bb75, type: 3}
+    _japanese: {fileID: 8300000, guid: ab91ffd037f79804abf6b04edc02b1fb, type: 3}
+  - _id: crossSafety.danger
+    _category: emergency_warning
+    _priority: P0
+    _vietnamese: {fileID: 8300000, guid: 17f3fe9c7b63f0d498568d7413ce8deb, type: 3}
+    _english: {fileID: 8300000, guid: 0723b1e2441ebb946b3cda0cb33984cb, type: 3}
+    _japanese: {fileID: 8300000, guid: 014811cc61fb09d4db7269fe8f1c9fbe, type: 3}
+  - _id: phone.conversation
+    _category: scenario_dialogue
+    _priority: P0
+    _vietnamese: {fileID: 8300000, guid: 2dfcb321fb1ac8442a28427ea94223db, type: 3}
+    _english: {fileID: 8300000, guid: 200773929a4879c45b226b45e162e407, type: 3}
+    _japanese: {fileID: 8300000, guid: 4bf9a65225edfda41a746eabfd215f63, type: 3}
+  - _id: failure.unknown.result
+    _category: failure_result
+    _priority: P1
+    _vietnamese: {fileID: 8300000, guid: 35315b80fe447d04680968682d432853, type: 3}
+    _english: {fileID: 8300000, guid: cb1a5ea62ecb89b40a13cdf396a1562a, type: 3}
+    _japanese: {fileID: 8300000, guid: e795c36d006f1c24287e2241f976c9b0, type: 3}
+  - _id: failure.vehicleCollision.result
+    _category: failure_result
+    _priority: P1
+    _vietnamese: {fileID: 8300000, guid: 5abf392f7e2d894478267ae46896fe27, type: 3}
+    _english: {fileID: 8300000, guid: 723bdd045df33ec4590288567faa0a28, type: 3}
+    _japanese: {fileID: 8300000, guid: 871241cb3f3b50d40bb5e76513c90871, type: 3}
+  - _id: failure.operatorCollision.result
+    _category: failure_result
+    _priority: P1
+    _vietnamese: {fileID: 8300000, guid: fcdd813655e04ed42800d1e692d73082, type: 3}
+    _english: {fileID: 8300000, guid: 398b12063859bc74ab968bd547db48e1, type: 3}
+    _japanese: {fileID: 8300000, guid: 5da965dfa920cf5488b5d3a9dcb7f95d, type: 3}
+  - _id: failure.loadCollision.result
+    _category: failure_result
+    _priority: P1
+    _vietnamese: {fileID: 8300000, guid: 01aa0ef50c20960469f50503a37483a7, type: 3}
+    _english: {fileID: 8300000, guid: 4c581a48b1ef00947ad8b179647188bd, type: 3}
+    _japanese: {fileID: 8300000, guid: 5dd7902d59ab1a041b2def6b595ecdb1, type: 3}
+  - _id: failure.loadDropped.result
+    _category: failure_result
+    _priority: P1
+    _vietnamese: {fileID: 8300000, guid: 77f3dd1ca9073f34f8a72ac60df62d29, type: 3}
+    _english: {fileID: 8300000, guid: a9b279acbf5235f4994b5d16ffe33d2b, type: 3}
+    _japanese: {fileID: 8300000, guid: ca4c555b23b3b594099aa18abe98ac38, type: 3}
+  - _id: failure.pedestrianCollision.result
+    _category: failure_result
+    _priority: P1
+    _vietnamese: {fileID: 8300000, guid: b7ddd4a1fccefea488de8e3f2743c67c, type: 3}
+    _english: {fileID: 8300000, guid: 979e1ec7079cda6489cc050c95925a82, type: 3}
+    _japanese: {fileID: 8300000, guid: 8096b288938eb9541a1284d6db8fba28, type: 3}
+  - _id: failure.phoneDistractionCollision.result
+    _category: failure_result
+    _priority: P1
+    _vietnamese: {fileID: 8300000, guid: 45f3105bc09823a4599be28abbf91d9f, type: 3}
+    _english: {fileID: 8300000, guid: a17b0e97b58580445934d8e23f900839, type: 3}
+    _japanese: {fileID: 8300000, guid: ab13da6428797064d957df41c83a84d6, type: 3}
+  - _id: failure.intersectionVehicleCollision.result
+    _category: failure_result
+    _priority: P1
+    _vietnamese: {fileID: 8300000, guid: afc5cb00632d4034985981440533f30d, type: 3}
+    _english: {fileID: 8300000, guid: afc5cb00632d4034985981440533f30d, type: 3}
+    _japanese: {fileID: 8300000, guid: afc5cb00632d4034985981440533f30d, type: 3}
+  - _id: failure.operatorFootRunOver.result
+    _category: failure_result
+    _priority: P1
+    _vietnamese: {fileID: 8300000, guid: afc5cb00632d4034985981440533f30d, type: 3}
+    _english: {fileID: 8300000, guid: afc5cb00632d4034985981440533f30d, type: 3}
+    _japanese: {fileID: 8300000, guid: afc5cb00632d4034985981440533f30d, type: 3}
+  - _id: completed.experience
+    _category: success_result
+    _priority: P1
+    _vietnamese: {fileID: 8300000, guid: afc5cb00632d4034985981440533f30d, type: 3}
+    _english: {fileID: 8300000, guid: afc5cb00632d4034985981440533f30d, type: 3}
+    _japanese: {fileID: 8300000, guid: afc5cb00632d4034985981440533f30d, type: 3}

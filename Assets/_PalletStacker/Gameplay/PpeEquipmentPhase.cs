@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using ElectricPalletStackers.Audio;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
@@ -78,6 +79,7 @@ namespace ElectricPalletStackers.Gameplay
                 !_equippedItems.Add(interactable))
                 return;
 
+            AudioManager.Instance?.Play(PalletStackerAudioKeys.EquipProtection);
             SetItemActive(FindItem(interactable), false);
             if (_equippedItems.Count < CountValidItems()) return;
 

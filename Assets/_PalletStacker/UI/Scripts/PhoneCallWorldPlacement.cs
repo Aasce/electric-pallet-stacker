@@ -15,7 +15,7 @@ namespace ElectricPalletStackers.UI
 
         [Header("In Front Of Viewer")]
         [Tooltip("Offset in the viewer's yaw space. Positive Z is in front of the viewer.")]
-        [SerializeField] private Vector3 _viewerYawOffset = new(-0.06f, -0.03f, 0.55f);
+        [SerializeField] private Vector3 _viewerYawOffset = new(0f, -0.03f, 0.55f);
 
         [Header("Occlude Road Blocker")]
         [Tooltip("Local offset from the configured blocker target, normally aimed at its torso or head.")]

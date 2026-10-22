@@ -24,16 +24,27 @@ namespace ElectricPalletStackers.Gameplay
         [SerializeField] private string _instructionLocalizationKey =
             LocalizationKeys.CrossSafety.PointThisWay;
         [SerializeField, Min(0f)] private float _labelHeight = 0.14f;
-        [SerializeField] private Vector2 _labelSize = new(420f, 88f);
-        [SerializeField, Min(0.0001f)] private float _labelWorldScale = 0.001f;
-        [SerializeField, Min(1f)] private float _labelFontSize = 30f;
+        // Render at 2x the previous pixel density while keeping the same
+        // 0.42 m x 0.088 m world-space size. Close VR UI otherwise gets
+        // magnified by the headset and looks soft even with an SDF font.
+        [SerializeField] private Vector2 _labelSize = new(840f, 176f);
+        [SerializeField, Min(0.0001f)] private float _labelWorldScale = 0.0005f;
+        [SerializeField, Min(1f)] private float _labelFontSize = 60f;
         [SerializeField] private Color _labelTextColor = Color.white;
-        [SerializeField] private Color _labelBackgroundColor = new(0.015f, 0.045f, 0.08f, 0.94f);
-        [SerializeField] private Color _labelFrameColor = new(0.08f, 0.65f, 1f, 1f);
-        [SerializeField, Min(0f)] private float _labelFrameThickness = 4f;
+        [Tooltip("Compensates world-space TMP text for the linear/HDR render pipeline so white stays white in the headset.")]
+        [SerializeField, Range(1f, 3f)] private float _labelTextBrightness = 2f;
+        [SerializeField] private Color _labelBackgroundColor = new(0.008f, 0.012f, 0.018f, 0.88f);
+        [SerializeField] private Color _labelFrameColor = new(0f, 0.8f, 1f, 1f);
+        [SerializeField, Min(0f)] private float _labelFrameThickness = 8f;
 
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
+        private static readonly int FaceColorId = Shader.PropertyToID("_FaceColor");
+        private static readonly int FaceDilateId = Shader.PropertyToID("_FaceDilate");
+        private static readonly int OutlineColorId = Shader.PropertyToID("_OutlineColor");
+        private static readonly int OutlineWidthId = Shader.PropertyToID("_OutlineWidth");
+        private static readonly int PerspectiveFilterId = Shader.PropertyToID("_PerspectiveFilter");
+        private static readonly int SharpnessId = Shader.PropertyToID("_Sharpness");
         private const string AlwaysOnTopUiShaderName =
             "Electric Pallet Stackers/UI/Always On Top";
         private const string AlwaysOnTopTextShaderName =
@@ -179,13 +190,21 @@ namespace ElectricPalletStackers.Gameplay
                 !_instructionLabelRoot.gameObject.activeSelf) return;
 
             _instructionLabelRoot.position = transform.position + Vector3.up * _labelHeight;
-            Vector3 directionToViewer = Vector3.ProjectOnPlane(
-                viewer.position - _instructionLabelRoot.position,
-                Vector3.up);
-            if (directionToViewer.sqrMagnitude > 0.0001f)
-                _instructionLabelRoot.rotation = Quaternion.LookRotation(
-                    -directionToViewer.normalized,
-                    Vector3.up);
+            Vector3 directionToViewer =
+                viewer.position - _instructionLabelRoot.position;
+            if (directionToViewer.sqrMagnitude <= 0.0001f) return;
+
+            // The front of a World Space Canvas is local -Z. Face the complete
+            // camera direction rather than yawing only: at close VR distances a
+            // vertical label viewed from above makes SDF text look soft and can
+            // differ noticeably between the two eyes.
+            Vector3 canvasForward = -directionToViewer.normalized;
+            Vector3 canvasUp = Vector3.up;
+            if (Mathf.Abs(Vector3.Dot(canvasForward, canvasUp)) > 0.98f)
+                canvasUp = viewer.up;
+            _instructionLabelRoot.rotation = Quaternion.LookRotation(
+                canvasForward,
+                canvasUp);
         }
 
         public void ApplyLocalization(ILocalizationService localization)
@@ -264,10 +283,15 @@ namespace ElectricPalletStackers.Gameplay
 
             Shader alwaysOnTopUiShader = Shader.Find(AlwaysOnTopUiShaderName);
             if (alwaysOnTopUiShader != null)
+            {
                 _alwaysOnTopUiMaterial = new Material(alwaysOnTopUiShader)
                 {
                     name = "Direction Label UI Always On Top (Runtime)"
                 };
+                _alwaysOnTopUiMaterial.SetColor(ColorId, Color.white);
+                _alwaysOnTopUiMaterial.renderQueue =
+                    (int)UnityEngine.Rendering.RenderQueue.Overlay;
+            }
 
             RectTransform frame = CreateImage(
                 "Frame",
@@ -288,14 +312,19 @@ namespace ElectricPalletStackers.Gameplay
                 typeof(TextMeshProUGUI));
             RectTransform textRect = textObject.GetComponent<RectTransform>();
             textRect.SetParent(background, false);
-            StretchRect(textRect, new Vector2(14f, 6f));
+            StretchRect(textRect, new Vector2(28f, 12f));
 
             _instructionLabelText = textObject.GetComponent<TextMeshProUGUI>();
             _instructionLabelText.text = "Point in this direction";
             _instructionLabelText.fontSize = _labelFontSize;
             _instructionLabelText.color = _labelTextColor;
+            _instructionLabelText.alpha = 1f;
+            _instructionLabelText.enableVertexGradient = false;
+            _instructionLabelText.overrideColorTags = true;
             _instructionLabelText.alignment = TextAlignmentOptions.Center;
+            _instructionLabelText.fontStyle = FontStyles.Bold;
             _instructionLabelText.textWrappingMode = TextWrappingModes.NoWrap;
+            _instructionLabelText.extraPadding = true;
             _instructionLabelText.raycastTarget = false;
             _defaultInstructionFont = _instructionLabelText.font;
             ApplyAlwaysOnTopTextMaterial();
@@ -303,20 +332,74 @@ namespace ElectricPalletStackers.Gameplay
 
         private void ApplyAlwaysOnTopTextMaterial()
         {
-            if (_instructionLabelText == null ||
-                _instructionLabelText.fontSharedMaterial == null) return;
+            if (_instructionLabelText == null) return;
 
             Shader overlayShader = Shader.Find(AlwaysOnTopTextShaderName);
             if (overlayShader == null) return;
 
-            if (_alwaysOnTopTextMaterial != null)
-                DestroyRuntimeMaterial(_alwaysOnTopTextMaterial);
-            _alwaysOnTopTextMaterial = new Material(_instructionLabelText.fontSharedMaterial)
+            // Always start from the currently assigned font asset material. Using
+            // fontSharedMaterial here can clone our previous runtime overlay and
+            // retain the wrong atlas when localization swaps fonts.
+            Material sourceMaterial = _instructionLabelText.font != null
+                ? _instructionLabelText.font.material
+                : _instructionLabelText.fontSharedMaterial;
+            if (sourceMaterial == null) return;
+
+            Material previousMaterial = _alwaysOnTopTextMaterial;
+            _alwaysOnTopTextMaterial = new Material(sourceMaterial)
             {
                 name = "Direction Label Text Always On Top (Runtime)",
                 shader = overlayShader
             };
+
+            // Keep the face bright and crisp for close world-space VR UI. The
+            // default perspective filter is useful for distant 3D text but makes
+            // this small label look washed out at an oblique viewing angle.
+            Color brightTextColor = new(
+                _labelTextColor.r * _labelTextBrightness,
+                _labelTextColor.g * _labelTextBrightness,
+                _labelTextColor.b * _labelTextBrightness,
+                1f);
+            SetMaterialColorIfPresent(
+                _alwaysOnTopTextMaterial,
+                FaceColorId,
+                brightTextColor);
+            SetMaterialColorIfPresent(
+                _alwaysOnTopTextMaterial,
+                OutlineColorId,
+                Color.clear);
+            SetMaterialFloatIfPresent(_alwaysOnTopTextMaterial, FaceDilateId, 0.08f);
+            SetMaterialFloatIfPresent(_alwaysOnTopTextMaterial, OutlineWidthId, 0f);
+            SetMaterialFloatIfPresent(_alwaysOnTopTextMaterial, PerspectiveFilterId, 0f);
+            SetMaterialFloatIfPresent(_alwaysOnTopTextMaterial, SharpnessId, 1f);
+            _alwaysOnTopTextMaterial.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Overlay;
+
             _instructionLabelText.fontSharedMaterial = _alwaysOnTopTextMaterial;
+            _instructionLabelText.color = _labelTextColor;
+            _instructionLabelText.alpha = 1f;
+            _instructionLabelText.enableVertexGradient = false;
+            _instructionLabelText.overrideColorTags = true;
+            _instructionLabelText.SetMaterialDirty();
+            _instructionLabelText.SetVerticesDirty();
+            _instructionLabelText.ForceMeshUpdate(true, true);
+
+            DestroyRuntimeMaterial(previousMaterial);
+        }
+
+        private static void SetMaterialColorIfPresent(
+            Material material,
+            int propertyId,
+            Color value)
+        {
+            if (material.HasProperty(propertyId)) material.SetColor(propertyId, value);
+        }
+
+        private static void SetMaterialFloatIfPresent(
+            Material material,
+            int propertyId,
+            float value)
+        {
+            if (material.HasProperty(propertyId)) material.SetFloat(propertyId, value);
         }
 
         private static void DestroyRuntimeMaterial(Material material)

@@ -1,4 +1,5 @@
 using System;
+using ElectricPalletStackers.Audio;
 using ElectricPalletStackers.NPCs;
 using ElectricPalletStackers.PalletStackers;
 using UnityEngine;
@@ -145,6 +146,8 @@ namespace ElectricPalletStackers.Gameplay
         {
             if (!_roundActive) return;
             _roundActive = false;
+            if (contact != null && contact.GetComponentInParent<PalletStackerLoad>() != null)
+                AudioManager.Instance?.Play(PalletStackerAudioKeys.CollisionAccident, contact.transform);
             Debug.LogWarning(
                 $"[PLAYER] Collision failure triggered by '{contact.name}' " +
                 $"on layer {LayerMask.LayerToName(contact.gameObject.layer)}.",

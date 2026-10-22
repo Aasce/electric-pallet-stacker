@@ -8,8 +8,10 @@ namespace ElectricPalletStackers.Audio
     {
         [SerializeField] private PhoneCallPanel _panel;
         [SerializeField] private Transform _followTarget;
+        [SerializeField] private VoiceCueReference _conversationVoice;
 
         private AudioHandle _activeAudio;
+        private VoicePlaybackHandle _activeVoice;
 
         private void OnEnable()
         {
@@ -20,11 +22,13 @@ namespace ElectricPalletStackers.Audio
         {
             if (_panel != null) _panel.StateChanged -= HandleStateChanged;
             _activeAudio.Stop();
+            _activeVoice.Stop();
         }
 
         private void HandleStateChanged(PhoneCallState previousState, PhoneCallState nextState)
         {
             _activeAudio.Stop();
+            _activeVoice.Stop();
             AudioManager manager = AudioManager.Instance;
             if (manager == null) return;
 
@@ -37,9 +41,7 @@ namespace ElectricPalletStackers.Audio
                         new AudioPlayOptions { Loop = true });
                     break;
                 case PhoneCallState.InCall:
-                    _activeAudio = manager.Play(
-                        PalletStackerAudioKeys.PhoneConversation,
-                        _followTarget);
+                    _activeVoice = manager.PlayVoice(_conversationVoice);
                     break;
                 case PhoneCallState.Ended:
                     manager.Play(PalletStackerAudioKeys.PhoneHangup, _followTarget);

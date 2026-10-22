@@ -1,3 +1,4 @@
+using ElectricPalletStackers.Audio;
 using ElectricPalletStackers.Gameplay;
 using UnityEngine;
 
@@ -22,6 +23,8 @@ namespace ElectricPalletStackers.NPCs
         [Header("Optional animation parameter")]
         [SerializeField] private Animator _animator;
         [SerializeField] private string _walkingBool = "Walking";
+        [Header("Footsteps")]
+        [SerializeField, Min(0.1f)] private float _stepDistance = 0.72f;
 
         private NpcPopulationController _population;
         private NpcWaypointRoute _route;
@@ -38,6 +41,7 @@ namespace ElectricPalletStackers.NPCs
         private bool _hasWalkingParameter;
         private bool _vehicleCollisionReported;
         private bool _vehicleCollisionEnabled = true;
+        private float _distanceSinceStep;
 
         public bool IsAvailableForPhoneEvent =>
             isActiveAndEnabled && _roundActive && _state != MovementState.Scripted;
@@ -103,6 +107,7 @@ namespace ElectricPalletStackers.NPCs
             _vehicleCollisionEnabled = true;
             _hornMinimumWaitUntil = 0f;
             _state = roundActive ? MovementState.Moving : MovementState.Paused;
+            _distanceSinceStep = 0f;
             _direction = 1;
             _waypointIndex = _startingWaypointIndex;
             if (_route != null && _route.TryGetWaypoint(_waypointIndex, out Vector3 position))
@@ -132,6 +137,7 @@ namespace ElectricPalletStackers.NPCs
             _hornMinimumWaitUntil = 0f;
             _waitUntil = 0f;
             _state = MovementState.Paused;
+            _distanceSinceStep = 0f;
             _waypointIndex = checkpoint.WaypointIndex;
             _direction = checkpoint.Direction;
             _speedMultiplier = checkpoint.SpeedMultiplier;
@@ -143,7 +149,11 @@ namespace ElectricPalletStackers.NPCs
         {
             if (active && !_roundActive) _vehicleCollisionReported = false;
             _roundActive = active;
-            if (!active) _state = MovementState.Paused;
+            if (!active)
+            {
+                _state = MovementState.Paused;
+                _distanceSinceStep = 0f;
+            }
             else if (_state == MovementState.Paused) _state = MovementState.Moving;
             UpdateAnimation();
         }
@@ -221,10 +231,12 @@ namespace ElectricPalletStackers.NPCs
                 return;
             }
 
+            Vector3 previousPosition = transform.position;
             transform.position = Vector3.MoveTowards(
                 transform.position,
                 destination,
                 _speed * _speedMultiplier * Time.deltaTime);
+            UpdateFootsteps(Vector3.Distance(previousPosition, transform.position));
             Face(delta, false);
         }
 
@@ -316,6 +328,17 @@ namespace ElectricPalletStackers.NPCs
         {
             if (_animator != null && _hasWalkingParameter)
                 _animator.SetBool(_walkingHash, _roundActive && _state == MovementState.Moving);
+        }
+
+        private void UpdateFootsteps(float travelledDistance)
+        {
+            _distanceSinceStep += Mathf.Max(0f, travelledDistance);
+            float stepDistance = Mathf.Max(0.1f, _stepDistance);
+            while (_distanceSinceStep >= stepDistance)
+            {
+                _distanceSinceStep -= stepDistance;
+                AudioManager.Instance?.Play(PalletStackerAudioKeys.HumanWalking, transform);
+            }
         }
 
         internal readonly struct CheckpointPose

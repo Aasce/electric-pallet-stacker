@@ -12,9 +12,13 @@ namespace ElectricPalletStackers.Audio
         [SerializeField] private Transform _followTarget;
 
         private AudioHandle _hornStart;
+        private AudioHandle _hornStartBoost;
         private AudioHandle _hornLoop;
+        private AudioHandle _hornLoopBoost;
         private AudioHandle _engineStartup;
+        private AudioHandle _engineStartupBoost;
         private AudioHandle _engineLoop;
+        private AudioHandle _engineLoopBoost;
         private Coroutine _hornRoutine;
         private Coroutine _engineRoutine;
         private bool _hornActive;
@@ -33,9 +37,13 @@ namespace ElectricPalletStackers.Audio
             _hornRoutine = null;
             _engineRoutine = null;
             _hornStart.Stop();
+            _hornStartBoost.Stop();
             _hornLoop.Stop();
+            _hornLoopBoost.Stop();
             _engineStartup.Stop();
+            _engineStartupBoost.Stop();
             _engineLoop.Stop();
+            _engineLoopBoost.Stop();
             _hornActive = false;
         }
 
@@ -48,7 +56,9 @@ namespace ElectricPalletStackers.Audio
             }
 
             _engineStartup.Stop();
+            _engineStartupBoost.Stop();
             _engineLoop.Stop();
+            _engineLoopBoost.Stop();
 
             if (moving) _engineRoutine = StartCoroutine(PlayEngineSequence());
         }
@@ -58,12 +68,14 @@ namespace ElectricPalletStackers.Audio
             _hornActive = active;
             if (_hornRoutine != null) StopCoroutine(_hornRoutine);
             _hornStart.Stop();
+            _hornStartBoost.Stop();
             _hornLoop.Stop();
+            _hornLoopBoost.Stop();
 
             if (active)
                 _hornRoutine = StartCoroutine(PlayHornSequence());
             else
-                AudioManager.Instance?.Play(PalletStackerAudioKeys.HornEnd, _followTarget);
+                PlayHornEndDoubled();
         }
 
         private IEnumerator PlayHornSequence()
@@ -71,12 +83,20 @@ namespace ElectricPalletStackers.Audio
             AudioManager manager = AudioManager.Instance;
             if (manager == null) yield break;
 
+            // AudioSource.volume is capped at 1. Layering the same horn voice twice
+            // produces the requested 2x linear amplitude without rewriting source clips.
             _hornStart = manager.Play(PalletStackerAudioKeys.HornStart, _followTarget);
-            while (_hornActive && _hornStart.IsPlaying) yield return null;
+            _hornStartBoost = manager.Play(PalletStackerAudioKeys.HornStart, _followTarget);
+            while (_hornActive && (_hornStart.IsPlaying || _hornStartBoost.IsPlaying))
+                yield return null;
 
             if (_hornActive)
             {
                 _hornLoop = manager.Play(
+                    PalletStackerAudioKeys.HornLoop,
+                    _followTarget,
+                    new AudioPlayOptions { Loop = true });
+                _hornLoopBoost = manager.Play(
                     PalletStackerAudioKeys.HornLoop,
                     _followTarget,
                     new AudioPlayOptions { Loop = true });
@@ -91,7 +111,11 @@ namespace ElectricPalletStackers.Audio
             if (manager == null) yield break;
 
             _engineStartup = manager.Play(PalletStackerAudioKeys.VehicleStartup, _followTarget);
-            while (_engineStartup.IsPlaying) yield return null;
+            _engineStartupBoost = manager.Play(
+                PalletStackerAudioKeys.VehicleStartup,
+                _followTarget,
+                new AudioPlayOptions { Volume = 0.2f });
+            while (_engineStartup.IsPlaying || _engineStartupBoost.IsPlaying) yield return null;
 
             if (isActiveAndEnabled && _motor != null && Mathf.Abs(_motor.CurrentSpeed) > 0.0001f)
             {
@@ -99,9 +123,22 @@ namespace ElectricPalletStackers.Audio
                     PalletStackerAudioKeys.VehicleLoop,
                     _followTarget,
                     new AudioPlayOptions { Loop = true });
+                _engineLoopBoost = manager.Play(
+                    PalletStackerAudioKeys.VehicleLoop,
+                    _followTarget,
+                    new AudioPlayOptions { Loop = true, Volume = 0.2f });
             }
 
             _engineRoutine = null;
+        }
+
+        private void PlayHornEndDoubled()
+        {
+            AudioManager manager = AudioManager.Instance;
+            if (manager == null) return;
+
+            manager.Play(PalletStackerAudioKeys.HornEnd, _followTarget);
+            manager.Play(PalletStackerAudioKeys.HornEnd, _followTarget);
         }
     }
 }

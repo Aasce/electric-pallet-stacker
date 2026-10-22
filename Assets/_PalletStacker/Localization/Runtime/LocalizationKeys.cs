@@ -59,6 +59,11 @@ namespace ElectricPalletStackers.Localization
             public const string Other = "vehicleChecklist.other";
         }
 
+        public static class VehicleIgnition
+        {
+            public const string StartInstruction = "vehicleIgnition.startInstruction";
+        }
+
         public static class CrossSafety
         {
             public const string ApproachInstruction = "crossSafety.approachInstruction";

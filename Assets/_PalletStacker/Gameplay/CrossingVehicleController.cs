@@ -1,4 +1,5 @@
 using System;
+using ElectricPalletStackers.Audio;
 using UnityEngine;
 
 namespace ElectricPalletStackers.Gameplay
@@ -19,8 +20,14 @@ namespace ElectricPalletStackers.Gameplay
 
         [Header("Walking")]
         [SerializeField, Min(0.1f)] private float _speed = 2.025f;
+        [Tooltip("Maximum amount the pedestrian may speed up or slow down to meet the moving vehicle at the crossing point.")]
+        [SerializeField, Min(0f)] private float _maximumSpeedAdjustment = 0.2f;
         [SerializeField, Min(1f)] private float _rotationSpeedDegrees = 540f;
         [SerializeField, Min(0.01f)] private float _arrivalDistance = 0.12f;
+
+        [Header("Footsteps")]
+        [Tooltip("Distance travelled between footstep sounds. Time between sounds automatically follows the resolved walking speed.")]
+        [SerializeField, Min(0.1f)] private float _stepDistance = 0.72f;
 
         [Header("NPC Presentation")]
         [SerializeField] private CapsuleCollider _pedestrianCollider;
@@ -34,6 +41,11 @@ namespace ElectricPalletStackers.Gameplay
         private bool _configurationErrorReported;
         private int _walkingHash;
         private bool _hasWalkingParameter;
+        private Rigidbody _vehicleTarget;
+        private Animator _cachedSpeedAnimator;
+        private float _baseAnimatorSpeed = 1f;
+        private float _currentSpeed;
+        private float _distanceSinceStep;
 
         public bool IsCrossing => _crossing;
         public bool HasCompletedRoute => _hasCompletedRoute;
@@ -46,6 +58,7 @@ namespace ElectricPalletStackers.Gameplay
         private void Awake()
         {
             CachePedestrianComponents();
+            _currentSpeed = _speed;
             ResetVehicle();
         }
 
@@ -56,10 +69,11 @@ namespace ElectricPalletStackers.Gameplay
             Transform targetWaypoint = _waypoints[_nextWaypointIndex];
             Vector3 currentPosition = _pedestrian.position;
             Vector3 targetPosition = targetWaypoint.position;
+            _currentSpeed = ResolveWalkingSpeed();
             Vector3 nextPosition = Vector3.MoveTowards(
                 currentPosition,
                 targetPosition,
-                _speed * Time.deltaTime);
+                _currentSpeed * Time.deltaTime);
             Vector3 direction = Vector3.ProjectOnPlane(
                 targetPosition - currentPosition,
                 Vector3.up);
@@ -75,6 +89,8 @@ namespace ElectricPalletStackers.Gameplay
             }
 
             _pedestrian.position = nextPosition;
+            UpdateFootsteps(Vector3.Distance(currentPosition, nextPosition));
+            UpdateAnimationSpeed();
             if ((nextPosition - targetPosition).sqrMagnitude >
                 _arrivalDistance * _arrivalDistance) return;
 
@@ -86,8 +102,14 @@ namespace ElectricPalletStackers.Gameplay
 
             _crossing = false;
             _hasCompletedRoute = true;
+            ResetMovementTiming();
             UpdateAnimation();
             CrossingCompleted?.Invoke();
+        }
+
+        public void SetVehicleTarget(Rigidbody vehicleTarget)
+        {
+            _vehicleTarget = vehicleTarget;
         }
 
         public void BeginCrossing()
@@ -100,6 +122,8 @@ namespace ElectricPalletStackers.Gameplay
                 _waypoints.Length - 1);
             EnsurePedestrianVisible();
             _crossing = true;
+            _currentSpeed = _speed;
+            _distanceSinceStep = 0f;
             UpdateAnimation();
             CrossingStarted?.Invoke();
         }
@@ -114,6 +138,7 @@ namespace ElectricPalletStackers.Gameplay
             _crossing = false;
             _hasCompletedRoute = false;
             _nextWaypointIndex = 1;
+            ResetMovementTiming();
             if (!HasRequiredReferences()) return;
 
             EnsurePedestrianVisible();
@@ -130,6 +155,7 @@ namespace ElectricPalletStackers.Gameplay
             _suppressed = true;
             _crossing = false;
             _hasCompletedRoute = true;
+            ResetMovementTiming();
             EnsurePedestrianVisible();
             UpdateAnimation();
         }
@@ -137,6 +163,7 @@ namespace ElectricPalletStackers.Gameplay
         public void StopVehicle()
         {
             _crossing = false;
+            ResetMovementTiming();
             UpdateAnimation();
         }
 
@@ -147,6 +174,7 @@ namespace ElectricPalletStackers.Gameplay
             _hasCompletedRoute = false;
             _suppressed = false;
             _nextWaypointIndex = 1;
+            ResetMovementTiming();
             if (!HasRequiredReferences()) return;
 
             EnsurePedestrianVisible();
@@ -204,6 +232,7 @@ namespace ElectricPalletStackers.Gameplay
             _hasCompletedRoute = checkpoint.HasCompletedRoute;
             _suppressed = checkpoint.IsSuppressed;
             _nextWaypointIndex = checkpoint.NextWaypointIndex;
+            ResetMovementTiming();
             if (!HasRequiredReferences()) return;
 
             _nextWaypointIndex = Mathf.Clamp(
@@ -224,6 +253,12 @@ namespace ElectricPalletStackers.Gameplay
                 _pedestrianCollider = _pedestrian.GetComponentInChildren<CapsuleCollider>(true);
             if (_animator == null)
                 _animator = _pedestrian.GetComponentInChildren<Animator>(true);
+
+            if (_animator != _cachedSpeedAnimator)
+            {
+                _cachedSpeedAnimator = _animator;
+                _baseAnimatorSpeed = _animator != null ? _animator.speed : 1f;
+            }
 
             _walkingHash = Animator.StringToHash(_walkingBool);
             _hasWalkingParameter = false;
@@ -273,6 +308,161 @@ namespace ElectricPalletStackers.Gameplay
         {
             if (_animator != null && _hasWalkingParameter)
                 _animator.SetBool(_walkingHash, _crossing);
+            UpdateAnimationSpeed();
+        }
+
+        private void UpdateAnimationSpeed()
+        {
+            if (_animator == null) return;
+
+            float speedRatio = _crossing && _speed > Mathf.Epsilon
+                ? _currentSpeed / _speed
+                : 1f;
+            _animator.speed = _baseAnimatorSpeed * speedRatio;
+        }
+
+        private float ResolveWalkingSpeed()
+        {
+            float minimumSpeed = Mathf.Max(0.01f, _speed - _maximumSpeedAdjustment);
+            float maximumSpeed = Mathf.Max(minimumSpeed, _speed + _maximumSpeedAdjustment);
+            if (_vehicleTarget == null || _maximumSpeedAdjustment <= Mathf.Epsilon)
+                return Mathf.Clamp(_speed, minimumSpeed, maximumSpeed);
+
+            Vector3 vehicleVelocity = Vector3.ProjectOnPlane(
+                _vehicleTarget.linearVelocity,
+                Vector3.up);
+            float vehicleSpeed = vehicleVelocity.magnitude;
+            if (vehicleSpeed <= 0.05f ||
+                !TryResolveIntercept(vehicleVelocity / vehicleSpeed, out float npcDistance,
+                    out float vehicleDistance))
+                return Mathf.Clamp(_speed, minimumSpeed, maximumSpeed);
+
+            float vehicleArrivalTime = vehicleDistance / vehicleSpeed;
+            if (vehicleArrivalTime <= Mathf.Epsilon)
+                return maximumSpeed;
+
+            float requiredSpeed = npcDistance / vehicleArrivalTime;
+            return Mathf.Clamp(requiredSpeed, minimumSpeed, maximumSpeed);
+        }
+
+        private bool TryResolveIntercept(
+            Vector3 vehicleDirection,
+            out float npcDistance,
+            out float vehicleDistance)
+        {
+            npcDistance = 0f;
+            vehicleDistance = 0f;
+            if (_vehicleTarget == null || _pedestrian == null ||
+                _waypoints == null || _nextWaypointIndex >= _waypoints.Length)
+                return false;
+
+            Vector3 vehiclePosition = Vector3.ProjectOnPlane(
+                _vehicleTarget.worldCenterOfMass,
+                Vector3.up);
+            Vector3 segmentStart = Vector3.ProjectOnPlane(_pedestrian.position, Vector3.up);
+            float distanceBeforeSegment = 0f;
+            float bestVehicleDistance = float.PositiveInfinity;
+            float bestNpcDistance = 0f;
+            bool found = false;
+
+            for (int index = _nextWaypointIndex; index < _waypoints.Length; index++)
+            {
+                Vector3 segmentEnd = Vector3.ProjectOnPlane(
+                    _waypoints[index].position,
+                    Vector3.up);
+                Vector3 segment = segmentEnd - segmentStart;
+                float segmentLength = segment.magnitude;
+                if (segmentLength <= Mathf.Epsilon)
+                {
+                    segmentStart = segmentEnd;
+                    continue;
+                }
+
+                if (TryGetClosestApproach(
+                        segmentStart,
+                        segment,
+                        vehiclePosition,
+                        vehicleDirection,
+                        out float segmentFraction,
+                        out float distanceAlongVehicle,
+                        out float missDistance) &&
+                    missDistance <= GetInterceptTolerance() &&
+                    distanceAlongVehicle < bestVehicleDistance)
+                {
+                    bestVehicleDistance = distanceAlongVehicle;
+                    bestNpcDistance = distanceBeforeSegment + segmentLength * segmentFraction;
+                    found = true;
+                }
+
+                distanceBeforeSegment += segmentLength;
+                segmentStart = segmentEnd;
+            }
+
+            if (!found) return false;
+            npcDistance = bestNpcDistance;
+            vehicleDistance = bestVehicleDistance;
+            return true;
+        }
+
+        private static bool TryGetClosestApproach(
+            Vector3 segmentStart,
+            Vector3 segment,
+            Vector3 rayStart,
+            Vector3 rayDirection,
+            out float segmentFraction,
+            out float distanceAlongRay,
+            out float missDistance)
+        {
+            segmentFraction = 0f;
+            distanceAlongRay = 0f;
+            missDistance = float.PositiveInfinity;
+
+            float segmentSqrLength = segment.sqrMagnitude;
+            float raySqrLength = rayDirection.sqrMagnitude;
+            float cross = Vector3.Dot(segment, rayDirection);
+            float denominator = segmentSqrLength * raySqrLength - cross * cross;
+            if (segmentSqrLength <= Mathf.Epsilon || raySqrLength <= Mathf.Epsilon ||
+                Mathf.Abs(denominator) <= Mathf.Epsilon)
+                return false;
+
+            Vector3 betweenOrigins = segmentStart - rayStart;
+            float segmentDot = Vector3.Dot(segment, betweenOrigins);
+            float rayDot = Vector3.Dot(rayDirection, betweenOrigins);
+            segmentFraction = Mathf.Clamp01(
+                (cross * rayDot - raySqrLength * segmentDot) / denominator);
+
+            Vector3 pointOnSegment = segmentStart + segment * segmentFraction;
+            distanceAlongRay = Vector3.Dot(pointOnSegment - rayStart, rayDirection);
+            if (distanceAlongRay < 0f) return false;
+
+            Vector3 pointOnRay = rayStart + rayDirection * distanceAlongRay;
+            missDistance = Vector3.Distance(pointOnSegment, pointOnRay);
+            return true;
+        }
+
+        private float GetInterceptTolerance()
+        {
+            if (_pedestrianCollider == null) return 0.5f;
+            Bounds bounds = _pedestrianCollider.bounds;
+            return Mathf.Max(0.5f, Mathf.Max(bounds.extents.x, bounds.extents.z));
+        }
+
+        private void UpdateFootsteps(float travelledDistance)
+        {
+            _distanceSinceStep += Mathf.Max(0f, travelledDistance);
+            float stepDistance = Mathf.Max(0.1f, _stepDistance);
+            while (_distanceSinceStep >= stepDistance)
+            {
+                _distanceSinceStep -= stepDistance;
+                AudioManager.Instance?.Play(PalletStackerAudioKeys.HumanWalking, _pedestrian);
+            }
+        }
+
+        private void ResetMovementTiming()
+        {
+            _currentSpeed = _speed;
+            _distanceSinceStep = 0f;
+            if (_animator != null) _animator.speed = _baseAnimatorSpeed;
         }
 
         private bool HasRequiredReferences()

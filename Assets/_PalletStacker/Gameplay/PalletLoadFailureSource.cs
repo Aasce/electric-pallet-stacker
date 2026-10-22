@@ -1,4 +1,5 @@
 using System;
+using ElectricPalletStackers.Audio;
 using ElectricPalletStackers.PalletStackers;
 using UnityEngine;
 
@@ -71,6 +72,7 @@ namespace ElectricPalletStackers.Gameplay
             float impactSpeed = GetMaximumUnsafeImpactSpeed(collision);
             if (impactSpeed < _minimumRelativeSpeed) return;
 
+            AudioManager.Instance?.Play(PalletStackerAudioKeys.CollisionAccident, transform);
             ReportFailure(
                 GameFailureReason.LoadCollision,
                 $"unsafe collision with '{collision.gameObject.name}' at {impactSpeed:0.00} m/s");

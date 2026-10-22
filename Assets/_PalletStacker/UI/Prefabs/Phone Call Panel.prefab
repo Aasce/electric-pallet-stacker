@@ -2822,6 +2822,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Audio.PhoneCallAudioPresenter
   _panel: {fileID: 3467639773829085774}
   _followTarget: {fileID: 630016475456356732}
+  _conversationVoice:
+    _id: phone.conversation
 --- !u!114 &2125259010950424064
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2836,7 +2838,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.UI.PhoneCallWorldPlacement
   _panelRoot: {fileID: 630016475456356732}
   _viewer: {fileID: 0}
-  _viewerYawOffset: {x: -0.06, y: -0.03, z: 0.55}
+  _viewerYawOffset: {x: 0, y: -0.03, z: 0.55}
   _blockerTargetLocalOffset: {x: 0, y: 1.35, z: 0}
   _lineRatio: 0.35
   _maximumDistanceFromViewer: 0.65

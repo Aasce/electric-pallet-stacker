@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using ElectricPalletStackers.Audio;
 using UnityEngine;
 
 namespace ElectricPalletStackers.Gameplay
@@ -22,12 +24,16 @@ namespace ElectricPalletStackers.Gameplay
         [Tooltip("Leave disabled when UIFlowGameStarter starts the round after the guide UI closes.")]
         [SerializeField] private bool _autoStart;
 
+        [Header("Result Audio")]
+        [SerializeField, Min(0f)] private float _humanScreamDelay = 0.15f;
+
         private readonly List<IGameRoundParticipant> _roundParticipants = new();
         private readonly List<IGameRoundResumable> _roundResumables = new();
         private readonly List<IGameVictorySource> _victorySources = new();
         private readonly List<IGameFailureSource> _failureSources = new();
         private readonly List<IGameResettable> _resettables = new();
         private bool _sourcesSubscribed;
+        private Coroutine _humanScreamRoutine;
 
         public GameState CurrentState { get; private set; } = GameState.Initializing;
         public GameFailureReason LastFailureReason { get; private set; } = GameFailureReason.Unknown;
@@ -57,12 +63,14 @@ namespace ElectricPalletStackers.Gameplay
         private void OnDisable()
         {
             UnsubscribeSources();
+            CancelPendingHumanScream();
         }
 
         public void StartRound()
         {
             if (CurrentState == GameState.Playing) return;
 
+            CancelPendingHumanScream();
             LastFailureReason = GameFailureReason.Unknown;
             for (int index = 0; index < _roundParticipants.Count; index++)
                 _roundParticipants[index].PrepareRound();
@@ -81,6 +89,7 @@ namespace ElectricPalletStackers.Gameplay
         {
             if (CurrentState != GameState.Lost) return;
 
+            CancelPendingHumanScream();
             LastFailureReason = GameFailureReason.Unknown;
             TransitionTo(GameState.Playing);
             for (int index = 0; index < _roundResumables.Count; index++)
@@ -105,6 +114,7 @@ namespace ElectricPalletStackers.Gameplay
 
         public void ResetToWaitingState()
         {
+            CancelPendingHumanScream();
             if (CurrentState == GameState.Playing)
             {
                 for (int index = 0; index < _roundParticipants.Count; index++)
@@ -166,8 +176,42 @@ namespace ElectricPalletStackers.Gameplay
                 _roundParticipants[index].FinishRound(result);
 
             TransitionTo(result);
-            if (result == GameState.Won) GameWon?.Invoke();
-            else GameLost?.Invoke(LastFailureReason);
+            if (result == GameState.Won)
+            {
+                AudioManager.Instance?.Play(PalletStackerAudioKeys.Completed);
+                GameWon?.Invoke();
+            }
+            else
+            {
+                ScheduleHumanScream(LastFailureReason);
+                GameLost?.Invoke(LastFailureReason);
+            }
+        }
+
+        private void ScheduleHumanScream(GameFailureReason reason)
+        {
+            if (reason != GameFailureReason.OperatorCollision &&
+                reason != GameFailureReason.PedestrianCollision &&
+                reason != GameFailureReason.PhoneDistractionCollision) return;
+
+            CancelPendingHumanScream();
+            _humanScreamRoutine = StartCoroutine(PlayHumanScreamAfterDelay());
+        }
+
+        private IEnumerator PlayHumanScreamAfterDelay()
+        {
+            float delay = Mathf.Max(0f, _humanScreamDelay);
+            if (delay > 0f) yield return new WaitForSecondsRealtime(delay);
+
+            _humanScreamRoutine = null;
+            AudioManager.Instance?.Play(PalletStackerAudioKeys.HumanScream);
+        }
+
+        private void CancelPendingHumanScream()
+        {
+            if (_humanScreamRoutine == null) return;
+            StopCoroutine(_humanScreamRoutine);
+            _humanScreamRoutine = null;
         }
 
         private void TransitionTo(GameState nextState)

@@ -49,3 +49,9 @@ MonoBehaviour:
   _maxPoolSize: 64
   _persistAcrossScenes: 1
   _logMissingKeys: 1
+  _voice:
+    _library: {fileID: 11400000, guid: 00734a7f9e055004a91c95a0c25938be, type: 2}
+    _defaultLanguage: 0
+    _output: {fileID: 0}
+    _volume: 1
+    _logMissingCues: 1

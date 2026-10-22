@@ -1,4 +1,5 @@
 using System;
+using ElectricPalletStackers.Audio;
 using ElectricPalletStackers.Localization;
 using ElectricPalletStackers.PalletStackers;
 using TMPro;
@@ -88,11 +89,17 @@ namespace ElectricPalletStackers.Gameplay
                                  _state == PhaseState.ConfirmingDirections ||
                                  _state == PhaseState.CompletingDirections;
         public event Action<GameFailureReason> FailureRequested;
+        public event Action ApproachInstructionPresented;
+        public event Action SafetyInstructionPresented;
+        public event Action DangerPresented;
 
         private void Awake()
         {
             if (_playerVehicle != null)
+            {
                 _playerColliders = _playerVehicle.GetComponentsInChildren<Collider>(true);
+                _crossingVehicle?.SetVehicleTarget(_playerVehicle);
+            }
             CacheFixedDirections();
             ConfigureTargets();
             ConfigurePresentationPanels();
@@ -182,14 +189,12 @@ namespace ElectricPalletStackers.Gameplay
 
             if (_state == PhaseState.Idle)
             {
-                if (IsVehicleInsideZone(_panelZone) &&
-                    _instructionPanel != null && !_instructionPanel.activeSelf)
+                if (IsVehicleInsideZone(_panelZone))
                 {
-                    SetInstruction(
-                        LocalizationKeys.CrossSafety.ApproachInstruction,
-                        "Intersection ahead. Slow down and prepare to stop for a safety check.");
-                    _instructionPanel.SetActive(true);
+                    ShowApproachInstruction();
                 }
+                else
+                    HideInstructionPanel();
 
                 if (IsVehicleInsideZone(_safetyConfirmZone))
                     BeginSafetyCheck();
@@ -197,6 +202,14 @@ namespace ElectricPalletStackers.Gameplay
 
             if (_state == PhaseState.WaitingForStop)
             {
+                if (!IsVehicleInsideZone(_safetyConfirmZone))
+                {
+                    _stoppedDuration = 0f;
+                    HideInstructionPanel();
+                    return;
+                }
+
+                ShowSafetyInstruction();
                 if (IsVehicleStopped())
                 {
                     _stoppedDuration += Time.deltaTime;
@@ -207,7 +220,12 @@ namespace ElectricPalletStackers.Gameplay
             }
 
             if (_state == PhaseState.ConfirmingDirections && !IsVehicleStopped())
-                TriggerUnsafeCrossing();
+            {
+                if (IsVehicleMovingForward())
+                    TriggerUnsafeCrossing();
+                else
+                    CancelSafetyCheckForRetreat();
+            }
         }
 
         private void LateUpdate()
@@ -265,11 +283,49 @@ namespace ElectricPalletStackers.Gameplay
             _state = PhaseState.WaitingForStop;
             _stoppedDuration = 0f;
             SetTargetsActive(false, true);
+            ShowSafetyInstruction(true);
+            Debug.Log("[Cross Safety] Entered safety-confirm zone. Waiting for the player to stop.", this);
+        }
+
+        private void ShowApproachInstruction()
+        {
+            if (_instructionPanel == null || _instructionPanel.activeSelf) return;
+
+            SetInstruction(
+                LocalizationKeys.CrossSafety.ApproachInstruction,
+                "Intersection ahead. Slow down and prepare to stop for a safety check.");
+            _instructionPanel.SetActive(true);
+            ApproachInstructionPresented?.Invoke();
+        }
+
+        private void ShowSafetyInstruction(bool announce = false)
+        {
+            if (_instructionPanel == null) return;
+
+            bool wasVisible = _instructionPanel.activeSelf;
             SetInstruction(
                 LocalizationKeys.CrossSafety.Instruction,
                 "Stop, point, and confirm it is safe to proceed.");
-            if (_instructionPanel != null) _instructionPanel.SetActive(true);
-            Debug.Log("[Cross Safety] Entered safety-confirm zone. Waiting for the player to stop.", this);
+            _instructionPanel.SetActive(true);
+            if (announce || !wasVisible) SafetyInstructionPresented?.Invoke();
+        }
+
+        private void HideInstructionPanel()
+        {
+            if (_instructionPanel != null) _instructionPanel.SetActive(false);
+        }
+
+        private void CancelSafetyCheckForRetreat()
+        {
+            _state = PhaseState.WaitingForStop;
+            _stoppedDuration = 0f;
+            _finalConfirmationElapsed = 0f;
+            SetTargetsActive(false, true);
+
+            if (IsVehicleInsideZone(_safetyConfirmZone))
+                ShowSafetyInstruction();
+            else
+                HideInstructionPanel();
         }
 
         private void SetInstruction(string localizationKey, string fallback)
@@ -345,11 +401,13 @@ namespace ElectricPalletStackers.Gameplay
             _state = PhaseState.HazardActive;
             HidePresentation();
             if (_dangerPanel != null) _dangerPanel.SetActive(true);
+            DangerPresented?.Invoke();
             Debug.LogWarning(
                 "[Cross Safety] Unsafe crossing detected. The waiting pedestrian is crossing.",
                 this);
             if (_crossingVehicle == null || _playerVehicle == null) return;
             _crossingVehicle.ArmForHazard();
+            _crossingVehicle.SetVehicleTarget(_playerVehicle);
             _crossingVehicle.BeginCrossing();
         }
 
@@ -372,6 +430,8 @@ namespace ElectricPalletStackers.Gameplay
                 _footAccidentVideoPlayer.time = 0d;
                 _footAccidentVideoPlayer.Play();
             }
+
+            AudioManager.Instance?.Play(PalletStackerAudioKeys.HumanScream);
 
             Debug.LogWarning(
                 "[Cross Safety] The player stopped after entering the pedestrian hazard. " +
@@ -418,6 +478,21 @@ namespace ElectricPalletStackers.Gameplay
             Vector3 planarVelocity = Vector3.ProjectOnPlane(_playerVehicle.linearVelocity, Vector3.up);
             return motorSpeed <= _stoppedSpeedThreshold &&
                    planarVelocity.sqrMagnitude <= _stoppedSpeedThreshold * _stoppedSpeedThreshold;
+        }
+
+        private bool IsVehicleMovingForward()
+        {
+            if (_playerMotor != null &&
+                Mathf.Abs(_playerMotor.CurrentSpeed) > _stoppedSpeedThreshold)
+                return _playerMotor.CurrentSpeed > 0f;
+
+            Vector3 planarVelocity = Vector3.ProjectOnPlane(
+                _playerVehicle.linearVelocity,
+                Vector3.up);
+            Vector3 forward = _playerMotor != null
+                ? _playerMotor.WorldForward
+                : Vector3.ProjectOnPlane(_playerVehicle.transform.forward, Vector3.up).normalized;
+            return Vector3.Dot(planarVelocity, forward) > 0f;
         }
 
         private bool IsPhaseEligible()

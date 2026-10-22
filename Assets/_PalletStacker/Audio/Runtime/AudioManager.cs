@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ElectricPalletStackers.Localization;
 using UnityEngine;
 
 namespace ElectricPalletStackers.Audio
@@ -12,6 +13,9 @@ namespace ElectricPalletStackers.Audio
         [SerializeField, Min(1)] private int _maxPoolSize = 64;
         [SerializeField] private bool _persistAcrossScenes = true;
         [SerializeField] private bool _logMissingKeys = true;
+
+        [Header("Localized Voice")]
+        [SerializeField] private VoicePlaybackSystem _voice = new();
 
         private readonly Stack<PooledAudioVoice> _available = new();
         private readonly List<PooledAudioVoice> _active = new();
@@ -32,6 +36,9 @@ namespace ElectricPalletStackers.Audio
             if (_library == null)
                 Debug.LogError("AudioManager requires an AudioCueLibrary assigned in the Inspector.", this);
             if (_persistAcrossScenes) DontDestroyOnLoad(gameObject);
+
+            _voice ??= new VoicePlaybackSystem();
+            _voice.Initialize(this);
 
             _maxPoolSize = Mathf.Max(1, _maxPoolSize);
             int count = Mathf.Min(Mathf.Max(0, _prewarmCount), _maxPoolSize);
@@ -77,10 +84,36 @@ namespace ElectricPalletStackers.Audio
             return PlayInternal(key, position, followTarget, worldOffset, options);
         }
 
+        public VoicePlaybackHandle PlayVoice(VoiceCueReference cue)
+        {
+            return _voice.Play(cue);
+        }
+
+        public void SetVoiceLanguage(LanguageCode language)
+        {
+            _voice.SetLanguage(language);
+        }
+
+        public void StopVoice()
+        {
+            _voice.Stop();
+        }
+
         public void StopAll()
         {
+            _voice.Stop();
             for (int index = _active.Count - 1; index >= 0; index--)
                 ReleaseAt(index);
+        }
+
+        internal bool IsVoicePlaying(uint generation)
+        {
+            return _voice.IsPlaying(generation);
+        }
+
+        internal void StopVoice(uint generation)
+        {
+            _voice.Stop(generation);
         }
 
         internal bool IsHandleValid(int voiceId, uint generation)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using ElectricPalletStackers.Audio;
 using ElectricPalletStackers.Localization;
 using UnityEngine;
 
@@ -77,6 +78,7 @@ namespace ElectricPalletStackers.Gameplay.Checklist
         {
             if (!IsPhaseActive) return;
 
+            AudioManager.Instance?.Play(PalletStackerAudioKeys.PenCheck);
             _checkedCount++;
             if (_checkedCount != _items.Count) return;
 

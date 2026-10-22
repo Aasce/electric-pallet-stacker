@@ -1,0 +1,149 @@
+{
+  "items": [
+    {
+      "id": "welcome.introduction",
+      "vi": "Chào mừng bạn đến với trải nghiệm tai nạn khi vận hành xe nâng tay điện. Hãy tuân thủ hướng dẫn và xử lý các tình huống an toàn trong suốt trải nghiệm.",
+      "en": "Welcome to the electric walkie pallet stacker accident experience. Follow the instructions and handle each situation safely throughout the experience.",
+      "jp": "電動歩行式パレットスタッカーの事故体験へようこそ。指示に従い、各場面で安全に対応してください。",
+      "category": "experience_intro",
+      "priority": "P1"
+    },
+    {
+      "id": "calibration.description",
+      "vi": "Điều chỉnh các nút đến khi góc nhìn của bạn khớp với xe.",
+      "en": "Adjust the controls until your view is aligned with the vehicle.",
+      "jp": "視点が車両に合うように操作ボタンで調整してください。",
+      "category": "training_instruction",
+      "priority": "P1"
+    },
+    {
+      "id": "ppe.description",
+      "vi": "Chạm vào các đồ bảo hộ để mặc chúng.",
+      "en": "Touch the safety equipment to put it on.",
+      "jp": "保護具に触れて着用してください。",
+      "category": "safety_instruction",
+      "priority": "P1"
+    },
+    {
+      "id": "vehicleChecklist.instruction",
+      "vi": "Chạm vào từng ô kiểm tra trước khi vận hành xe.",
+      "en": "Touch every checkbox before operating the vehicle.",
+      "jp": "車両を操作する前に、すべてのチェック欄に触れてください。",
+      "category": "safety_instruction",
+      "priority": "P1"
+    },
+    {
+      "id": "crossSafety.approachInstruction",
+      "vi": "Sắp đến khu vực giao nhau. Hãy giảm tốc và chuẩn bị dừng để kiểm tra an toàn.",
+      "en": "Intersection ahead. Slow down and prepare to stop for a safety check.",
+      "jp": "交差点が近づいています。減速し、安全確認のために停止する準備をしてください。",
+      "category": "critical_safety_instruction",
+      "priority": "P0"
+    },
+    {
+      "id": "crossSafety.instruction",
+      "vi": "Hãy dừng lại, quan sát và chỉ tay xác nhận an toàn trước khi di chuyển.",
+      "en": "Stop, look, and point to confirm it is safe before proceeding.",
+      "jp": "停止して周囲を確認し、指差し確認を行ってから進んでください。",
+      "category": "critical_safety_instruction",
+      "priority": "P0"
+    },
+    {
+      "id": "crossSafety.danger",
+      "vi": "Nguy hiểm! Dừng xe lại ngay.",
+      "en": "Danger! Stop the vehicle immediately.",
+      "jp": "危険です。直ちに車両を停止してください。",
+      "category": "emergency_warning",
+      "priority": "P0"
+    },
+    {
+      "id": "phone.conversation",
+      "vi": "A lô, anh kiểm tra giúp tôi toàn bộ khu vực giao nhận, xác nhận lối đi thông thoáng rồi báo lại ngay nhé.",
+      "en": "Hello. Check the entire receiving area, make sure the path is clear, and report back to me right away.",
+      "jp": "もしもし。荷受けエリア全体を確認し、通路の安全を確かめて、すぐに報告してください。",
+      "category": "scenario_dialogue",
+      "priority": "P0"
+    },
+    {
+      "id": "failure.unknown.result",
+      "vi": "Lượt huấn luyện kết thúc do vi phạm an toàn. Hãy dừng xe và kiểm tra lại tình huống trước khi tiếp tục.",
+      "en": "The training run ended because of a safety violation. Stop the vehicle and review the situation before continuing.",
+      "jp": "安全違反のため訓練を終了しました。車両を停止し、再開する前に状況を確認してください。",
+      "category": "failure_result",
+      "priority": "P1"
+    },
+    {
+      "id": "failure.vehicleCollision.result",
+      "vi": "Bạn đã va chạm với chướng ngại vật do không giữ khoảng cách an toàn. Hãy kiểm tra hai bên và khoảng hở của càng nâng trước khi di chuyển.",
+      "en": "You collided with an obstacle because a safe clearance was not maintained. Check both sides and the fork clearance before moving.",
+      "jp": "安全な間隔を確保せず、障害物に衝突しました。移動する前に左右とフォークの間隔を確認してください。",
+      "category": "failure_result",
+      "priority": "P1"
+    },
+    {
+      "id": "failure.operatorCollision.result",
+      "vi": "Bạn đã va chạm khi đứng sai vị trí vận hành. Hãy giữ cơ thể ngoài quỹ đạo di chuyển của xe và tránh xa tường, thiết bị.",
+      "en": "You collided while standing in an unsafe operating position. Keep your body outside the vehicle's travel path and away from walls and equipment.",
+      "jp": "危険な操作位置にいたため衝突しました。身体を車両の走行経路から外し、壁や設備との間隔を確保してください。",
+      "category": "failure_result",
+      "priority": "P1"
+    },
+    {
+      "id": "failure.loadCollision.result",
+      "vi": "Hàng đang nâng đã va vào chướng ngại vật do chưa kiểm tra khoảng hở. Hãy hạ tải và quan sát phía trên, hai bên trước khi di chuyển.",
+      "en": "The raised load struck an obstacle because the clearance was not checked. Lower the load and check above and to both sides before moving.",
+      "jp": "間隔を確認せず、持ち上げた荷が障害物に接触しました。荷を下げ、上方と左右を確認してから移動してください。",
+      "category": "failure_result",
+      "priority": "P1"
+    },
+    {
+      "id": "failure.loadDropped.result",
+      "vi": "Pallet hoặc hàng đã rơi do càng nâng chưa vào đúng vị trí hoặc tải không ổn định. Hãy đặt càng vào giữa pallet và kiểm tra tải trước khi di chuyển.",
+      "en": "The pallet or load fell because the forks were not positioned correctly or the load was unstable. Center the forks and check the load before moving.",
+      "jp": "フォークの位置が正しくない、または荷が不安定だったため、パレットまたは荷が落下しました。フォークを中央に入れ、移動前に荷を確認してください。",
+      "category": "failure_result",
+      "priority": "P1"
+    },
+    {
+      "id": "failure.pedestrianCollision.result",
+      "vi": "Bạn đã va chạm với người đi bộ do không giữ khoảng cách an toàn. Hãy dừng xe và chỉ đi tiếp khi người đi bộ đã rời khỏi lối đi.",
+      "en": "You collided with a pedestrian because a safe distance was not maintained. Stop and move only after the pedestrian has cleared the path.",
+      "jp": "安全な距離を保たず、歩行者に衝突しました。停止し、歩行者が通路から離れてから進んでください。",
+      "category": "failure_result",
+      "priority": "P1"
+    },
+    {
+      "id": "failure.phoneDistractionCollision.result",
+      "vi": "Bạn đã va chạm do sử dụng điện thoại khi đang vận hành xe. Bạn chưa tuân thủ quy định an toàn: không vừa đi vừa sử dụng điện thoại.",
+      "en": "You collided because you used the phone while operating the vehicle. You did not follow the safety rule: never move and use a phone at the same time.",
+      "jp": "運転中に電話を使用したため衝突しました。走行しながら電話を使用しないという安全ルールを守ってください。",
+      "category": "failure_result",
+      "priority": "P1"
+    },
+    {
+      "id": "failure.intersectionVehicleCollision.result",
+      "vi": "Bạn không kiểm tra an toàn tại khu vực giao nhau và đã va chạm với xe khác. Hãy dừng hẳn, quan sát trái, phải, trái rồi mới đi tiếp.",
+      "en": "You did not perform a safety check at the intersection and collided with another vehicle. Stop completely and look left, right, then left again before proceeding.",
+      "jp": "交差点で安全確認を行わず、他の車両と衝突しました。完全に停止し、左、右、左の順に確認してから進んでください。",
+      "category": "failure_result",
+      "priority": "P1"
+    },
+    {
+      "id": "failure.operatorFootRunOver.result",
+      "vi": "Bạn đã bị xe đè lên chân khi dừng đột ngột. Bạn chưa tuân thủ quy định an toàn: khi tới khu vực giao nhau, cần phải chỉ tay xác nhận an toàn trước khi di chuyển.",
+      "en": "The crossing vehicle ran over your foot after an abrupt stop. You did not follow the safety rule: at intersections, point and confirm it is safe before moving.",
+      "jp": "急停止した際、交差車両に足をひかれました。交差エリアでは、移動する前に指差し確認を行ってください。",
+      "category": "failure_result",
+      "priority": "P1"
+    },
+    {
+      "id": "completed.experience",
+      "vi": "Bạn đã không bị tai nạn nhờ tuân thủ tốt quy tắc an toàn khi sử dụng xe nâng. Chúc mừng bạn đã hoàn thành trải nghiệm. Xin cảm ơn!",
+      "en": "You avoided an accident by following the pallet stacker safety rules. Congratulations on completing the experience. Thank you!",
+      "jp": "パレットスタッカーの安全ルールを守り、事故を防ぐことができました。体験完了おめでとうございます。ありがとうございました。",
+      "category": "success_result",
+      "priority": "P1"
+    }
+  ]
+}
+

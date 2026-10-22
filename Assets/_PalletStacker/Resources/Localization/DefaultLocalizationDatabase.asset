@@ -129,6 +129,10 @@ MonoBehaviour:
     _vietnamese: "Ch\u1EA1m v\xE0o c\xE1c \u0111\u1ED3 b\u1EA3o h\u1ED9 \u0111\u1EC3
       m\u1EB7c ch\xFAng"
     _japanese: "\u4FDD\u8B77\u5177\u306B\u89E6\u308C\u3066\u7740\u7528\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
+  - _key: vehicleIgnition.startInstruction
+    _english: Turn the ignition key to start the vehicle.
+    _vietnamese: "V\u1EB7n ch\xECa kh\xF3a \u0111\u1EC3 kh\u1EDFi \u0111\u1ED9ng xe."
+    _japanese: "\u30A4\u30B0\u30CB\u30C3\u30B7\u30E7\u30F3\u30AD\u30FC\u3092\u56DE\u3057\u3066\u8ECA\u4E21\u3092\u59CB\u52D5\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
   - _key: crossSafety.approachInstruction
     _english: Intersection ahead. Slow down and prepare to stop for a safety check.
     _vietnamese: "S\u1EAFp \u0111\u1EBFn ng\u00E3 r\u1EBD. H\u00E3y gi\u1EA3m t\u1ED1c v\u00E0 chu\u1EA9n
