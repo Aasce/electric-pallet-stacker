@@ -25,6 +25,7 @@ namespace ElectricPalletStackers.PalletStackers
         private bool _collisionInterlock;
         private bool _gameplayInterlock;
         private bool _inputCaptureInterlock;
+        private bool _phoneCallInterlock;
         private bool _hasSmoothedCommand;
         private float _smoothedTravel;
         private float _smoothedTravelInput;
@@ -48,6 +49,7 @@ namespace ElectricPalletStackers.PalletStackers
         public bool CollisionInterlock => _collisionInterlock;
         public bool GameplayInterlock => _gameplayInterlock;
         public bool InputCaptureInterlock => _inputCaptureInterlock;
+        public bool PhoneCallInterlock => _phoneCallInterlock;
 
         public event Action<PalletStackerControlState, ushort> ControlUpdated;
         public event Action<PalletStackerDriveCommand> CommandApplied;
@@ -142,6 +144,13 @@ namespace ElectricPalletStackers.PalletStackers
             ReapplyCurrentState();
         }
 
+        public void SetPhoneCallInterlock(bool engaged)
+        {
+            if (_phoneCallInterlock == engaged) return;
+            _phoneCallInterlock = engaged;
+            ReapplyCurrentState();
+        }
+
         private void ReapplyCurrentState()
         {
 
@@ -169,7 +178,7 @@ namespace ElectricPalletStackers.PalletStackers
                 sequence,
                 SlowModeTravelMultiplier,
                 _collisionInterlock,
-                _gameplayInterlock || _inputCaptureInterlock,
+                _gameplayInterlock || _inputCaptureInterlock || _phoneCallInterlock,
                 TravelDeadzoneNormalized);
             SetTargetCommand(command);
             ControlUpdated?.Invoke(state, sequence);
@@ -201,7 +210,8 @@ namespace ElectricPalletStackers.PalletStackers
         private void ApplyFailSafe()
         {
             SetTargetCommand(PalletStackerDriveCommand.CreateFailSafe(
-                _collisionInterlock || _gameplayInterlock || _inputCaptureInterlock));
+                _collisionInterlock || _gameplayInterlock || _inputCaptureInterlock ||
+                _phoneCallInterlock));
         }
 
         private void SetTargetCommand(PalletStackerDriveCommand command)

@@ -37,6 +37,12 @@ MonoBehaviour:
     _vietnamese: {fileID: 8300000, guid: 32b39eb56f9d9444495f725da2b16554, type: 3}
     _english: {fileID: 8300000, guid: 7a8de85cd6589e241b8c79b6f797a013, type: 3}
     _japanese: {fileID: 8300000, guid: 26250befa0517d34f9ae8ecdc40d1600, type: 3}
+  - _id: vehicleIgnition.startInstruction
+    _category: training_instruction
+    _priority: P0
+    _vietnamese: {fileID: 8300000, guid: a8a6e5f371123ca4b89590c0baecfd27, type: 3}
+    _english: {fileID: 8300000, guid: 43b04ed611dc15b4a840f13af4af131f, type: 3}
+    _japanese: {fileID: 8300000, guid: afc5cb00632d4034985981440533f30d, type: 3}
   - _id: crossSafety.approachInstruction
     _category: critical_safety_instruction
     _priority: P0
@@ -106,18 +112,18 @@ MonoBehaviour:
   - _id: failure.intersectionVehicleCollision.result
     _category: failure_result
     _priority: P1
-    _vietnamese: {fileID: 8300000, guid: afc5cb00632d4034985981440533f30d, type: 3}
-    _english: {fileID: 8300000, guid: afc5cb00632d4034985981440533f30d, type: 3}
-    _japanese: {fileID: 8300000, guid: afc5cb00632d4034985981440533f30d, type: 3}
+    _vietnamese: {fileID: 8300000, guid: 4374aee6ec062ee4a82093320c1302dd, type: 3}
+    _english: {fileID: 8300000, guid: 03406f858a3c19347949d51cf9c680a3, type: 3}
+    _japanese: {fileID: 8300000, guid: 451c49b0c61c22b4b8cf479c079f8902, type: 3}
   - _id: failure.operatorFootRunOver.result
     _category: failure_result
     _priority: P1
-    _vietnamese: {fileID: 8300000, guid: afc5cb00632d4034985981440533f30d, type: 3}
-    _english: {fileID: 8300000, guid: afc5cb00632d4034985981440533f30d, type: 3}
-    _japanese: {fileID: 8300000, guid: afc5cb00632d4034985981440533f30d, type: 3}
+    _vietnamese: {fileID: 8300000, guid: cfd94590421099a4bbc597a37241416b, type: 3}
+    _english: {fileID: 8300000, guid: 480972716ad49244eb664cdbadeaac9b, type: 3}
+    _japanese: {fileID: 8300000, guid: 764f71da9930338449df1f5322790ead, type: 3}
   - _id: completed.experience
     _category: success_result
     _priority: P1
-    _vietnamese: {fileID: 8300000, guid: afc5cb00632d4034985981440533f30d, type: 3}
-    _english: {fileID: 8300000, guid: afc5cb00632d4034985981440533f30d, type: 3}
-    _japanese: {fileID: 8300000, guid: afc5cb00632d4034985981440533f30d, type: 3}
+    _vietnamese: {fileID: 8300000, guid: 8fa4286fe3893374cb3180862b17cfb2, type: 3}
+    _english: {fileID: 8300000, guid: 53d076be40221b74d94442b5caccbfc1, type: 3}
+    _japanese: {fileID: 8300000, guid: 0bf386144daf72949989af0b986d0403, type: 3}

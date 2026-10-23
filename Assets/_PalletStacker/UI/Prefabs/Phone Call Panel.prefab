@@ -2776,6 +2776,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1482085775915806054}
+  - {fileID: 1271476425006809473}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &3467639773829085774
@@ -2804,6 +2805,7 @@ MonoBehaviour:
   _declineButton: {fileID: 910000000000001006}
   _endButton: {fileID: 4254364655294899708}
   _endButtonLabel: {fileID: 910000000000001010}
+  _allowDirectInteraction: 0
   _transitionDuration: 0.2
   _ringingStartScale: 0.92
   _hiddenScale: 0.94
@@ -2824,6 +2826,7 @@ MonoBehaviour:
   _followTarget: {fileID: 630016475456356732}
   _conversationVoice:
     _id: phone.conversation
+  _missingVoiceFallbackDuration: 10
 --- !u!114 &2125259010950424064
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3522,3 +3525,109 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Mask
   m_ShowMaskGraphic: 1
+--- !u!1001 &1041180329642741161
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 630016475456356732}
+    m_Modifications:
+    - target: {fileID: 2294077049983880232, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2294077049983880232, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2294077049983880232, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2294077049983880232, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2294077049983880232, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2294077049983880232, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2294077049983880232, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 440
+      objectReference: {fileID: 0}
+    - target: {fileID: 2294077049983880232, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 150
+      objectReference: {fileID: 0}
+    - target: {fileID: 2294077049983880232, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2294077049983880232, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2294077049983880232, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2294077049983880232, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2294077049983880232, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2294077049983880232, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2294077049983880232, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2294077049983880232, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2294077049983880232, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -0.255
+      objectReference: {fileID: 0}
+    - target: {fileID: 2294077049983880232, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2294077049983880232, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2294077049983880232, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2642909813560902435, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+      propertyPath: m_Name
+      value: Phone Call Choice Panel
+      objectReference: {fileID: 0}
+    - target: {fileID: 2642909813560902435, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+--- !u!224 &1271476425006809473 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 2294077049983880232, guid: ab88c8c89934eff44ad720c29bff14db, type: 3}
+  m_PrefabInstance: {fileID: 1041180329642741161}
+  m_PrefabAsset: {fileID: 0}

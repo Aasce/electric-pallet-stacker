@@ -43,18 +43,14 @@ namespace ElectricPalletStackers.Gameplay
         [SerializeField] private Collider _dangerZone;
 
         [Header("Direction confirmation")]
-        [Tooltip("Origin used with the Forward / Turn Right marker positions to derive fixed world directions.")]
+        [Tooltip("Origin used with the Turn Left / Turn Right marker positions to derive fixed world directions.")]
         [SerializeField] private Transform _directionRoot;
-        [Tooltip("The target GameObjects under Confirm Directions. Supports two or three directions.")]
+        [Tooltip("The Turn Left and Turn Right target GameObjects under Confirm Directions.")]
         [SerializeField] private CrossDirectionPokeTarget[] _directionTargets;
         [Tooltip("Reach distance from the player's view to every poke sphere.")]
         [SerializeField, Range(0.3f, 0.8f)] private float _targetDistance = 0.5625f;
         [Tooltip("Moves the centre shared by all direction targets slightly forward, making side targets easier to see without a full 90-degree head turn.")]
         [SerializeField, Min(0f)] private float _targetForwardOffset = 0.2f;
-        [Tooltip("Additional forward-axis adjustment for the Forward target.")]
-        [SerializeField] private float _forwardTargetForwardAdjustment = -0.2f;
-        [Tooltip("Additional forward-axis adjustment for the Turn Right target.")]
-        [SerializeField] private float _turnRightTargetForwardAdjustment = 0.1f;
         [Tooltip("Vertical offset from the player's view. Negative values place spheres below eye level.")]
         [SerializeField, Range(-0.5f, 0.25f)] private float _targetVerticalOffset = -0.18f;
         [Tooltip("How long the final confirmed target remains visible before all direction targets are hidden.")]
@@ -74,6 +70,8 @@ namespace ElectricPalletStackers.Gameplay
         [SerializeField] private GameObject _dangerPanel;
         [SerializeField] private GameObject _footAccidentCutscenePanel;
         [SerializeField] private VideoPlayer _footAccidentVideoPlayer;
+        [Tooltip("Maximum time after an unsafe entry before the cutscene starts, regardless of the pedestrian's route progress.")]
+        [SerializeField, Min(0f)] private float _unsafeCutsceneDelay = 2f;
         [SerializeField, Min(0.1f)] private float _missingVideoFallbackDuration = 3f;
 
         private PhaseState _state;
@@ -81,6 +79,7 @@ namespace ElectricPalletStackers.Gameplay
         private Collider[] _playerColliders;
         private float _stoppedDuration;
         private float _finalConfirmationElapsed;
+        private float _unsafeElapsed;
         private float _cutsceneElapsed;
         private int _promptedDirectionIndex;
 
@@ -96,10 +95,7 @@ namespace ElectricPalletStackers.Gameplay
         private void Awake()
         {
             if (_playerVehicle != null)
-            {
                 _playerColliders = _playerVehicle.GetComponentsInChildren<Collider>(true);
-                _crossingVehicle?.SetVehicleTarget(_playerVehicle);
-            }
             CacheFixedDirections();
             ConfigureTargets();
             ConfigurePresentationPanels();
@@ -163,18 +159,11 @@ namespace ElectricPalletStackers.Gameplay
 
             if (_state == PhaseState.HazardActive)
             {
-                if (_crossingVehicle != null && _crossingVehicle.IsCrossing &&
-                    IsVehicleStopped())
+                _unsafeElapsed += Time.deltaTime;
+                if (IsVehicleStopped() || _unsafeElapsed >= _unsafeCutsceneDelay)
                 {
                     BeginFootAccidentCutscene();
                     return;
-                }
-
-                if (_crossingVehicle != null &&
-                    _crossingVehicle.IsTouchingAny(_playerColliders))
-                {
-                    _crossingVehicle.StopVehicle();
-                    FailureRequested?.Invoke(GameFailureReason.PedestrianCollision);
                 }
                 return;
             }
@@ -235,8 +224,8 @@ namespace ElectricPalletStackers.Gameplay
                 _playerView == null ||
                 _directionTargets == null || _fixedDirections == null) return;
 
-            Vector3 forwardDirection = _fixedDirections.Length > 0
-                ? _fixedDirections[0]
+            Vector3 forwardDirection = _directionRoot != null
+                ? Vector3.ProjectOnPlane(_directionRoot.right, Vector3.up).normalized
                 : Vector3.ProjectOnPlane(_playerView.forward, Vector3.up).normalized;
             Vector3 origin = _playerView.position +
                              Vector3.up * _targetVerticalOffset +
@@ -246,15 +235,8 @@ namespace ElectricPalletStackers.Gameplay
             {
                 CrossDirectionPokeTarget target = _directionTargets[index];
                 if (target == null) continue;
-                float forwardAdjustment = index switch
-                {
-                    0 => _forwardTargetForwardAdjustment,
-                    1 => _turnRightTargetForwardAdjustment,
-                    _ => 0f
-                };
                 target.transform.position = origin +
-                                            _fixedDirections[index] * _targetDistance +
-                                            forwardDirection * forwardAdjustment;
+                                            _fixedDirections[index] * _targetDistance;
                 target.transform.rotation = Quaternion.LookRotation(
                     _fixedDirections[index],
                     Vector3.up);
@@ -399,6 +381,7 @@ namespace ElectricPalletStackers.Gameplay
         private void TriggerUnsafeCrossing()
         {
             _state = PhaseState.HazardActive;
+            _unsafeElapsed = 0f;
             HidePresentation();
             if (_dangerPanel != null) _dangerPanel.SetActive(true);
             DangerPresented?.Invoke();
@@ -407,7 +390,6 @@ namespace ElectricPalletStackers.Gameplay
                 this);
             if (_crossingVehicle == null || _playerVehicle == null) return;
             _crossingVehicle.ArmForHazard();
-            _crossingVehicle.SetVehicleTarget(_playerVehicle);
             _crossingVehicle.BeginCrossing();
         }
 
@@ -434,7 +416,7 @@ namespace ElectricPalletStackers.Gameplay
             AudioManager.Instance?.Play(PalletStackerAudioKeys.HumanScream);
 
             Debug.LogWarning(
-                "[Cross Safety] The player stopped after entering the pedestrian hazard. " +
+                "[Cross Safety] Unsafe-entry delay elapsed or the player stopped early. " +
                 "Playing the accident cutscene.",
                 this);
         }
@@ -532,6 +514,7 @@ namespace ElectricPalletStackers.Gameplay
             _state = PhaseState.Idle;
             _stoppedDuration = 0f;
             _finalConfirmationElapsed = 0f;
+            _unsafeElapsed = 0f;
             _cutsceneElapsed = 0f;
             HidePresentation();
         }

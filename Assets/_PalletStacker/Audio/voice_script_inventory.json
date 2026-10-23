@@ -33,6 +33,14 @@
       "priority": "P1"
     },
     {
+      "id": "vehicleIgnition.startInstruction",
+      "vi": "Vặn chìa khóa để khởi động xe.",
+      "en": "Turn the ignition key to start the vehicle.",
+      "jp": "イグニッションキーを回して車両を始動してください。",
+      "category": "training_instruction",
+      "priority": "P0"
+    },
+    {
       "id": "crossSafety.approachInstruction",
       "vi": "Sắp đến khu vực giao nhau. Hãy giảm tốc và chuẩn bị dừng để kiểm tra an toàn.",
       "en": "Intersection ahead. Slow down and prepare to stop for a safety check.",

@@ -196,15 +196,19 @@ namespace ElectricPalletStackers.Audio.Editor
             UIController uiController = FindSceneObject<UIController>();
             AppManager appManager = FindSceneObject<AppManager>();
             CrossSafetyPhaseController crossSafety = FindSceneObject<CrossSafetyPhaseController>();
+            VehicleIgnitionReminder ignitionReminder = FindSceneObject<VehicleIgnitionReminder>();
 
-            if (uiController == null || appManager == null || crossSafety == null)
+            if (uiController == null || appManager == null || crossSafety == null ||
+                ignitionReminder == null)
                 throw new MissingReferenceException(
-                    "MainScene requires UIController, AppManager, and CrossSafetyPhaseController.");
+                    "MainScene requires UIController, AppManager, CrossSafetyPhaseController, " +
+                    "and VehicleIgnitionReminder.");
 
             ConfigureLanguageSync(uiController);
             ConfigureUIFlowPresenter(uiController);
             ConfigureFailurePresenter(appManager);
             ConfigureCrossSafetyPresenter(crossSafety);
+            ConfigureVehicleIgnitionPresenter(ignitionReminder);
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
@@ -297,6 +301,19 @@ namespace ElectricPalletStackers.Audio.Editor
             SetCue(
                 serializedPresenter.FindProperty("_dangerWarning"),
                 "crossSafety.danger");
+            serializedPresenter.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void ConfigureVehicleIgnitionPresenter(
+            VehicleIgnitionReminder reminder)
+        {
+            VehicleIgnitionVoicePresenter presenter =
+                GetOrAdd<VehicleIgnitionVoicePresenter>(reminder.gameObject);
+            SerializedObject serializedPresenter = new(presenter);
+            serializedPresenter.FindProperty("_reminder").objectReferenceValue = reminder;
+            SetCue(
+                serializedPresenter.FindProperty("_instruction"),
+                "vehicleIgnition.startInstruction");
             serializedPresenter.ApplyModifiedPropertiesWithoutUndo();
         }
 

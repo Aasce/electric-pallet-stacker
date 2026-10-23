@@ -40,6 +40,10 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private Button _endButton;
         [SerializeField] private TMP_Text _endButtonLabel;
 
+        [Header("Interaction")]
+        [Tooltip("When disabled, choices are owned by PhoneCallChoicePanel instead of this view.")]
+        [SerializeField] private bool _allowDirectInteraction;
+
         [Header("Presentation")]
         [SerializeField, Min(0f)] private float _transitionDuration = 0.2f;
         [SerializeField, Range(0.01f, 1f)] private float _ringingStartScale = 0.92f;
@@ -141,8 +145,8 @@ namespace ElectricPalletStackers.UI
             KillTweens();
 
             _canvasGroup.alpha = 0f;
-            _canvasGroup.interactable = true;
-            _canvasGroup.blocksRaycasts = true;
+            _canvasGroup.interactable = _allowDirectInteraction;
+            _canvasGroup.blocksRaycasts = _allowDirectInteraction;
             _content.localScale = _shownScale * _ringingStartScale;
 
             _canvasGroup.DOFade(1f, _transitionDuration)
@@ -166,6 +170,18 @@ namespace ElectricPalletStackers.UI
             SetState(PhoneCallState.InCall);
             SetInCallVisual();
             CallAccepted?.Invoke();
+        }
+
+        public void SetDirectInteractionEnabled(bool enabled)
+        {
+            _allowDirectInteraction = enabled;
+            if (State == PhoneCallState.Ringing) SetRingingVisual();
+            else if (State == PhoneCallState.InCall) SetInCallVisual();
+
+            if (_canvasGroup == null || State == PhoneCallState.Hidden ||
+                State == PhoneCallState.Ended) return;
+            _canvasGroup.interactable = enabled;
+            _canvasGroup.blocksRaycasts = enabled;
         }
 
         public void ShowEnded()
@@ -290,9 +306,11 @@ namespace ElectricPalletStackers.UI
                 _hintLabel,
                 LocalizationKeys.Phone.ChooseAction,
                 "Accept or decline");
-            if (_incomingActions != null) _incomingActions.SetActive(true);
-            if (_acceptButton != null) _acceptButton.gameObject.SetActive(true);
-            if (_declineButton != null) _declineButton.gameObject.SetActive(true);
+            if (_incomingActions != null) _incomingActions.SetActive(_allowDirectInteraction);
+            if (_acceptButton != null)
+                _acceptButton.gameObject.SetActive(_allowDirectInteraction);
+            if (_declineButton != null)
+                _declineButton.gameObject.SetActive(_allowDirectInteraction);
             SetLocalizedText(_endButtonLabel, LocalizationKeys.Phone.Decline, "Decline");
         }
 
@@ -301,7 +319,7 @@ namespace ElectricPalletStackers.UI
             SetPhaseVisible(_ongoingCallView);
             SetLocalizedText(_statusLabel, LocalizationKeys.Phone.InCall, "In call");
             SetLocalizedText(_hintLabel, LocalizationKeys.Phone.InCall, "In call");
-            if (_endButton != null) _endButton.gameObject.SetActive(true);
+            if (_endButton != null) _endButton.gameObject.SetActive(_allowDirectInteraction);
         }
 
         private void SetEndedVisual()

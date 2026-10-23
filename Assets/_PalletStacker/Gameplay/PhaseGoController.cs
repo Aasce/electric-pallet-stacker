@@ -40,7 +40,6 @@ namespace ElectricPalletStackers.Gameplay
         {
             if (_checkpointController == null)
                 _checkpointController = FindFirstObjectByType<TrainingCheckpointController>();
-            _crossingVehicle?.SetVehicleTarget(_playerVehicle);
         }
 
         private void OnEnable()

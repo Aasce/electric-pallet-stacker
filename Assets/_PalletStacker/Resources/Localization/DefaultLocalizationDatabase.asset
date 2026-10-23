@@ -104,6 +104,18 @@ MonoBehaviour:
     _english: Accept or decline
     _vietnamese: "Ch\u1EA5p nh\u1EADn ho\u1EB7c t\u1EEB ch\u1ED1i"
     _japanese: "\u5FDC\u7B54\u307E\u305F\u306F\u62D2\u5426"
+  - _key: phone.choiceTitle
+    _english: Choose how to take this call
+    _vietnamese: "Ch\u1ECDn c\xE1ch nghe cu\u1ED9c g\u1ECDi"
+    _japanese: "\u901A\u8A71\u65B9\u6CD5\u3092\u9078\u3093\u3067\u304F\u3060\u3055\u3044"
+  - _key: phone.stopAndListen
+    _english: Stop and answer
+    _vietnamese: "D\u1EEBng l\u1EA1i nghe m\xE1y"
+    _japanese: "\u505C\u6B62\u3057\u3066\u901A\u8A71\u3059\u308B"
+  - _key: phone.moveWhileListening
+    _english: Move while answering
+    _vietnamese: "V\u1EEBa di chuy\u1EC3n v\u1EEBa nghe"
+    _japanese: "\u8D70\u884C\u3057\u306A\u304C\u3089\u901A\u8A71\u3059\u308B"
   - _key: phone.boss
     _english: Boss
     _vietnamese: "S\u1EBFp"

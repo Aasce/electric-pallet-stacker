@@ -103,6 +103,9 @@ namespace ElectricPalletStackers.Localization
             public const string InCall = "phone.inCall";
             public const string TapToAnswer = "phone.tapToAnswer";
             public const string ChooseAction = "phone.chooseAction";
+            public const string ChoiceTitle = "phone.choiceTitle";
+            public const string StopAndListen = "phone.stopAndListen";
+            public const string MoveWhileListening = "phone.moveWhileListening";
             public const string Boss = "phone.boss";
             public const string Decline = "phone.decline";
             public const string Accept = "phone.accept";

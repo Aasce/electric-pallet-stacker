@@ -1,3 +1,4 @@
+using System;
 using ElectricPalletStackers.Ble;
 using ElectricPalletStackers.Gameplay;
 using UnityEngine;
@@ -17,6 +18,8 @@ namespace ElectricPalletStackers.UI
 
         private bool _roundActive;
         private bool _dismissedForRound;
+
+        public event Action<bool> VisibilityChanged;
 
         private void Awake()
         {
@@ -97,8 +100,10 @@ namespace ElectricPalletStackers.UI
 
         private void SetVisible(bool visible)
         {
-            if (_presentationRoot != null && _presentationRoot.activeSelf != visible)
-                _presentationRoot.SetActive(visible);
+            if (_presentationRoot == null || _presentationRoot.activeSelf == visible) return;
+
+            _presentationRoot.SetActive(visible);
+            VisibilityChanged?.Invoke(visible);
         }
 
         private void Hide() => SetVisible(false);
