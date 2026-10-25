@@ -481,8 +481,7 @@ namespace ElectricPalletStackers.Gameplay
         {
             if (_trainingExperience == null) return true;
             if (_trainingExperience.HasCompletedCrossSafety) return false;
-            return _trainingExperience.CurrentStage > TrainingExperienceStage.WaitingToStart &&
-                   _trainingExperience.CurrentStage < TrainingExperienceStage.PhoneIntersection;
+            return _trainingExperience.CurrentStage == TrainingExperienceStage.YieldIntersection;
         }
 
         private bool IsVehicleInsideZone(Collider zone)

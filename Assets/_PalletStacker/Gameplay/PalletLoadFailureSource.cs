@@ -63,11 +63,23 @@ namespace ElectricPalletStackers.Gameplay
 
         private void OnCollisionEnter(Collision collision)
         {
-            if (!_roundActive || !IsHeldLoad() || collision == null) return;
+            if (!_roundActive || collision == null) return;
+
+            Collider contactCollider = collision.collider;
+            if (IsVehicleContact(contactCollider))
+            {
+                if (IsSafeOwnerVehicleContact(contactCollider)) return;
+
+                ReportFailure(
+                    GameFailureReason.VehicleCollision,
+                    $"vehicle '{contactCollider.gameObject.name}' touched the pallet");
+                return;
+            }
+
+            if (!IsHeldLoad()) return;
 
             int layerMask = 1 << collision.gameObject.layer;
             if ((_collisionLayers.value & layerMask) == 0) return;
-            if (IsVehicleContact(collision.collider)) return;
 
             float impactSpeed = GetMaximumUnsafeImpactSpeed(collision);
             if (impactSpeed < _minimumRelativeSpeed) return;
@@ -138,6 +150,24 @@ namespace ElectricPalletStackers.Gameplay
             Rigidbody vehicleBody = _loadHandler != null ? _loadHandler.VehicleBody : null;
             return collider.attachedRigidbody == vehicleBody ||
                    collider.GetComponentInParent<PalletStacker>() != null;
+        }
+
+        private bool IsSafeOwnerVehicleContact(Collider collider)
+        {
+            if (_loadHandler == null || collider == null ||
+                collider.attachedRigidbody != _loadHandler.VehicleBody)
+                return false;
+
+            // Contact from the assigned vehicle is normal while carrying the load.
+            // Before pickup, only the forks may touch the pallet so the vehicle body
+            // cannot push it around without failing the round.
+            if (IsHeldLoad()) return true;
+
+            Transform forks = _loadHandler.Mast != null
+                ? _loadHandler.Mast.Forks
+                : null;
+            return forks != null &&
+                   (collider.transform == forks || collider.transform.IsChildOf(forks));
         }
 
         private void ReportFailure(GameFailureReason failureReason, string diagnostic)

@@ -25,10 +25,16 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private UIGuidePanel _guidePanel;
         [SerializeField] private UIPpePanel _ppePanel;
         [SerializeField] private PpeEquipmentPhase _ppeEquipmentPhase;
+        [SerializeField] private UIChecklistPanel _checklistPanel;
         [SerializeField] private VehicleChecklistController _vehicleChecklist;
         [SerializeField] private UICompletedPanel _completedPanel;
         [SerializeField] private UIFailedPanel _failedPanel;
         [SerializeField] private UIResetGamePanel _resetGamePanel;
+
+        [Header("Flow Timing")]
+        [SerializeField, Min(0f)] private float _welcomeNavigationDelay = 2f;
+
+        private float _navigationInputUnlockedAt = float.NegativeInfinity;
 
         public UIFlowState CurrentState { get; private set; } = UIFlowState.CalibrateVehicleView;
         public bool IsInputCaptured => CurrentState != UIFlowState.Hidden;
@@ -85,6 +91,7 @@ namespace ElectricPalletStackers.UI
             _welcomePanel?.HideImmediate();
             _guidePanel?.HideImmediate();
             _ppePanel?.HideImmediate();
+            _checklistPanel?.HideImmediate();
             _ppeEquipmentPhase?.EndPhase();
             _vehicleChecklist.EndPhase();
             _completedPanel?.HideImmediate();
@@ -140,6 +147,8 @@ namespace ElectricPalletStackers.UI
 
         private void HandleNavigateNext()
         {
+            if (!CanProcessNavigationInput()) return;
+
             if (CurrentState == UIFlowState.SelectLanguage)
                 _selectLanguagePanel.NavigateNext();
             else if (CurrentState == UIFlowState.Failed)
@@ -150,6 +159,8 @@ namespace ElectricPalletStackers.UI
 
         private void HandleNavigatePrevious()
         {
+            if (!CanProcessNavigationInput()) return;
+
             if (CurrentState == UIFlowState.SelectLanguage)
                 _selectLanguagePanel.NavigatePrevious();
             else if (CurrentState == UIFlowState.Failed)
@@ -160,7 +171,15 @@ namespace ElectricPalletStackers.UI
 
         private void HandleConfirm()
         {
+            if (!CanProcessNavigationInput()) return;
+
             ConfirmCurrentPanel();
+        }
+
+        private bool CanProcessNavigationInput()
+        {
+            return CurrentState != UIFlowState.Welcome ||
+                   Time.unscaledTime >= _navigationInputUnlockedAt;
         }
 
         public void ConfirmCurrentPanel()
@@ -246,6 +265,7 @@ namespace ElectricPalletStackers.UI
             _welcomePanel?.Hide();
             _guidePanel?.Hide();
             _ppePanel?.Hide();
+            _checklistPanel?.Hide();
             _ppeEquipmentPhase?.EndPhase();
             _vehicleChecklist.EndPhase();
             _completedPanel?.Hide();
@@ -253,6 +273,9 @@ namespace ElectricPalletStackers.UI
             _resetGamePanel?.Hide();
 
             CurrentState = nextState;
+            _navigationInputUnlockedAt = nextState == UIFlowState.Welcome
+                ? Time.unscaledTime + _welcomeNavigationDelay
+                : float.NegativeInfinity;
             _inputRouter?.ResetForPanel();
 
             switch (nextState)
@@ -275,6 +298,7 @@ namespace ElectricPalletStackers.UI
                     _ppeEquipmentPhase?.BeginPhase();
                     break;
                 case UIFlowState.VehicleChecklist:
+                    _checklistPanel?.Show();
                     _vehicleChecklist.BeginPhase();
                     break;
                 case UIFlowState.Completed:

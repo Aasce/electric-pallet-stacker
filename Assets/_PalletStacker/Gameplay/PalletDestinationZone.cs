@@ -44,6 +44,8 @@ namespace ElectricPalletStackers.Gameplay
                 return;
             }
 
+            _targetPallet.SetHighlighted(false);
+
             _validDuration += Time.deltaTime;
             if (_validDuration < _confirmationDuration) return;
 
@@ -65,7 +67,12 @@ namespace ElectricPalletStackers.Gameplay
         {
             if (other == null) return;
             _overlappingTargetColliders.Remove(other);
-            if (_overlappingTargetColliders.Count == 0) _validDuration = 0f;
+            if (_overlappingTargetColliders.Count != 0) return;
+
+            _validDuration = 0f;
+            if (_targetPallet != null &&
+                (_loadHandler == null || _loadHandler.HeldLoad != _targetPallet))
+                _targetPallet.SetHighlighted(true);
         }
 
         public void Arm(PalletStackerLoad targetPallet, PalletStackerLoadHandler loadHandler)
@@ -83,6 +90,20 @@ namespace ElectricPalletStackers.Gameplay
         public void SetPreviewVisible(bool visible)
         {
             _view?.SetVisible(visible);
+        }
+
+        public bool ContainsPallet(PalletStackerLoad pallet)
+        {
+            if (!IsArmed || pallet == null || pallet != _targetPallet) return false;
+
+            foreach (Collider overlappingCollider in _overlappingTargetColliders)
+            {
+                if (overlappingCollider != null &&
+                    overlappingCollider.attachedRigidbody == pallet.Body)
+                    return true;
+            }
+
+            return false;
         }
 
         public void Disarm()
@@ -103,6 +124,8 @@ namespace ElectricPalletStackers.Gameplay
             if (candidate.attachedRigidbody != _targetPallet.Body) return;
 
             _overlappingTargetColliders.Add(candidate);
+            if (_loadHandler == null || _loadHandler.HeldLoad != _targetPallet)
+                _targetPallet.SetHighlighted(false);
         }
 
         private bool IsValidNow()

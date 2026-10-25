@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ElectricPalletStackers.Gameplay;
 using ElectricPalletStackers.NPCs;
 using ElectricPalletStackers.UI;
 using UnityEngine;
@@ -31,6 +32,10 @@ namespace ElectricPalletStackers.PalletStackers
         private readonly List<WarningCandidate> _candidates = new();
         private readonly List<Vector2> _visibleDirections = new(MaximumWarnings);
         private readonly List<float> _visibleProximities = new(MaximumWarnings);
+        private AppManager _appManager;
+        private CrossSafetyPhaseController _crossSafetyPhase;
+        private PalletStackerControlDriver _controlDriver;
+        private UIController _uiController;
 
         private readonly struct WarningCandidate
         {
@@ -50,6 +55,10 @@ namespace ElectricPalletStackers.PalletStackers
         {
             ResolveTrigger();
             ResolveHud();
+            _appManager = FindAnyObjectByType<AppManager>(FindObjectsInactive.Include);
+            _crossSafetyPhase = FindAnyObjectByType<CrossSafetyPhaseController>(FindObjectsInactive.Include);
+            _controlDriver = GetComponentInParent<PalletStackerControlDriver>();
+            _uiController = FindAnyObjectByType<UIController>(FindObjectsInactive.Include);
         }
 
         private void LateUpdate()
@@ -58,8 +67,13 @@ namespace ElectricPalletStackers.PalletStackers
 
             RemoveInvalidContacts();
             ResolveHud();
-
             if (_warningHud == null) return;
+
+            if (!CanShowWarnings())
+            {
+                _warningHud.SetVisible(false);
+                return;
+            }
 
             Camera viewCamera = Camera.main;
             if (viewCamera == null)
@@ -158,6 +172,17 @@ namespace ElectricPalletStackers.PalletStackers
                 // guarantee OnTriggerExit. Cull contacts that are no longer even inside
                 // the trigger's world-space bounds so stale warnings cannot survive reset.
                 || !warningBounds.Intersects(contact.bounds));
+        }
+
+        private bool CanShowWarnings()
+        {
+            if (_appManager != null && _appManager.CurrentState != GameState.Playing) return false;
+            if (_uiController != null && _uiController.CurrentState != UIFlowState.Hidden) return false;
+            if (_crossSafetyPhase != null && _crossSafetyPhase.IsRunning) return false;
+
+            // Interlocks cover phone-call choices/cutscenes and any other phase where
+            // the vehicle cannot move. The safety direction check is handled above.
+            return _controlDriver == null || !_controlDriver.CurrentCommand.MovementInhibited;
         }
 
         private bool IsWarningTarget(Collider contact)

@@ -1,5 +1,4 @@
 using System;
-using ElectricPalletStackers.NPCs;
 using ElectricPalletStackers.PalletStackers;
 using UnityEngine;
 
@@ -19,7 +18,6 @@ namespace ElectricPalletStackers.Gameplay
         [SerializeField] private PalletStackerLoadHandler _loadHandler;
         [SerializeField] private PalletStackerLoad _pallet;
         [SerializeField] private PalletStackerRearUserFollower _playerFollower;
-        [SerializeField] private NpcPopulationController _npcPopulation;
         [SerializeField] private CrossingVehicleController _crossingVehicle;
 
         [Header("Phase Reset Points")]
@@ -36,6 +34,12 @@ namespace ElectricPalletStackers.Gameplay
         private bool _hasCheckpointEntryDirection;
         private bool _checkpointEnteredInReverse;
         private bool _isWaitingForEntryDirection;
+        private bool _palletReleasedThisFrame;
+        private Vector3 _releasedPalletPositionInForkSpace;
+        private Quaternion _releasedPalletRotationInForkSpace;
+        private bool _hasFailurePalletSnapshot;
+        private Vector3 _failurePalletPositionInForkSpace;
+        private Quaternion _failurePalletRotationInForkSpace;
 
         public bool HasCheckpoint => _hasCheckpoint;
         public TrainingExperienceStage LatestStage => _latest.Stage;
@@ -46,19 +50,27 @@ namespace ElectricPalletStackers.Gameplay
         private void OnEnable()
         {
             _appManager.RoundStarted += HandleRoundStarted;
+            _appManager.GameLost += HandleGameLost;
             _appManager.StateChanged += HandleGameStateChanged;
             _experience.StageChanged += HandleStageChanged;
+            _loadHandler.LoadReleased += HandleLoadReleased;
         }
 
         private void OnDisable()
         {
             _appManager.RoundStarted -= HandleRoundStarted;
+            _appManager.GameLost -= HandleGameLost;
             _appManager.StateChanged -= HandleGameStateChanged;
             _experience.StageChanged -= HandleStageChanged;
+            _loadHandler.LoadReleased -= HandleLoadReleased;
         }
 
         private void Update()
         {
+            // A normal pallet release should not be mistaken for a load that was
+            // dropped by the failure which ended the round.
+            _palletReleasedThisFrame = false;
+
             if (!_isWaitingForEntryDirection ||
                 _appManager == null ||
                 _appManager.CurrentState != GameState.Playing) return;
@@ -86,6 +98,22 @@ namespace ElectricPalletStackers.Gameplay
         {
             if (!_hasCheckpoint) return false;
 
+            // Save the live fork-relative pose before releasing the load and moving
+            // the vehicle back to the phase checkpoint. A failed phase can have
+            // picked up the pallet after its checkpoint was captured.
+            bool preserveCurrentlyCarriedPallet = TryGetCarriedPalletPose(
+                out Vector3 carriedPalletPosition,
+                out Quaternion carriedPalletRotation);
+            bool preserveFailurePallet = !preserveCurrentlyCarriedPallet &&
+                _appManager.CurrentState == GameState.Lost && _hasFailurePalletSnapshot;
+            bool preservePallet = preserveCurrentlyCarriedPallet || preserveFailurePallet;
+            Vector3 preservedPalletPosition = preserveCurrentlyCarriedPallet
+                ? carriedPalletPosition
+                : _failurePalletPositionInForkSpace;
+            Quaternion preservedPalletRotation = preserveCurrentlyCarriedPallet
+                ? carriedPalletRotation
+                : _failurePalletRotationInForkSpace;
+
             _isRestoring = true;
             _loadHandler.ReleaseLoad();
 
@@ -97,17 +125,22 @@ namespace ElectricPalletStackers.Gameplay
 
             _mast.RestoreHeight(_latest.MastHeight, _latest.MastTargetHeight);
 
-            if (_pallet.gameObject.activeSelf != _latest.PalletWasActive)
-                _pallet.gameObject.SetActive(_latest.PalletWasActive);
-            _pallet.SetHighlighted(_latest.PalletWasHighlighted);
+            bool palletWasActive = preservePallet || _latest.PalletWasActive;
+            if (_pallet.gameObject.activeSelf != palletWasActive)
+                _pallet.gameObject.SetActive(palletWasActive);
+            _pallet.SetHighlighted(preservePallet ? false : _latest.PalletWasHighlighted);
 
             Rigidbody palletBody = _pallet.Body;
-            Vector3 palletPosition = _latest.PalletPoseIsForkRelative
-                ? _mast.Forks.TransformPoint(_latest.PalletPosition)
-                : _latest.PalletPosition;
-            Quaternion palletRotation = _latest.PalletPoseIsForkRelative
-                ? _mast.Forks.rotation * _latest.PalletRotation
-                : _latest.PalletRotation;
+            Vector3 palletPosition = preservePallet
+                ? _mast.Forks.TransformPoint(preservedPalletPosition)
+                : _latest.PalletPoseIsForkRelative
+                    ? _mast.Forks.TransformPoint(_latest.PalletPosition)
+                    : _latest.PalletPosition;
+            Quaternion palletRotation = preservePallet
+                ? _mast.Forks.rotation * preservedPalletRotation
+                : _latest.PalletPoseIsForkRelative
+                    ? _mast.Forks.rotation * _latest.PalletRotation
+                    : _latest.PalletRotation;
             RigidbodyPoseUtility.Restore(
                 palletBody,
                 palletPosition,
@@ -116,16 +149,17 @@ namespace ElectricPalletStackers.Gameplay
             _pallet.ResetSupportTracking();
 
             Physics.SyncTransforms();
-            if (_latest.HadAttachedLoad && !_loadHandler.AttachLoad(_pallet))
+            bool shouldAttachPallet = preservePallet || _latest.HadAttachedLoad;
+            if (shouldAttachPallet && !_loadHandler.AttachLoad(_pallet))
                 Debug.LogError("Failed to restore the checkpoint pallet attachment.", this);
 
             _crossingVehicle?.RestoreCheckpointState(_latest.CrossingVehicleState);
             _experience.RestoreStage(_latest.Stage);
-            _npcPopulation?.RestoreCheckpoint();
             _playerFollower.FollowVehicle();
             Physics.SyncTransforms();
 
             _isRestoring = false;
+            _hasFailurePalletSnapshot = false;
             CheckpointRestored?.Invoke(_latest.Stage);
             return true;
         }
@@ -143,10 +177,31 @@ namespace ElectricPalletStackers.Gameplay
 
         private void HandleRoundStarted()
         {
+            _hasFailurePalletSnapshot = false;
+            _palletReleasedThisFrame = false;
             _hasCheckpointEntryDirection = false;
             _checkpointEnteredInReverse = false;
             _isWaitingForEntryDirection = false;
             Capture(_experience.CurrentStage);
+        }
+
+        private void HandleLoadReleased(PalletStackerLoad releasedLoad)
+        {
+            if (_isRestoring || releasedLoad != _pallet ||
+                !TryGetPalletPoseRelativeToForks(
+                    out _releasedPalletPositionInForkSpace,
+                    out _releasedPalletRotationInForkSpace)) return;
+
+            _palletReleasedThisFrame = true;
+        }
+
+        private void HandleGameLost(GameFailureReason reason)
+        {
+            if (!_palletReleasedThisFrame) return;
+
+            _hasFailurePalletSnapshot = true;
+            _failurePalletPositionInForkSpace = _releasedPalletPositionInForkSpace;
+            _failurePalletRotationInForkSpace = _releasedPalletRotationInForkSpace;
         }
 
         private void HandleStageChanged(
@@ -162,6 +217,8 @@ namespace ElectricPalletStackers.Gameplay
             if (next != GameState.WaitingToStart) return;
 
             _hasCheckpoint = false;
+            _hasFailurePalletSnapshot = false;
+            _palletReleasedThisFrame = false;
             _hasCheckpointEntryDirection = false;
             _checkpointEnteredInReverse = false;
             _isWaitingForEntryDirection = false;
@@ -188,9 +245,9 @@ namespace ElectricPalletStackers.Gameplay
                 ? Quaternion.Inverse(forks.rotation) * palletBody.rotation
                 : palletBody.rotation;
 
-            _hasCheckpointEntryDirection =
-                TryGetEnteredInReverse(out _checkpointEnteredInReverse);
-            _isWaitingForEntryDirection = false;
+            _hasCheckpointEntryDirection = TryGetEnteredInReverse(
+                out _checkpointEnteredInReverse);
+            _isWaitingForEntryDirection = !_hasCheckpointEntryDirection;
             _latest = new CheckpointSnapshot(
                 stage,
                 vehiclePosition,
@@ -206,7 +263,6 @@ namespace ElectricPalletStackers.Gameplay
                 _crossingVehicle != null
                     ? _crossingVehicle.CaptureCheckpointState()
                     : default);
-            _npcPopulation?.CaptureCheckpoint();
             _hasCheckpoint = true;
             CheckpointSaved?.Invoke(stage);
         }
@@ -266,6 +322,29 @@ namespace ElectricPalletStackers.Gameplay
             _checkpointEnteredInReverse = enteredInReverse;
             _hasCheckpointEntryDirection = true;
             _isWaitingForEntryDirection = false;
+        }
+
+        private bool TryGetCarriedPalletPose(out Vector3 position, out Quaternion rotation)
+        {
+            position = default;
+            rotation = Quaternion.identity;
+            return _loadHandler != null && _loadHandler.HeldLoad == _pallet &&
+                   TryGetPalletPoseRelativeToForks(out position, out rotation);
+        }
+
+        private bool TryGetPalletPoseRelativeToForks(
+            out Vector3 position,
+            out Quaternion rotation)
+        {
+            position = default;
+            rotation = Quaternion.identity;
+            if (_pallet == null || _pallet.Body == null || _mast == null || _mast.Forks == null)
+                return false;
+
+            Transform forks = _mast.Forks;
+            position = forks.InverseTransformPoint(_pallet.Body.position);
+            rotation = Quaternion.Inverse(forks.rotation) * _pallet.Body.rotation;
+            return true;
         }
 
         [Serializable]

@@ -29,6 +29,12 @@ namespace ElectricPalletStackers.Gameplay
 
         public event Action VictoryRequested;
 
+        private void OnEnable()
+        {
+            if (_loadHandler != null)
+                _loadHandler.LoadReleased += HandleLoadReleased;
+        }
+
         public void PrepareRound()
         {
             DeactivateDestinations();
@@ -93,6 +99,8 @@ namespace ElectricPalletStackers.Gameplay
 
         private void OnDisable()
         {
+            if (_loadHandler != null)
+                _loadHandler.LoadReleased -= HandleLoadReleased;
             DeactivateDestinations();
         }
 
@@ -101,7 +109,17 @@ namespace ElectricPalletStackers.Gameplay
             PalletStackerLoad pallet)
         {
             if (destination != _activeDestination || pallet != ActivePallet) return;
+            pallet.SetHighlighted(false);
             VictoryRequested?.Invoke();
+        }
+
+        private void HandleLoadReleased(PalletStackerLoad pallet)
+        {
+            if (pallet == null || pallet != ActivePallet) return;
+
+            bool isInDestination = _activeDestination != null &&
+                                   _activeDestination.ContainsPallet(pallet);
+            pallet.SetHighlighted(!isInDestination);
         }
 
         private void DeactivateDestinations()

@@ -33,38 +33,6 @@
       "priority": "P1"
     },
     {
-      "id": "vehicleIgnition.startInstruction",
-      "vi": "Vặn chìa khóa để khởi động xe.",
-      "en": "Turn the ignition key to start the vehicle.",
-      "jp": "イグニッションキーを回して車両を始動してください。",
-      "category": "training_instruction",
-      "priority": "P0"
-    },
-    {
-      "id": "crossSafety.approachInstruction",
-      "vi": "Sắp đến khu vực giao nhau. Hãy giảm tốc và chuẩn bị dừng để kiểm tra an toàn.",
-      "en": "Intersection ahead. Slow down and prepare to stop for a safety check.",
-      "jp": "交差点が近づいています。減速し、安全確認のために停止する準備をしてください。",
-      "category": "critical_safety_instruction",
-      "priority": "P0"
-    },
-    {
-      "id": "crossSafety.instruction",
-      "vi": "Hãy dừng lại, quan sát và chỉ tay xác nhận an toàn trước khi di chuyển.",
-      "en": "Stop, look, and point to confirm it is safe before proceeding.",
-      "jp": "停止して周囲を確認し、指差し確認を行ってから進んでください。",
-      "category": "critical_safety_instruction",
-      "priority": "P0"
-    },
-    {
-      "id": "crossSafety.danger",
-      "vi": "Nguy hiểm! Dừng xe lại ngay.",
-      "en": "Danger! Stop the vehicle immediately.",
-      "jp": "危険です。直ちに車両を停止してください。",
-      "category": "emergency_warning",
-      "priority": "P0"
-    },
-    {
       "id": "phone.conversation",
       "vi": "A lô, anh kiểm tra giúp tôi toàn bộ khu vực giao nhận, xác nhận lối đi thông thoáng rồi báo lại ngay nhé.",
       "en": "Hello. Check the entire receiving area, make sure the path is clear, and report back to me right away.",

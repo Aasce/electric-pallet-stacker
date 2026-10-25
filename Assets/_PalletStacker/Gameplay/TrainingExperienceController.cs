@@ -5,18 +5,11 @@ using UnityEngine;
 
 namespace ElectricPalletStackers.Gameplay
 {
-    public enum ExperienceCheckpoint
-    {
-        Corner,
-        YieldIntersection,
-        PhoneIntersection
-    }
-
     public enum TrainingExperienceStage
     {
         WaitingToStart,
-        CollectPallet,
-        NavigateCorner,
+        Start,
+        PickupPallet,
         YieldIntersection,
         PhoneIntersection,
         PhoneCall,
@@ -34,8 +27,6 @@ namespace ElectricPalletStackers.Gameplay
         [Header("Scene Dependencies")]
         [Tooltip("Round coordinator assigned from the scene Gameplay Manager.")]
         [SerializeField] private PalletRoundController _palletRoundController;
-        [Tooltip("Load handler on the player pallet stacker instance.")]
-        [SerializeField] private PalletStackerLoadHandler _loadHandler;
         [Tooltip("Crossing vehicle controller owned by the Cross phase.")]
         [SerializeField] private CrossingVehicleController _crossingVehicle;
         [Tooltip("Phone event service assigned from the scene Gameplay Manager.")]
@@ -63,21 +54,12 @@ namespace ElectricPalletStackers.Gameplay
                 _phoneCallEvent.CallCompleted -= HandlePhoneCallCompleted;
         }
 
-        private void Update()
-        {
-            if (CurrentStage == TrainingExperienceStage.CollectPallet &&
-                _loadHandler != null && _loadHandler.HeldLoad != null)
-                TransitionTo(TrainingExperienceStage.NavigateCorner);
-        }
-
         public void PrepareRound()
         {
             HasCompletedCrossSafety = false;
             _crossingVehicle?.ResetVehicle();
             _palletRoundController?.SetPalletVisible(true);
-            // The authored route starts in the NPC Moving area. CollectPallet is a
-            // legacy stage from the old route, so the experience begins at the corner.
-            TransitionTo(TrainingExperienceStage.NavigateCorner);
+            TransitionTo(TrainingExperienceStage.Start);
         }
 
         public void ResumeRound()
@@ -120,8 +102,8 @@ namespace ElectricPalletStackers.Gameplay
         {
             if (CurrentStage != TrainingExperienceStage.PhoneIntersection) return false;
 
-            // Save the phone checkpoint before spawning the distraction NPC. The
-            // dedicated Cross flow can reach this zone before the legacy waypoints.
+            // Save the phone checkpoint before presenting the call so a reset retries
+            // from this zone without replaying the completed Cross safety flow.
             TransitionTo(TrainingExperienceStage.PhoneCall);
             _phoneCallEvent?.RestartIncomingCall();
             return true;
@@ -136,34 +118,29 @@ namespace ElectricPalletStackers.Gameplay
             TransitionTo(TrainingExperienceStage.PhoneIntersection);
         }
 
-        public bool CompleteNpcMovingPhase()
+        public bool BeginPickupPalletPhase()
         {
-            if (CurrentStage != TrainingExperienceStage.NavigateCorner) return false;
+            if (CurrentStage != TrainingExperienceStage.Start) return false;
+
+            TransitionTo(TrainingExperienceStage.PickupPallet);
+            return true;
+        }
+
+        public bool BeginCrossPhase()
+        {
+            if (CurrentStage != TrainingExperienceStage.Start &&
+                CurrentStage != TrainingExperienceStage.PickupPallet) return false;
 
             TransitionTo(TrainingExperienceStage.YieldIntersection);
             return true;
         }
 
-        public bool ReachCheckpoint(ExperienceCheckpoint checkpoint)
+        public bool CompleteCrossPhaseWithoutSafetyCheck()
         {
-            switch (checkpoint)
-            {
-                case ExperienceCheckpoint.Corner
-                    when CurrentStage == TrainingExperienceStage.NavigateCorner:
-                    TransitionTo(TrainingExperienceStage.YieldIntersection);
-                    return true;
+            if (CurrentStage != TrainingExperienceStage.YieldIntersection) return false;
 
-                case ExperienceCheckpoint.YieldIntersection
-                    when CurrentStage == TrainingExperienceStage.YieldIntersection:
-                    _crossingVehicle?.BeginCrossing();
-                    TransitionTo(TrainingExperienceStage.PhoneIntersection);
-                    return true;
-
-                case ExperienceCheckpoint.PhoneIntersection
-                    when CurrentStage == TrainingExperienceStage.PhoneIntersection:
-                    return BeginPhoneCall();
-            }
-            return false;
+            TransitionTo(TrainingExperienceStage.PhoneIntersection);
+            return true;
         }
 
         private void HandleDestinationConfirmed()

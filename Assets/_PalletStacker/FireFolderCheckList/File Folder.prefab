@@ -502,7 +502,7 @@ MonoBehaviour:
   _itemPrefab: {fileID: 6533656622511779244, guid: 3b339e71d357d1a418f447b7acf0e83a, type: 3}
   _itemsRoot: {fileID: 3842815604631135106}
   _localizationManager: {fileID: 0}
-  _completionDelay: 2
+  _completionDelay: 1.2
 --- !u!114 &6229887047608660591
 MonoBehaviour:
   m_ObjectHideFlags: 0

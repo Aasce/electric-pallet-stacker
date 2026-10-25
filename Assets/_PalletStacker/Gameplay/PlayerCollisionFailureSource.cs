@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace ElectricPalletStackers.Gameplay
 {
+    [DefaultExecutionOrder(10001)]
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CharacterController))]
     public sealed class PlayerCollisionFailureSource : MonoBehaviour, IGameFailureSource, IGameRoundParticipant, IGameRoundResumable
@@ -21,6 +22,8 @@ namespace ElectricPalletStackers.Gameplay
         private readonly Collider[] _overlapBuffer = new Collider[OverlapBufferSize];
         private CharacterController _characterController;
         private Camera _playerCamera;
+        private float _cameraToControllerVerticalOffset;
+        private bool _cameraToControllerOffsetInitialized;
         private bool _roundActive;
 
         public event Action<GameFailureReason> FailureRequested;
@@ -28,13 +31,45 @@ namespace ElectricPalletStackers.Gameplay
         private void Awake()
         {
             _characterController = GetComponent<CharacterController>();
-            _playerCamera = Camera.main;
+            _playerCamera = GetComponentInChildren<Camera>(true);
+            SyncCharacterControllerToCamera();
+        }
+
+        private void LateUpdate()
+        {
+            SyncCharacterControllerToCamera();
         }
 
         private void FixedUpdate()
         {
+            SyncCharacterControllerToCamera();
             if (!_roundActive) return;
             DetectBodyOverlaps();
+        }
+
+        private void SyncCharacterControllerToCamera()
+        {
+            if (_characterController == null)
+                _characterController = GetComponent<CharacterController>();
+            if (_playerCamera == null)
+                _playerCamera = GetComponentInChildren<Camera>(true);
+            if (_characterController == null || _playerCamera == null) return;
+
+            Vector3 cameraLocalPosition = transform.InverseTransformPoint(_playerCamera.transform.position);
+            if (!_cameraToControllerOffsetInitialized)
+            {
+                // Preserve the capsule's authored vertical relationship to the headset,
+                // while letting its center follow XR camera-offset alignment in every axis.
+                _cameraToControllerVerticalOffset = cameraLocalPosition.y - _characterController.center.y;
+                _cameraToControllerOffsetInitialized = true;
+            }
+
+            Vector3 targetCenter = new(
+                cameraLocalPosition.x,
+                cameraLocalPosition.y - _cameraToControllerVerticalOffset,
+                cameraLocalPosition.z);
+            if ((_characterController.center - targetCenter).sqrMagnitude > 0.000001f)
+                _characterController.center = targetCenter;
         }
 
         public void PrepareRound()
@@ -58,7 +93,10 @@ namespace ElectricPalletStackers.Gameplay
 
             int layerMask = 1 << hit.collider.gameObject.layer;
             if ((_collisionLayers.value & layerMask) == 0) return;
-            if (Vector3.Dot(hit.normal.normalized, Vector3.up) >= _groundNormalDotThreshold) return;
+            bool isPallet = hit.collider.GetComponentInParent<PalletStackerLoad>() != null;
+            if (!isPallet &&
+                Vector3.Dot(hit.normal.normalized, Vector3.up) >= _groundNormalDotThreshold)
+                return;
             if (ShouldIgnore(hit.collider)) return;
 
             ReportFailure(hit.collider);
@@ -69,8 +107,6 @@ namespace ElectricPalletStackers.Gameplay
             if (_characterController == null)
                 _characterController = GetComponent<CharacterController>();
             if (_characterController == null || !_characterController.enabled) return;
-            if (_playerCamera == null) _playerCamera = Camera.main;
-            if (_playerCamera == null) return;
 
             Transform controllerTransform = _characterController.transform;
             Vector3 scale = controllerTransform.lossyScale;
@@ -81,8 +117,8 @@ namespace ElectricPalletStackers.Gameplay
                 _characterController.height * verticalScale,
                 bodyRadius * 2f);
             float segmentHalfLength = Mathf.Max(0f, bodyHeight * 0.5f - bodyRadius);
-            Vector3 bodyUp = Vector3.up;
-            Vector3 bodyCenter = _playerCamera.transform.position;
+            Vector3 bodyCenter = controllerTransform.TransformPoint(_characterController.center);
+            Vector3 bodyUp = controllerTransform.up;
             Vector3 top = bodyCenter + bodyUp * segmentHalfLength;
             Vector3 bottom = bodyCenter - bodyUp * segmentHalfLength;
 
@@ -134,6 +170,8 @@ namespace ElectricPalletStackers.Gameplay
             Vector3 bodyCenter,
             Vector3 bodyUp)
         {
+            if (contact.GetComponentInParent<PalletStackerLoad>() != null) return false;
+
             Vector3 closestPoint = contact.ClosestPoint(bodyCenter);
             Vector3 surfaceDirection = bodyCenter - closestPoint;
             if (surfaceDirection.sqrMagnitude < 0.0001f) return false;

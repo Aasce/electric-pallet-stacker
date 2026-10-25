@@ -19,6 +19,6 @@ MonoBehaviour:
   _slowModeTravelMultiplier: 0.4
   _travelDeadzoneNormalized: 0.05
   _maximumSteeringAngleDegrees: 35
-  _minimumForkHeight: 0.3
+  _minimumForkHeight: 0.2
   _maximumForkHeight: 2.4
-  _forkLiftSpeed: 0.75
+  _forkLiftSpeed: 0.7

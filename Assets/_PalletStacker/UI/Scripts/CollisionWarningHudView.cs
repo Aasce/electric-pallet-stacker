@@ -14,7 +14,6 @@ namespace ElectricPalletStackers.UI
         private const int MaximumDirectionArrows = 3;
 
         [SerializeField] private Canvas _canvas;
-        [SerializeField] private RectTransform _warningPanel;
         [SerializeField] private RectTransform _arrowsRoot;
 
         [Header("World Placement")]
@@ -50,7 +49,6 @@ namespace ElectricPalletStackers.UI
             _indicatorSize.x = Mathf.Max(1f, _indicatorSize.x);
             _indicatorSize.y = Mathf.Max(1f, _indicatorSize.y);
             ConfigureCanvas();
-            CenterPanel();
             ApplyIndicatorLayout();
         }
 
@@ -106,8 +104,6 @@ namespace ElectricPalletStackers.UI
 
         public void SetVisible(bool visible)
         {
-            if (_warningPanel != null && _warningPanel.gameObject.activeSelf != visible)
-                _warningPanel.gameObject.SetActive(visible);
             if (_arrowsRoot != null && _arrowsRoot.gameObject.activeSelf != visible)
                 _arrowsRoot.gameObject.SetActive(visible);
         }
@@ -131,16 +127,6 @@ namespace ElectricPalletStackers.UI
                 view.rotation);
         }
 
-        private void CenterPanel()
-        {
-            if (_warningPanel == null) return;
-            _warningPanel.anchorMin = new Vector2(0.5f, 0.5f);
-            _warningPanel.anchorMax = new Vector2(0.5f, 0.5f);
-            _warningPanel.pivot = new Vector2(0.5f, 0.5f);
-            _warningPanel.anchoredPosition = Vector2.zero;
-            _warningPanel.localRotation = Quaternion.identity;
-        }
-
         private void ApplyIndicatorLayout()
         {
             if (_directionArrows == null) return;
@@ -158,8 +144,6 @@ namespace ElectricPalletStackers.UI
         {
             if (_canvas == null) _canvas = GetComponent<Canvas>();
 
-            if (_warningPanel == null)
-                _warningPanel = transform.Find("Warning Panel") as RectTransform;
             if (_arrowsRoot == null)
                 _arrowsRoot = transform.Find("Arrows") as RectTransform;
 

@@ -15,7 +15,7 @@ namespace ElectricPalletStackers.Gameplay.Checklist
         [SerializeField] private VehicleChecklistItemView _itemPrefab;
         [SerializeField] private RectTransform _itemsRoot;
         [SerializeField] private LocalizationManager _localizationManager;
-        [SerializeField, Min(0f)] private float _completionDelay = 2f;
+        [SerializeField, Min(0f)] private float _completionDelay = 1.2f;
 
         private readonly List<VehicleChecklistItemView> _items = new();
         private ILocalizationService _localization;

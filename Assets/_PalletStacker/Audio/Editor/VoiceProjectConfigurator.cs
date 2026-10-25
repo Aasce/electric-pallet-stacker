@@ -195,20 +195,14 @@ namespace ElectricPalletStackers.Audio.Editor
 
             UIController uiController = FindSceneObject<UIController>();
             AppManager appManager = FindSceneObject<AppManager>();
-            CrossSafetyPhaseController crossSafety = FindSceneObject<CrossSafetyPhaseController>();
-            VehicleIgnitionReminder ignitionReminder = FindSceneObject<VehicleIgnitionReminder>();
 
-            if (uiController == null || appManager == null || crossSafety == null ||
-                ignitionReminder == null)
+            if (uiController == null || appManager == null)
                 throw new MissingReferenceException(
-                    "MainScene requires UIController, AppManager, CrossSafetyPhaseController, " +
-                    "and VehicleIgnitionReminder.");
+                    "MainScene requires UIController and AppManager.");
 
             ConfigureLanguageSync(uiController);
             ConfigureUIFlowPresenter(uiController);
             ConfigureFailurePresenter(appManager);
-            ConfigureCrossSafetyPresenter(crossSafety);
-            ConfigureVehicleIgnitionPresenter(ignitionReminder);
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
@@ -283,37 +277,6 @@ namespace ElectricPalletStackers.Audio.Editor
                 binding.FindPropertyRelative("_reason").intValue = (int)bindings[index].Reason;
                 SetCue(binding.FindPropertyRelative("_cue"), bindings[index].CueId);
             }
-            serializedPresenter.ApplyModifiedPropertiesWithoutUndo();
-        }
-
-        private static void ConfigureCrossSafetyPresenter(CrossSafetyPhaseController phase)
-        {
-            CrossSafetyVoicePresenter presenter =
-                GetOrAdd<CrossSafetyVoicePresenter>(phase.gameObject);
-            SerializedObject serializedPresenter = new(presenter);
-            serializedPresenter.FindProperty("_phase").objectReferenceValue = phase;
-            SetCue(
-                serializedPresenter.FindProperty("_approachInstruction"),
-                "crossSafety.approachInstruction");
-            SetCue(
-                serializedPresenter.FindProperty("_safetyInstruction"),
-                "crossSafety.instruction");
-            SetCue(
-                serializedPresenter.FindProperty("_dangerWarning"),
-                "crossSafety.danger");
-            serializedPresenter.ApplyModifiedPropertiesWithoutUndo();
-        }
-
-        private static void ConfigureVehicleIgnitionPresenter(
-            VehicleIgnitionReminder reminder)
-        {
-            VehicleIgnitionVoicePresenter presenter =
-                GetOrAdd<VehicleIgnitionVoicePresenter>(reminder.gameObject);
-            SerializedObject serializedPresenter = new(presenter);
-            serializedPresenter.FindProperty("_reminder").objectReferenceValue = reminder;
-            SetCue(
-                serializedPresenter.FindProperty("_instruction"),
-                "vehicleIgnition.startInstruction");
             serializedPresenter.ApplyModifiedPropertiesWithoutUndo();
         }
 

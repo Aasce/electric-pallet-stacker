@@ -37,30 +37,6 @@ MonoBehaviour:
     _vietnamese: {fileID: 8300000, guid: 32b39eb56f9d9444495f725da2b16554, type: 3}
     _english: {fileID: 8300000, guid: 7a8de85cd6589e241b8c79b6f797a013, type: 3}
     _japanese: {fileID: 8300000, guid: 26250befa0517d34f9ae8ecdc40d1600, type: 3}
-  - _id: vehicleIgnition.startInstruction
-    _category: training_instruction
-    _priority: P0
-    _vietnamese: {fileID: 8300000, guid: a8a6e5f371123ca4b89590c0baecfd27, type: 3}
-    _english: {fileID: 8300000, guid: 43b04ed611dc15b4a840f13af4af131f, type: 3}
-    _japanese: {fileID: 8300000, guid: afc5cb00632d4034985981440533f30d, type: 3}
-  - _id: crossSafety.approachInstruction
-    _category: critical_safety_instruction
-    _priority: P0
-    _vietnamese: {fileID: 8300000, guid: 7c52f9ef31bc8514991672659c200b54, type: 3}
-    _english: {fileID: 8300000, guid: 9075d16c238386e44b0804ba1d0de6c6, type: 3}
-    _japanese: {fileID: 8300000, guid: 50b493a8a15a28f4da8ecfe1997f27b5, type: 3}
-  - _id: crossSafety.instruction
-    _category: critical_safety_instruction
-    _priority: P0
-    _vietnamese: {fileID: 8300000, guid: bc6b23cc7083f634792cf748555372bb, type: 3}
-    _english: {fileID: 8300000, guid: 50398d1c92b7d2d45bc5e8940a25bb75, type: 3}
-    _japanese: {fileID: 8300000, guid: ab91ffd037f79804abf6b04edc02b1fb, type: 3}
-  - _id: crossSafety.danger
-    _category: emergency_warning
-    _priority: P0
-    _vietnamese: {fileID: 8300000, guid: 17f3fe9c7b63f0d498568d7413ce8deb, type: 3}
-    _english: {fileID: 8300000, guid: 0723b1e2441ebb946b3cda0cb33984cb, type: 3}
-    _japanese: {fileID: 8300000, guid: 014811cc61fb09d4db7269fe8f1c9fbe, type: 3}
   - _id: phone.conversation
     _category: scenario_dialogue
     _priority: P0
