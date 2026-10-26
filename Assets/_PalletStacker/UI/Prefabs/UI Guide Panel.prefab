@@ -68,8 +68,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Guide
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: f89ce2922ef89ae46adc711adf2e04ef, type: 2}
-  m_sharedMaterial: {fileID: 4749908933887385871, guid: f89ce2922ef89ae46adc711adf2e04ef, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: c32bae5b39062054d86d21a09f8598f0, type: 2}
+  m_sharedMaterial: {fileID: 1861335653571429718, guid: c32bae5b39062054d86d21a09f8598f0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -316,8 +316,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Press E-Stop to Continue
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8322a83c36dbf604db8a075474b12c47, type: 2}
-  m_sharedMaterial: {fileID: 3055816025143138274, guid: 8322a83c36dbf604db8a075474b12c47, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: c32bae5b39062054d86d21a09f8598f0, type: 2}
+  m_sharedMaterial: {fileID: 1861335653571429718, guid: c32bae5b39062054d86d21a09f8598f0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -830,8 +830,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Use Travel to scrolling
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8322a83c36dbf604db8a075474b12c47, type: 2}
-  m_sharedMaterial: {fileID: 3055816025143138274, guid: 8322a83c36dbf604db8a075474b12c47, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: c32bae5b39062054d86d21a09f8598f0, type: 2}
+  m_sharedMaterial: {fileID: 1861335653571429718, guid: c32bae5b39062054d86d21a09f8598f0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

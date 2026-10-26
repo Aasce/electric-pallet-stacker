@@ -9,8 +9,10 @@ namespace ElectricPalletStackers.Gameplay
     public sealed class PalletDestinationZone : MonoBehaviour
     {
         [SerializeField] private BoxCollider _trigger;
-        [Tooltip("Seconds the pallet must remain in the destination after the forks release it before the round is completed.")]
-        [SerializeField, Min(0f)] private float _confirmationDuration = 2f;
+        [Tooltip("Seconds all delivery conditions must remain valid before the round is completed.")]
+        [SerializeField, Min(0f)] private float _confirmationDuration = 1.5f;
+        [Tooltip("The forks count as low when their height is no more than this distance above the mast's minimum height.")]
+        [SerializeField, Min(0f)] private float _lowForkHeightOffset = 1f;
         [SerializeField] private PalletDestinationView _view;
 
         private readonly HashSet<Collider> _overlappingTargetColliders = new();
@@ -132,9 +134,14 @@ namespace ElectricPalletStackers.Gameplay
         {
             if (_targetPallet == null || !_targetPallet.isActiveAndEnabled) return false;
             if (_overlappingTargetColliders.Count == 0) return false;
+            if (_loadHandler == null || _loadHandler.HeldLoad == _targetPallet) return false;
+            if (!_loadHandler.AreForksWithdrawnFrom(_targetPallet)) return false;
 
-            // A pallet touching the destination while still held by the forks is not delivered.
-            return _loadHandler == null || _loadHandler.HeldLoad != _targetPallet;
+            PalletStackerMast mast = _loadHandler.Mast;
+            if (mast == null) return false;
+
+            float maximumLowHeight = mast.MinHeight + Mathf.Max(0f, _lowForkHeightOffset);
+            return mast.CurrentHeight <= maximumLowHeight;
         }
 
     }

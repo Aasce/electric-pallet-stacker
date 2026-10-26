@@ -68,7 +68,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Gameplay.PalletDestinationZone
   _trigger: {fileID: 8100000000000000003}
-  _confirmationDuration: 3
+  _confirmationDuration: 1.5
+  _lowForkHeightOffset: 1
   _view: {fileID: 8100000000000000015}
 --- !u!1 &8100000000000000011
 GameObject:

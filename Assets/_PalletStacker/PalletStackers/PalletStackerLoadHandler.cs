@@ -127,6 +127,28 @@ namespace ElectricPalletStackers.PalletStackers
                    AttachLoad(nearestLoad);
         }
 
+        /// <summary>
+        /// Returns true after the fork tips have moved completely past the nearest
+        /// edge of the supplied load. Height is intentionally ignored so lowering
+        /// inserted forks cannot be mistaken for withdrawing them.
+        /// </summary>
+        public bool AreForksWithdrawnFrom(PalletStackerLoad load)
+        {
+            if (load == null || Forks == null ||
+                !TryGetForkSpaceBounds(load, out Bounds bounds))
+                return false;
+
+            float halfDetectionLength = Mathf.Abs(_detectionSize.x) * 0.5f;
+            bool forksPointForward = _detectionCenter.x >= 0f;
+            float forkTip = forksPointForward
+                ? _detectionCenter.x + halfDetectionLength
+                : _detectionCenter.x - halfDetectionLength;
+
+            return forksPointForward
+                ? bounds.min.x >= forkTip
+                : bounds.max.x <= forkTip;
+        }
+
         public bool AttachLoad(PalletStackerLoad load)
         {
             if (HasLoad || load == null || load.Body == null) return false;

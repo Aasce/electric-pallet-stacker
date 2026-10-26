@@ -245,8 +245,8 @@ MonoBehaviour:
     _japanese: "\u305D\u306E\u4ED6"
   _languageProfiles:
   - _language: 0
-    _fontOverride: {fileID: 11400000, guid: e9a1fec3604a5864db7480e450e7c93f, type: 2}
+    _fontOverride: {fileID: 11400000, guid: c32bae5b39062054d86d21a09f8598f0, type: 2}
   - _language: 1
-    _fontOverride: {fileID: 11400000, guid: e9a1fec3604a5864db7480e450e7c93f, type: 2}
+    _fontOverride: {fileID: 11400000, guid: c32bae5b39062054d86d21a09f8598f0, type: 2}
   - _language: 2
-    _fontOverride: {fileID: 11400000, guid: eb22fb93520ccdf49a801caaff01af78, type: 2}
+    _fontOverride: {fileID: 11400000, guid: c32bae5b39062054d86d21a09f8598f0, type: 2}

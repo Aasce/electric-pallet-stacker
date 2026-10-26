@@ -323,7 +323,7 @@ MonoBehaviour:
       m_Calls: []
   m_text: Turn the ignition key to start the vehicle.
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: e9a1fec3604a5864db7480e450e7c93f, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: c32bae5b39062054d86d21a09f8598f0, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 47b70e31bcb8e0742ab3bd2cc7af54ea, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
