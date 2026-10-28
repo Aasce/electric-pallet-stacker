@@ -39,8 +39,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -25}
-  m_SizeDelta: {x: -20, y: -40}
+  m_AnchoredPosition: {x: 0, y: -7.499998}
+  m_SizeDelta: {x: -20, y: -95}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &604807938655817339
 GameObject:
@@ -655,7 +655,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 16.1
+  m_fontSize: 14.4
   m_fontSizeBase: 18
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -1882,15 +1882,15 @@ RectTransform:
   - {fileID: 5912041972406556444}
   - {fileID: 8218123153218362569}
   - {fileID: 6547009638815343484}
-  - {fileID: 1504963618689853375}
   - {fileID: 8131659348837942852}
+  - {fileID: 1504963618689853375}
   - {fileID: 4767764773271186073}
   m_Father: {fileID: 3461928461325647768}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 260, y: 250}
+  m_SizeDelta: {x: 260, y: 280}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!223 &5105041433461826667
 Canvas:
@@ -2049,7 +2049,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15.85
+  m_fontSize: 14.95
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -2549,7 +2549,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 14.25
+  m_fontSize: 13.3
   m_fontSizeBase: 15
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -2629,8 +2629,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -28}
-  m_SizeDelta: {x: -24, y: 34}
+  m_AnchoredPosition: {x: 0, y: -25}
+  m_SizeDelta: {x: -24, y: 30}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &508274145440369064
 CanvasRenderer:
@@ -2669,7 +2669,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294956608
+    rgba: 4294634459
   m_fontColor: {r: 0.86, g: 0.92, b: 0.98, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -2687,12 +2687,12 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 10.5
+  m_fontSize: 12
   m_fontSizeBase: 18
   m_fontWeight: 400
   m_enableAutoSizing: 1
-  m_fontSizeMin: 12
-  m_fontSizeMax: 18
+  m_fontSizeMin: 10
+  m_fontSizeMax: 16
   m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -3134,7 +3134,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 424745440210169234, guid: 0818b5da958060046b749857bdd7da2d, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 36
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 424745440210169234, guid: 0818b5da958060046b749857bdd7da2d, type: 3}
       propertyPath: m_LocalPosition.x
@@ -3170,7 +3170,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 424745440210169234, guid: 0818b5da958060046b749857bdd7da2d, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 9
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 424745440210169234, guid: 0818b5da958060046b749857bdd7da2d, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -3184,6 +3184,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4957807285727810371, guid: 0818b5da958060046b749857bdd7da2d, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5968702859515336439, guid: 0818b5da958060046b749857bdd7da2d, type: 3}
       propertyPath: m_Name
       value: Continue
@@ -3191,6 +3195,10 @@ PrefabInstance:
     - target: {fileID: 7293555681797201110, guid: 0818b5da958060046b749857bdd7da2d, type: 3}
       propertyPath: m_text
       value: Continue
+      objectReference: {fileID: 0}
+    - target: {fileID: 7293555681797201110, guid: 0818b5da958060046b749857bdd7da2d, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

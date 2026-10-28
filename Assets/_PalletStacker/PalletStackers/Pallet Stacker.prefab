@@ -129,7 +129,7 @@ MonoBehaviour:
   - {fileID: 6924479301191952720}
   _interlockMotor: {fileID: 5210768195172812719}
   _interlockMast: {fileID: 2871494232518386074}
-  _travelHeightTolerance: 0.05
+  _travelHeightTolerance: 0.25
   _movingSpeedThreshold: 0.01
   _analogSmoothingTime: 0.08
 --- !u!114 &5210768195172812719
@@ -147,7 +147,7 @@ MonoBehaviour:
   _body: {fileID: 3273737744600335219}
   _settings: {fileID: 11400000, guid: 185ec762c7b64b7a80da1d21db8fbce4, type: 2}
   _mast: {fileID: 2871494232518386074}
-  _travelHeightTolerance: 0.05
+  _travelHeightTolerance: 0.25
   _localForwardAxis: {x: 0, y: 0, z: 1}
   _fixedFrontAxleReference: {fileID: 0}
   _steeredRearAxleReference: {fileID: 5077208130004456298}

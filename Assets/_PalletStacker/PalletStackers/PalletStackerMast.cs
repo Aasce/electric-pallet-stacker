@@ -25,6 +25,7 @@ namespace ElectricPalletStackers.PalletStackers
         [SerializeField, Min(0f)] private float _obstructionHorizontalPadding = 0.01f;
 
         private readonly Collider[] _obstructionResults = new Collider[32];
+        private bool _movementLiftInterlockBypassed;
 
         public event Action<float> OnHeightChanged;
 
@@ -45,7 +46,7 @@ namespace ElectricPalletStackers.PalletStackers
         private void FixedUpdate()
         {
             if (forks == null) return;
-            if (IsVehicleMoving())
+            if (!_movementLiftInterlockBypassed && IsVehicleMoving())
             {
                 SetTargetHeight(CurrentHeight);
                 return;
@@ -77,6 +78,11 @@ namespace ElectricPalletStackers.PalletStackers
             if (direction > 0f) _targetHeightNormalized = 1f;
             else if (direction < 0f) _targetHeightNormalized = 0f;
             else if (forks != null) SetTargetHeight(CurrentHeight);
+        }
+
+        public void SetMovementLiftInterlockBypassed(bool bypassed)
+        {
+            _movementLiftInterlockBypassed = bypassed;
         }
 
         public void ResetToMinimumHeight()

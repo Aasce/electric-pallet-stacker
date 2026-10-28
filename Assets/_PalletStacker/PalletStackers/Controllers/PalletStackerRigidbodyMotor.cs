@@ -12,7 +12,7 @@ namespace ElectricPalletStackers.PalletStackers
         [SerializeField] private PalletStackerVehicleSettings _settings;
         [SerializeField] private PalletStackerMast _mast;
         [Tooltip("Hard travel stop when the forks are farther than this above minimum height.")]
-        [SerializeField, Min(0f)] private float _travelHeightTolerance = 0.05f;
+        [SerializeField, Min(0f)] private float _travelHeightTolerance = 0.25f;
 
         [Header("Vehicle geometry")]
         [Tooltip("Fallback local-space forward axis used when the axle references cannot define a direction.")]
@@ -28,6 +28,7 @@ namespace ElectricPalletStackers.PalletStackers
         private float _currentSpeed;
         private float _steeringDegrees;
         private bool _movementInhibited = true;
+        private bool _forkHeightTravelInterlockBypassed;
         private bool _isMoving;
         private RigidbodyConstraints _drivingConstraints;
 
@@ -88,6 +89,14 @@ namespace ElectricPalletStackers.PalletStackers
                 : Mathf.Clamp(command.TravelNormalized, -1f, 1f) * speedLimit;
 
             if (command.RequiresImmediateStop || forkHeightInterlock) StopImmediately();
+        }
+
+        public void SetForkHeightTravelInterlockBypassed(bool bypassed)
+        {
+            if (_forkHeightTravelInterlockBypassed == bypassed) return;
+            _forkHeightTravelInterlockBypassed = bypassed;
+
+            if (!bypassed && AreForksAboveTravelHeight()) StopImmediately();
         }
 
         public void StopImmediately()
@@ -176,7 +185,8 @@ namespace ElectricPalletStackers.PalletStackers
 
         private bool AreForksAboveTravelHeight()
         {
-            return _mast != null &&
+            return !_forkHeightTravelInterlockBypassed &&
+                   _mast != null &&
                    _mast.CurrentHeight > _mast.MinHeight + _travelHeightTolerance;
         }
 

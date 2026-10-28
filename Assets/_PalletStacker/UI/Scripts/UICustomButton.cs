@@ -133,7 +133,17 @@ namespace ElectricPalletStackers.UI
         private void ResolveReferences()
         {
             if (_button == null) _button = GetComponent<Button>();
-            if (_button != null) _button.transition = Selectable.Transition.None;
+            if (_button != null)
+            {
+                _button.transition = Selectable.Transition.None;
+
+                // These buttons used to be driven by Travel/E-Stop navigation, so
+                // their invisible target graphics were not raycast targets. The
+                // world-space flow is poke-driven now; every custom button needs a
+                // graphic that the XR UI raycaster can hit.
+                if (_button.targetGraphic != null)
+                    _button.targetGraphic.raycastTarget = true;
+            }
             if (_label == null) _label = GetComponentInChildren<TextMeshProUGUI>(true);
 
         }
