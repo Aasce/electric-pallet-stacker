@@ -21,7 +21,7 @@ namespace ElectricPalletStackers.Gameplay
         [SerializeField] private MonoBehaviour[] _resettableComponents;
 
         [Header("Startup")]
-        [Tooltip("Leave disabled when UIFlowGameStarter starts the round after the guide UI closes.")]
+        [Tooltip("Leave disabled when UIFlowGameStarter starts the round after the setup UI closes.")]
         [SerializeField] private bool _autoStart;
 
         [Header("Result Audio")]

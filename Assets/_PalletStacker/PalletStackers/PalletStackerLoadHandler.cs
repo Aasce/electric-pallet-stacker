@@ -28,9 +28,6 @@ namespace ElectricPalletStackers.PalletStackers
         [SerializeField, Min(0f)] private float _maximumLateralOffset = 0.15f;
         [Tooltip("Maximum yaw error from either valid pallet entry axis.")]
         [SerializeField, Range(0f, 45f)] private float _maximumYawError = 12f;
-        [Tooltip("Short upward impulse at the fork tips so a rejected shallow pickup visibly tips and drops.")]
-        [SerializeField, Min(0f)] private float _unsafePickupLiftImpulse = 0.35f;
-
         [Header("Holding")]
         [SerializeField, Min(0f)] private float _breakForce = 100000f;
         [SerializeField, Min(0f)] private float _breakTorque = 100000f;
@@ -48,6 +45,7 @@ namespace ElectricPalletStackers.PalletStackers
         private CollisionDetectionMode _previousCollisionDetectionMode;
         private bool _hasPreviousBodySettings;
         private bool _unsafePickupReported;
+        private Collider[] _vehiclePhysicalColliders = Array.Empty<Collider>();
 
         public event Action<PalletStackerLoad> LoadAttached;
         public event Action<PalletStackerLoad> LoadReleased;
@@ -61,8 +59,21 @@ namespace ElectricPalletStackers.PalletStackers
 
         private Transform Forks => _mast != null ? _mast.Forks : null;
 
+        private void OnEnable()
+        {
+            PalletStackerLoad.BecameAvailable += SuppressVehicleForces;
+            CacheVehiclePhysicalColliders();
+
+            PalletStackerLoad[] loads = FindObjectsByType<PalletStackerLoad>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            for (int index = 0; index < loads.Length; index++)
+                SuppressVehicleForces(loads[index]);
+        }
+
         private void OnDisable()
         {
+            PalletStackerLoad.BecameAvailable -= SuppressVehicleForces;
             ReleaseLoad();
         }
 
@@ -107,14 +118,44 @@ namespace ElectricPalletStackers.PalletStackers
 
             if (_unsafePickupReported) return;
             _unsafePickupReported = true;
-            DestabilizeRejectedLoad(nearestLoad);
             Debug.LogWarning(
-                $"[PALLET LOAD] Unsafe pickup rejected: insertion {insertionDepth:0.00} m " +
+                $"[PALLET LOAD] Pickup blocked until the forks are aligned: insertion {insertionDepth:0.00} m " +
                 $"(required {_minimumInsertionDepth:0.00}), lateral offset {lateralOffset:0.00} m " +
                 $"(maximum {_maximumLateralOffset:0.00}), yaw error {yawError:0.0} degrees " +
                 $"(maximum {_maximumYawError:0.0}).",
                 this);
             UnsafePickupAttempted?.Invoke(nearestLoad);
+        }
+
+        public bool IsPickupPoseValid(PalletStackerLoad load)
+        {
+            return IsPickupPoseValid(load, out _, out _, out _);
+        }
+
+        /// <summary>
+        /// Pallets are moved only by the accepted load joint. Physical vehicle and
+        /// fork colliders never push, tip, or drag them while the operator aligns.
+        /// Trigger colliders remain active so safety sensing continues to work.
+        /// </summary>
+        public void SuppressVehicleForces(PalletStackerLoad load)
+        {
+            if (load == null) return;
+            if (_vehiclePhysicalColliders == null || _vehiclePhysicalColliders.Length == 0)
+                CacheVehiclePhysicalColliders();
+
+            Collider[] loadColliders = load.CollisionRoot.GetComponentsInChildren<Collider>(true);
+            for (int vehicleIndex = 0; vehicleIndex < _vehiclePhysicalColliders.Length; vehicleIndex++)
+            {
+                Collider vehicleCollider = _vehiclePhysicalColliders[vehicleIndex];
+                if (vehicleCollider == null || vehicleCollider.isTrigger) continue;
+
+                for (int loadIndex = 0; loadIndex < loadColliders.Length; loadIndex++)
+                {
+                    Collider loadCollider = loadColliders[loadIndex];
+                    if (loadCollider == null || loadCollider.isTrigger) continue;
+                    Physics.IgnoreCollision(vehicleCollider, loadCollider, true);
+                }
+            }
         }
 
         public bool TryAttachNearestLoad()
@@ -155,6 +196,8 @@ namespace ElectricPalletStackers.PalletStackers
 
             Rigidbody loadBody = load.Body;
             if (loadBody == _vehicleBody || loadBody.isKinematic) return false;
+
+            SuppressVehicleForces(load);
 
             _heldLoad = load;
             load.ResetSupportTracking();
@@ -333,22 +376,6 @@ namespace ElectricPalletStackers.PalletStackers
             return Mathf.Acos(Mathf.Clamp(bestAlignment, -1f, 1f)) * Mathf.Rad2Deg;
         }
 
-        private void DestabilizeRejectedLoad(PalletStackerLoad load)
-        {
-            if (load == null || load.Body == null || Forks == null || _unsafePickupLiftImpulse <= 0f)
-                return;
-
-            float forkTip = _detectionCenter.x + _detectionSize.x * 0.5f;
-            Vector3 liftPoint = Forks.TransformPoint(new Vector3(
-                forkTip,
-                _detectionCenter.y - _detectionSize.y * 0.5f,
-                _detectionCenter.z));
-            load.Body.AddForceAtPosition(
-                Vector3.up * _unsafePickupLiftImpulse,
-                liftPoint,
-                ForceMode.Impulse);
-        }
-
         private void FollowForkAnchor()
         {
             if (_joint == null || _heldLoad == null || _heldLoad.Body == null ||
@@ -417,6 +444,13 @@ namespace ElectricPalletStackers.PalletStackers
 
             body.interpolation = _previousInterpolation;
             body.collisionDetectionMode = _previousCollisionDetectionMode;
+        }
+
+        private void CacheVehiclePhysicalColliders()
+        {
+            _vehiclePhysicalColliders = _vehicleBody != null
+                ? _vehicleBody.GetComponentsInChildren<Collider>(true)
+                : Array.Empty<Collider>();
         }
 
         private void OnDrawGizmosSelected()

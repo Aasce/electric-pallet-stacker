@@ -11,6 +11,9 @@ namespace ElectricPalletStackers.PalletStackers
         [SerializeField] private PalletStackerLoadHandler _loadHandler;
         [SerializeField] private Transform _vehicleRoot;
         [SerializeField] private PalletStackerVehicleSettings _settings;
+        [SerializeField] private PalletStackerRigidbodyMotor _vehicleMotor;
+        [Tooltip("Hard lift stop while actual vehicle speed is above this value.")]
+        [SerializeField, Min(0f)] private float _movingSpeedThreshold = 0.01f;
 
         [SerializeField, Range(0f, 1f)] private float _targetHeightNormalized;
 
@@ -42,6 +45,11 @@ namespace ElectricPalletStackers.PalletStackers
         private void FixedUpdate()
         {
             if (forks == null) return;
+            if (IsVehicleMoving())
+            {
+                SetTargetHeight(CurrentHeight);
+                return;
+            }
 
             float previousHeight = CurrentHeight;
             float nextHeight = Mathf.MoveTowards(
@@ -123,6 +131,12 @@ namespace ElectricPalletStackers.PalletStackers
             return false;
         }
 
+        private bool IsVehicleMoving()
+        {
+            return _vehicleMotor != null &&
+                   Mathf.Abs(_vehicleMotor.CurrentSpeed) > _movingSpeedThreshold;
+        }
+
         private bool TryGetObstructionBox(
             float localHeightDelta,
             out Vector3 center,
@@ -178,10 +192,13 @@ namespace ElectricPalletStackers.PalletStackers
             PalletStackerLoad load = candidate.GetComponentInParent<PalletStackerLoad>();
             if (load == null) return false;
 
-            // Any marked load may be approached from below while raising. When
-            // lowering, only the load already connected to this vehicle moves as
-            // part of the fork assembly and must not block its own descent.
-            return isRaising || (_loadHandler != null && _loadHandler.HeldLoad == load);
+            // A connected load moves with the forks. An unconnected pallet may be
+            // approached from below only after insertion, lateral offset, and yaw
+            // validation pass; otherwise the obstruction guard force-stops the mast.
+            if (_loadHandler != null && _loadHandler.HeldLoad == load) return true;
+            return isRaising &&
+                   _loadHandler != null &&
+                   _loadHandler.IsPickupPoseValid(load);
         }
 
         private void OnDrawGizmosSelected()

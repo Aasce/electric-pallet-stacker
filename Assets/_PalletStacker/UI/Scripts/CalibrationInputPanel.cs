@@ -17,9 +17,11 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private Button _rightButton;
         [SerializeField] private Button _forwardButton;
         [SerializeField] private Button _backButton;
+        [SerializeField] private Button _continueButton;
         private bool _buttonsBound;
         public event Action AlignRequested;
         public event Action<Vector3> OffsetAdjustmentRequested;
+        public event Action ContinueRequested;
 
         protected override void Awake()
         {
@@ -46,6 +48,7 @@ namespace ElectricPalletStackers.UI
         public void PressRight() => OffsetAdjustmentRequested?.Invoke(Vector3.right);
         public void PressForward() => OffsetAdjustmentRequested?.Invoke(Vector3.forward);
         public void PressBack() => OffsetAdjustmentRequested?.Invoke(Vector3.back);
+        public void PressContinue() => ContinueRequested?.Invoke();
 
         private void BindButtons()
         {
@@ -57,6 +60,7 @@ namespace ElectricPalletStackers.UI
             BindButton(_rightButton, PressRight);
             BindButton(_forwardButton, PressForward);
             BindButton(_backButton, PressBack);
+            BindButton(_continueButton, PressContinue);
             _buttonsBound = true;
         }
 

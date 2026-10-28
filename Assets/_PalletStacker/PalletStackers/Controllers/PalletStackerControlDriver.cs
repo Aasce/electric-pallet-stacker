@@ -16,6 +16,14 @@ namespace ElectricPalletStackers.PalletStackers
         [Tooltip("MonoBehaviours implementing IPalletStackerControlOutput.")]
         [SerializeField] private MonoBehaviour[] _outputComponents;
 
+        [Header("Operational safety interlocks")]
+        [SerializeField] private PalletStackerRigidbodyMotor _interlockMotor;
+        [SerializeField] private PalletStackerMast _interlockMast;
+        [Tooltip("Travel is force-stopped when the forks are more than this distance above their minimum height.")]
+        [SerializeField, Min(0f)] private float _travelHeightTolerance = 0.05f;
+        [Tooltip("Actual vehicle speed above this value blocks lift motion.")]
+        [SerializeField, Min(0f)] private float _movingSpeedThreshold = 0.01f;
+
         [Header("Analog input smoothing")]
         [Tooltip("Time in seconds used to blend analog controls between received states. Set to 0 to disable smoothing.")]
         [SerializeField, Min(0f)] private float _analogSmoothingTime = 0.08f;
@@ -36,6 +44,8 @@ namespace ElectricPalletStackers.PalletStackers
         private float _smoothingStartSteering;
         private float _smoothingStartTiller;
         private float _smoothingElapsed;
+        private bool _previouslyMoving;
+        private bool _previouslyAboveTravelHeight;
         private PalletStackerDriveCommand _targetCommand = PalletStackerDriveCommand.CreateFailSafe();
 
         public PalletStackerControlState CurrentState { get; private set; }
@@ -59,6 +69,7 @@ namespace ElectricPalletStackers.PalletStackers
         {
             CacheOutputs();
             Subscribe();
+            CacheOperationalInterlockState();
 
             if (_stateReceiver != null && _stateReceiver.LastAppliedSequence.HasValue)
             {
@@ -82,6 +93,8 @@ namespace ElectricPalletStackers.PalletStackers
 
         private void Update()
         {
+            RefreshOperationalInterlocks();
+
             if (!_hasSmoothedCommand ||
                 _analogSmoothingTime <= 0f ||
                 _smoothingElapsed >= _analogSmoothingTime)
@@ -180,6 +193,7 @@ namespace ElectricPalletStackers.PalletStackers
                 _collisionInterlock,
                 _gameplayInterlock || _inputCaptureInterlock || _phoneCallInterlock,
                 TravelDeadzoneNormalized);
+            command = ApplyOperationalInterlocks(command);
             SetTargetCommand(command);
             ControlUpdated?.Invoke(state, sequence);
         }
@@ -277,6 +291,52 @@ namespace ElectricPalletStackers.PalletStackers
                 if (_outputComponents[index] is IPalletStackerControlOutput output && !_outputs.Contains(output))
                     _outputs.Add(output);
             }
+        }
+
+        private PalletStackerDriveCommand ApplyOperationalInterlocks(
+            PalletStackerDriveCommand command)
+        {
+            bool forksAboveTravelHeight = AreForksAboveTravelHeight();
+            if (forksAboveTravelHeight) command = command.WithTravelSafetyStop();
+
+            bool travelRequested = !forksAboveTravelHeight &&
+                                   Mathf.Abs(command.TravelNormalized) > 0.0001f;
+            if (IsVehicleMoving() || travelRequested)
+                command = command.WithLift(PalletStackerLiftState.Neutral);
+
+            return command;
+        }
+
+        private void RefreshOperationalInterlocks()
+        {
+            bool moving = IsVehicleMoving();
+            bool forksAboveTravelHeight = AreForksAboveTravelHeight();
+            if (moving == _previouslyMoving &&
+                forksAboveTravelHeight == _previouslyAboveTravelHeight)
+                return;
+
+            _previouslyMoving = moving;
+            _previouslyAboveTravelHeight = forksAboveTravelHeight;
+            ReapplyCurrentState();
+        }
+
+        private void CacheOperationalInterlockState()
+        {
+            _previouslyMoving = IsVehicleMoving();
+            _previouslyAboveTravelHeight = AreForksAboveTravelHeight();
+        }
+
+        private bool IsVehicleMoving()
+        {
+            return _interlockMotor != null &&
+                   Mathf.Abs(_interlockMotor.CurrentSpeed) > _movingSpeedThreshold;
+        }
+
+        private bool AreForksAboveTravelHeight()
+        {
+            return _interlockMast != null &&
+                   _interlockMast.CurrentHeight >
+                   _interlockMast.MinHeight + _travelHeightTolerance;
         }
 
         private void Subscribe()

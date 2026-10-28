@@ -1,4 +1,6 @@
+using ElectricPalletStackers.Localization;
 using ElectricPalletStackers.PalletStackers;
+using ElectricPalletStackers.UI;
 using UnityEngine;
 
 namespace ElectricPalletStackers.Ble
@@ -24,39 +26,85 @@ namespace ElectricPalletStackers.Ble
         [Tooltip("Fallback tolerance at the pallet's top and bottom edges when penetration data is unavailable.")]
         [SerializeField, Min(0f)] private float _palletSideEdgeTolerance = 0.01f;
 
+        [Header("Alignment warning")]
+        [Tooltip("Uses the regular Cross Safety instruction panel prefab directly; no prefab variant is required.")]
+        [SerializeField] private GameObject _alignmentWarningPrefab;
+        [SerializeField, Min(0.1f)] private float _warningHoldSeconds = 2.5f;
+
+        private GameObject _alignmentWarningInstance;
+        private LocalizationManager _localizationManager;
+        private LocalizedText _warningText;
+        private float _lastWarningTime = float.NegativeInfinity;
+
+        private void OnEnable()
+        {
+            if (_loadHandler != null)
+                _loadHandler.UnsafePickupAttempted += HandleUnsafePickupAttempted;
+        }
+
+        private void OnDisable()
+        {
+            if (_loadHandler != null)
+                _loadHandler.UnsafePickupAttempted -= HandleUnsafePickupAttempted;
+            HideAlignmentWarning();
+        }
+
+        private void OnDestroy()
+        {
+            if (_localizationManager != null && _warningText != null)
+                _localizationManager.Unregister(_warningText);
+            if (_alignmentWarningInstance != null) Destroy(_alignmentWarningInstance);
+        }
+
+        private void LateUpdate()
+        {
+            if (_alignmentWarningInstance == null ||
+                !_alignmentWarningInstance.activeSelf ||
+                Time.unscaledTime - _lastWarningTime <= _warningHoldSeconds)
+                return;
+
+            HideAlignmentWarning();
+        }
+
         private void OnTriggerEnter(Collider other)
         {
-            if (_collisionReporter == null || ShouldIgnore(other)) return;
+            EvaluateContact(other, true);
+        }
+
+        private void OnTriggerStay(Collider other)
+        {
+            EvaluateContact(other, false);
+        }
+
+        private void EvaluateContact(Collider other, bool reportEnvironmentCollision)
+        {
+            if (other == null || other == _sensor || other.isTrigger) return;
+
+            int layerMask = 1 << other.gameObject.layer;
+            if ((_collisionLayers.value & layerMask) == 0 || IsVehicleCollider(other)) return;
+
+            PalletStackerLoad load = other.GetComponentInParent<PalletStackerLoad>();
+            if (load != null)
+            {
+                if (!load.OwnsCollider(other)) return;
+
+                _loadHandler?.SuppressVehicleForces(load);
+                if (_loadHandler != null && _loadHandler.HeldLoad == load) return;
+
+                if (load.IsForkHazardCollider(other) || IsPalletSideContact(other, load))
+                    ShowAlignmentWarning();
+                return;
+            }
+
+            if (!reportEnvironmentCollision ||
+                (_ignoreGroundLikeContacts && IsGroundLikeContact(other)) ||
+                _collisionReporter == null)
+                return;
 
             Debug.LogWarning(
                 $"[PALLET STACKER] Fork collision interlock triggered by '{other.gameObject.name}'.",
                 this);
             _collisionReporter.ReportCollision(other);
-        }
-
-        private bool ShouldIgnore(Collider other)
-        {
-            if (other == null || other == _sensor) return true;
-            if (other.isTrigger) return true;
-
-            int layerMask = 1 << other.gameObject.layer;
-            if ((_collisionLayers.value & layerMask) == 0) return true;
-            if (IsVehicleCollider(other)) return true;
-
-            PalletStackerLoad load = other.GetComponentInParent<PalletStackerLoad>();
-            if (load != null)
-            {
-                if (!load.OwnsCollider(other)) return true;
-                if (_loadHandler != null && _loadHandler.HeldLoad == load) return true;
-
-                if (load.IsForkHazardCollider(other)) return false;
-
-                // A pallet body collider is safe at its top and underside, but a fork
-                // entering through one of its four sides must trigger the collision loss.
-                return !IsPalletSideContact(other, load);
-            }
-
-            return _ignoreGroundLikeContacts && IsGroundLikeContact(other);
         }
 
         private bool IsPalletSideContact(Collider palletCollider, PalletStackerLoad load)
@@ -135,6 +183,72 @@ namespace ElectricPalletStackers.Ble
         {
             if (_sensor == null) return false;
             return other.bounds.max.y <= _sensor.bounds.min.y + _groundClearance;
+        }
+
+        private void HandleUnsafePickupAttempted(PalletStackerLoad load)
+        {
+            if (load == null) return;
+            _loadHandler?.SuppressVehicleForces(load);
+            ShowAlignmentWarning();
+        }
+
+        private void ShowAlignmentWarning()
+        {
+            EnsureAlignmentWarning();
+            if (_alignmentWarningInstance == null) return;
+
+            Camera viewCamera = Camera.main;
+            if (viewCamera != null)
+            {
+                Canvas canvas = _alignmentWarningInstance.GetComponent<Canvas>();
+                if (canvas != null) canvas.worldCamera = viewCamera;
+
+                TargetFollower follower = _alignmentWarningInstance.GetComponent<TargetFollower>();
+                follower?.SetTarget(viewCamera.transform);
+            }
+
+            _lastWarningTime = Time.unscaledTime;
+            if (!_alignmentWarningInstance.activeSelf)
+                _alignmentWarningInstance.SetActive(true);
+        }
+
+        private void HideAlignmentWarning()
+        {
+            if (_alignmentWarningInstance != null && _alignmentWarningInstance.activeSelf)
+                _alignmentWarningInstance.SetActive(false);
+        }
+
+        private void EnsureAlignmentWarning()
+        {
+            if (_alignmentWarningInstance != null || _alignmentWarningPrefab == null) return;
+
+            _alignmentWarningInstance = Instantiate(_alignmentWarningPrefab);
+            _alignmentWarningInstance.name = "Fork Alignment Warning Panel";
+
+            Camera viewCamera = Camera.main;
+            Canvas canvas = _alignmentWarningInstance.GetComponent<Canvas>();
+            if (canvas != null)
+            {
+                canvas.worldCamera = viewCamera;
+                canvas.overrideSorting = true;
+                canvas.sortingOrder = short.MaxValue - 5;
+            }
+
+            TargetFollower follower = _alignmentWarningInstance.GetComponent<TargetFollower>();
+            if (follower != null && viewCamera != null)
+                follower.SetTarget(viewCamera.transform);
+
+            _warningText = _alignmentWarningInstance.GetComponentInChildren<LocalizedText>(true);
+            _localizationManager = FindFirstObjectByType<LocalizationManager>();
+            if (_warningText != null)
+            {
+                _warningText.SetKey(
+                    LocalizationKeys.PalletHandling.AlignmentWarning,
+                    _localizationManager != null ? _localizationManager.Service : null);
+                _localizationManager?.Register(_warningText);
+            }
+
+            _alignmentWarningInstance.SetActive(false);
         }
 
     }

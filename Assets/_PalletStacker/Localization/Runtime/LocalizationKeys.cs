@@ -18,7 +18,6 @@ namespace ElectricPalletStackers.Localization
         public static class SelectLanguage
         {
             public const string Title = "selectLanguage.title";
-            public const string NavigationHint = "selectLanguage.navigationHint";
         }
 
         public static class Calibration
@@ -31,12 +30,6 @@ namespace ElectricPalletStackers.Localization
         {
             public const string Title = "welcome.title";
             public const string Description = "welcome.description";
-        }
-
-        public static class Guide
-        {
-            public const string Title = "guide.title";
-            public const string ScrollHint = "guide.scrollHint";
         }
 
         public static class Ppe
@@ -72,6 +65,11 @@ namespace ElectricPalletStackers.Localization
             public const string PointThisWay = "crossSafety.pointThisWay";
         }
 
+        public static class PalletHandling
+        {
+            public const string AlignmentWarning = "palletHandling.alignmentWarning";
+        }
+
         public static class Completed
         {
             public const string Title = "completed.title";
@@ -85,7 +83,6 @@ namespace ElectricPalletStackers.Localization
             public const string UnknownReason = "failed.reason.unknown";
             public const string ContinueCheckpoint = "failed.continueCheckpoint";
             public const string ExitRestart = "failed.exitRestart";
-            public const string NavigationHint = "failed.navigationHint";
         }
 
         public static class ResetGame
@@ -94,7 +91,6 @@ namespace ElectricPalletStackers.Localization
             public const string Restart = "resetGame.restart";
             public const string Continue = "resetGame.continue";
             public const string ResetPhase = "resetGame.resetPhase";
-            public const string NavigationHint = "resetGame.navigationHint";
         }
 
         public static class Phone

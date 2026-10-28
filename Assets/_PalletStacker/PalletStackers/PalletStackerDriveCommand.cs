@@ -144,6 +144,45 @@ namespace ElectricPalletStackers.PalletStackers
                 LiftInput);
         }
 
+        public PalletStackerDriveCommand WithLift(PalletStackerLiftState lift)
+        {
+            return new PalletStackerDriveCommand(
+                Sequence,
+                TravelNormalized,
+                SteeringDegrees,
+                TillerDegrees,
+                lift,
+                Horn,
+                SlowMode,
+                MovementInhibited,
+                EmergencyStop,
+                LocalInterlock,
+                TravelInputNormalized,
+                LiftInput);
+        }
+
+        /// <summary>
+        /// Stops travel immediately while preserving the requested lift command.
+        /// This is used by the operational fork-height interlock: the operator must
+        /// still be able to lower the forks before travel can resume.
+        /// </summary>
+        public PalletStackerDriveCommand WithTravelSafetyStop()
+        {
+            return new PalletStackerDriveCommand(
+                Sequence,
+                0f,
+                SteeringDegrees,
+                TillerDegrees,
+                Lift,
+                Horn,
+                SlowMode,
+                true,
+                EmergencyStop,
+                true,
+                TravelInputNormalized,
+                LiftInput);
+        }
+
         public static PalletStackerDriveCommand CreateFailSafe(bool localInterlock = false)
         {
             return new PalletStackerDriveCommand(

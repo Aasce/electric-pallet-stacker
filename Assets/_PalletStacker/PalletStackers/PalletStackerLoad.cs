@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,6 +13,8 @@ namespace ElectricPalletStackers.PalletStackers
     [RequireComponent(typeof(Rigidbody))]
     public sealed class PalletStackerLoad : MonoBehaviour
     {
+        public static event Action<PalletStackerLoad> BecameAvailable;
+
         [Header("View")]
         [SerializeField] private GameObject _defaultView;
         [SerializeField] private GameObject _highlightView;
@@ -64,6 +67,11 @@ namespace ElectricPalletStackers.PalletStackers
             // Safe fallback for older prefabs: the body collider is placed directly
             // on CollisionRoot, while every base collider lives below it.
             return candidate.transform != CollisionRoot;
+        }
+
+        private void OnEnable()
+        {
+            BecameAvailable?.Invoke(this);
         }
 
         private void OnDisable()

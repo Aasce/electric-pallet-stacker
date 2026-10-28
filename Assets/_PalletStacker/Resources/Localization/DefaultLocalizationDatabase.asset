@@ -14,13 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Localization.LocalizationDatabase
   _entries:
   - _key: common.confirm
-    _english: Press E-Stop to Confirm
-    _vietnamese: "Nh\u1EA5n d\u1EEBng kh\u1EA9n c\u1EA5p \u0111\u1EC3 x\xE1c nh\u1EADn"
-    _japanese: "\u975E\u5E38\u505C\u6B62\u30DC\u30BF\u30F3\u3067\u6C7A\u5B9A"
+    _english: Confirm
+    _vietnamese: "X\xE1c nh\u1EADn"
+    _japanese: "\u6C7A\u5B9A"
   - _key: common.continue
-    _english: Press E-Stop to Continue
-    _vietnamese: "Nh\u1EA5n d\u1EEBng kh\u1EA9n c\u1EA5p \u0111\u1EC3 ti\u1EBFp t\u1EE5c"
-    _japanese: "\u975E\u5E38\u505C\u6B62\u30DC\u30BF\u30F3\u3067\u7D9A\u884C"
+    _english: Continue
+    _vietnamese: "Ti\u1EBFp t\u1EE5c"
+    _japanese: "\u7D9A\u884C"
   - _key: calibration.title
     _english: Vehicle Calibration
     _vietnamese: "C\u0103n ch\u1EC9nh xe"
@@ -46,11 +46,6 @@ MonoBehaviour:
     _english: Select Language
     _vietnamese: "Ch\u1ECDn ng\xF4n ng\u1EEF"
     _japanese: "\u8A00\u8A9E\u3092\u9078\u629E"
-  - _key: selectLanguage.navigationHint
-    _english: Use Travel to select language
-    _vietnamese: "D\xF9ng c\u1EA7n di chuy\u1EC3n \u0111\u1EC3 ch\u1ECDn ng\xF4n
-      ng\u1EEF"
-    _japanese: "\u8D70\u884C\u30EC\u30D0\u30FC\u3067\u8A00\u8A9E\u3092\u9078\u629E"
   - _key: welcome.title
     _english: Welcome
     _vietnamese: "Ch\xE0o m\u1EEBng"
@@ -62,14 +57,6 @@ MonoBehaviour:
       t\xECnh hu\u1ED1ng tai n\u1EA1n li\xEAn quan \u0111\u1EBFn xe n\xE2ng tay cao
       ch\u1EA1y \u0111i\u1EC7n."
     _japanese: "\u3053\u306E\u8A13\u7DF4\u30B7\u30DF\u30E5\u30EC\u30FC\u30B7\u30E7\u30F3\u3067\u306F\u3001\u6B69\u884C\u64CD\u4F5C\u5F0F\u30D1\u30EC\u30C3\u30C8\u30B9\u30BF\u30C3\u30AB\u30FC\u306B\u95A2\u3059\u308B\u4E8B\u6545\u72B6\u6CC1\u3092\u518D\u73FE\u3057\u307E\u3059\u3002"
-  - _key: guide.title
-    _english: Guide
-    _vietnamese: "H\u01B0\u1EDBng d\u1EABn"
-    _japanese: "\u64CD\u4F5C\u30AC\u30A4\u30C9"
-  - _key: guide.scrollHint
-    _english: Use Travel to scroll
-    _vietnamese: "D\xF9ng c\u1EA7n di chuy\u1EC3n \u0111\u1EC3 cu\u1ED9n"
-    _japanese: "\u8D70\u884C\u30EC\u30D0\u30FC\u3067\u30B9\u30AF\u30ED\u30FC\u30EB"
   - _key: completed.title
     _english: Completed
     _vietnamese: "Ho\xE0n th\xE0nh"
@@ -163,6 +150,10 @@ MonoBehaviour:
     _english: Point in this direction
     _vietnamese: "Ch\u1EC9 tay theo h\u01B0\u1EDBng n\xE0y"
     _japanese: "\u3053\u306E\u65B9\u5411\u3092\u6307\u5DEE\u3057\u3066\u304F\u3060\u3055\u3044"
+  - _key: palletHandling.alignmentWarning
+    _english: Forks are touching the pallet side. Realign before lifting.
+    _vietnamese: "C\xE0ng \u0111ang ch\u1EA1m m\u1EB7t b\xEAn pallet. H\xE3y c\u0103n ch\u1EC9nh l\u1EA1i tr\u01B0\u1EDBc khi n\xE2ng."
+    _japanese: "\u30D5\u30A9\u30FC\u30AF\u304C\u30D1\u30EC\u30C3\u30C8\u306E\u5074\u9762\u306B\u63A5\u89E6\u3057\u3066\u3044\u307E\u3059\u3002\u4E0A\u6607\u524D\u306B\u4F4D\u7F6E\u3092\u8ABF\u6574\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
   - _key: failed.reason.unknown
     _english: The run ended because a safety condition was violated.
     _vietnamese: "L\u01B0\u1EE3t hu\u1EA5n luy\u1EC7n k\u1EBFt th\xFAc do vi ph\u1EA1m
@@ -176,11 +167,6 @@ MonoBehaviour:
     _english: Exit and restart
     _vietnamese: "Tho\xE1t v\xE0 b\u1EAFt \u0111\u1EA7u l\u1EA1i"
     _japanese: "\u7D42\u4E86\u3057\u3066\u6700\u521D\u304B\u3089\u3084\u308A\u76F4\u3059"
-  - _key: failed.navigationHint
-    _english: "Use Travel to select \u2022 Press E-Stop to confirm"
-    _vietnamese: "D\xF9ng Travel \u0111\u1EC3 ch\u1ECDn \u2022 Nh\u1EA5n E-Stop \u0111\u1EC3
-      x\xE1c nh\u1EADn"
-    _japanese: "\u8D70\u884C\u30EC\u30D0\u30FC\u3067\u9078\u629E \u2022 \u975E\u5E38\u505C\u6B62\u30DC\u30BF\u30F3\u3067\u6C7A\u5B9A"
   - _key: resetGame.title
     _english: Reset Game
     _vietnamese: "\u0110\u1EB7t l\u1EA1i tr\xF2 ch\u01A1i"
@@ -197,11 +183,6 @@ MonoBehaviour:
     _english: Reset Current Phase
     _vietnamese: "\u0110\u1EB7t l\u1EA1i giai \u0111o\u1EA1n"
     _japanese: "\u73FE\u5728\u306E\u30D5\u30A7\u30FC\u30BA\u3092\u30EA\u30BB\u30C3\u30C8"
-  - _key: resetGame.navigationHint
-    _english: "Use Travel to select \u2022 Press E-Stop to confirm"
-    _vietnamese: "D\xF9ng Travel \u0111\u1EC3 ch\u1ECDn \u2022 Nh\u1EA5n E-Stop \u0111\u1EC3
-      x\xE1c nh\u1EADn"
-    _japanese: "\u8D70\u884C\u30EC\u30D0\u30FC\u3067\u9078\u629E \u2022 \u975E\u5E38\u505C\u6B62\u30DC\u30BF\u30F3\u3067\u6C7A\u5B9A"
   - _key: vehicleChecklist.title
     _english: Pre-operation Checklist
     _vietnamese: "Danh s\xE1ch ki\u1EC3m tra tr\u01B0\u1EDBc v\u1EADn h\xE0nh"

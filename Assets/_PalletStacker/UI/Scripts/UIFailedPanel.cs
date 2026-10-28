@@ -54,18 +54,6 @@ namespace ElectricPalletStackers.UI
             _reasonText.SetKey(LocalizationKeys.Failed.UnknownReason, localization);
         }
 
-        public void NavigateNext()
-        {
-            Select(SelectedAction == FailedPanelAction.ContinueFromCheckpoint
-                ? FailedPanelAction.ExitToWelcome
-                : FailedPanelAction.ContinueFromCheckpoint);
-        }
-
-        public void NavigatePrevious()
-        {
-            NavigateNext();
-        }
-
         public void ConfirmSelection()
         {
             ActionConfirmed?.Invoke(SelectedAction);

@@ -5,7 +5,6 @@ namespace ElectricPalletStackers.UI
         CalibrateVehicleView = 0,
         SelectLanguage = 1,
         Welcome = 2,
-        Guide = 3,
         PpeEquipment = 4,
         Hidden = 5,
         Completed = 6,

@@ -10,6 +10,9 @@ namespace ElectricPalletStackers.PalletStackers
         [Header("Dependencies")]
         [SerializeField] private Rigidbody _body;
         [SerializeField] private PalletStackerVehicleSettings _settings;
+        [SerializeField] private PalletStackerMast _mast;
+        [Tooltip("Hard travel stop when the forks are farther than this above minimum height.")]
+        [SerializeField, Min(0f)] private float _travelHeightTolerance = 0.05f;
 
         [Header("Vehicle geometry")]
         [Tooltip("Fallback local-space forward axis used when the axle references cannot define a direction.")]
@@ -70,7 +73,8 @@ namespace ElectricPalletStackers.PalletStackers
 
         public void Apply(PalletStackerDriveCommand command)
         {
-            _movementInhibited = command.MovementInhibited;
+            bool forkHeightInterlock = AreForksAboveTravelHeight();
+            _movementInhibited = command.MovementInhibited || forkHeightInterlock;
             _steeringDegrees = Mathf.Clamp(
                 command.SteeringDegrees,
                 -MaximumSteeringAngleDegrees,
@@ -83,7 +87,7 @@ namespace ElectricPalletStackers.PalletStackers
                 ? 0f
                 : Mathf.Clamp(command.TravelNormalized, -1f, 1f) * speedLimit;
 
-            if (command.RequiresImmediateStop) StopImmediately();
+            if (command.RequiresImmediateStop || forkHeightInterlock) StopImmediately();
         }
 
         public void StopImmediately()
@@ -107,6 +111,11 @@ namespace ElectricPalletStackers.PalletStackers
         private void FixedUpdate()
         {
             if (_body == null) return;
+            if (AreForksAboveTravelHeight())
+            {
+                StopImmediately();
+                return;
+            }
 
             float rate = ShouldBrake() ? ServiceBrakeDeceleration : Acceleration;
             _currentSpeed = Mathf.MoveTowards(_currentSpeed, _targetSpeed, rate * Time.fixedDeltaTime);
@@ -163,6 +172,12 @@ namespace ElectricPalletStackers.PalletStackers
             if (_movementInhibited) return true;
             if (Mathf.Approximately(_targetSpeed, 0f)) return true;
             return Mathf.Sign(_currentSpeed) != Mathf.Sign(_targetSpeed) && !Mathf.Approximately(_currentSpeed, 0f);
+        }
+
+        private bool AreForksAboveTravelHeight()
+        {
+            return _mast != null &&
+                   _mast.CurrentHeight > _mast.MinHeight + _travelHeightTolerance;
         }
 
         private float MaximumForwardSpeed => _settings != null

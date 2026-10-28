@@ -12,6 +12,7 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private UICustomButton _englishButton;
         [SerializeField] private UICustomButton _vietnameseButton;
         [SerializeField] private UICustomButton _japaneseButton;
+        [SerializeField] private Button _confirmButton;
 
         private bool _hasFocusedLanguage;
         private bool _buttonsSubscribed;
@@ -19,6 +20,7 @@ namespace ElectricPalletStackers.UI
         public LanguageCode FocusedLanguage { get; private set; } = LanguageCode.En;
 
         public event Action<LanguageCode> FocusChanged;
+        public event Action<LanguageCode> Confirmed;
 
         private void OnEnable()
         {
@@ -34,29 +36,6 @@ namespace ElectricPalletStackers.UI
         public override void ResetView()
         {
             FocusLanguage(_hasFocusedLanguage ? FocusedLanguage : LanguageCode.En);
-        }
-
-        public void NavigateNext()
-        {
-            MoveFocus(useDownNavigation: true);
-        }
-
-        public void NavigatePrevious()
-        {
-            MoveFocus(useDownNavigation: false);
-        }
-
-        private void MoveFocus(bool useDownNavigation)
-        {
-            UICustomButton current = GetButton(FocusedLanguage);
-            if (current == null) return;
-
-            Navigation navigation = current.Button.navigation;
-            Selectable target = useDownNavigation ? navigation.selectOnDown : navigation.selectOnUp;
-            if (target == null) return;
-
-            UICustomButton customButton = target.GetComponent<UICustomButton>();
-            if (customButton != null) FocusButton(customButton);
         }
 
         private void FocusLanguage(LanguageCode language)
@@ -110,20 +89,47 @@ namespace ElectricPalletStackers.UI
         private void SubscribeButtons()
         {
             if (_buttonsSubscribed) return;
-            if (_englishButton != null) _englishButton.Focused += HandleButtonFocused;
-            if (_vietnameseButton != null) _vietnameseButton.Focused += HandleButtonFocused;
-            if (_japaneseButton != null) _japaneseButton.Focused += HandleButtonFocused;
+            SubscribeLanguageButton(_englishButton, SelectEnglish);
+            SubscribeLanguageButton(_vietnameseButton, SelectVietnamese);
+            SubscribeLanguageButton(_japaneseButton, SelectJapanese);
+            if (_confirmButton != null)
+                _confirmButton.onClick.AddListener(ConfirmLanguage);
             _buttonsSubscribed = true;
         }
 
         private void UnsubscribeButtons()
         {
             if (!_buttonsSubscribed) return;
-            if (_englishButton != null) _englishButton.Focused -= HandleButtonFocused;
-            if (_vietnameseButton != null) _vietnameseButton.Focused -= HandleButtonFocused;
-            if (_japaneseButton != null) _japaneseButton.Focused -= HandleButtonFocused;
+            UnsubscribeLanguageButton(_englishButton, SelectEnglish);
+            UnsubscribeLanguageButton(_vietnameseButton, SelectVietnamese);
+            UnsubscribeLanguageButton(_japaneseButton, SelectJapanese);
+            if (_confirmButton != null)
+                _confirmButton.onClick.RemoveListener(ConfirmLanguage);
             _buttonsSubscribed = false;
         }
+
+        private void SubscribeLanguageButton(
+            UICustomButton button,
+            UnityEngine.Events.UnityAction clickAction)
+        {
+            if (button == null) return;
+            button.Focused += HandleButtonFocused;
+            if (button.Button != null) button.Button.onClick.AddListener(clickAction);
+        }
+
+        private void UnsubscribeLanguageButton(
+            UICustomButton button,
+            UnityEngine.Events.UnityAction clickAction)
+        {
+            if (button == null) return;
+            button.Focused -= HandleButtonFocused;
+            if (button.Button != null) button.Button.onClick.RemoveListener(clickAction);
+        }
+
+        private void SelectEnglish() => FocusLanguage(LanguageCode.En);
+        private void SelectVietnamese() => FocusLanguage(LanguageCode.Vi);
+        private void SelectJapanese() => FocusLanguage(LanguageCode.Ja);
+        private void ConfirmLanguage() => Confirmed?.Invoke(FocusedLanguage);
 
     }
 }

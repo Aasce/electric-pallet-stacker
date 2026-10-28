@@ -53,5 +53,10 @@ namespace ElectricPalletStackers.UI
                 }
             }
         }
+
+        public void SetTarget(Transform target)
+        {
+            _target = target;
+        }
     }
 }

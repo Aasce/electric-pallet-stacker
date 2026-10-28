@@ -127,6 +127,10 @@ MonoBehaviour:
   - {fileID: 3558005869592371582}
   - {fileID: 2976386511929750409}
   - {fileID: 6924479301191952720}
+  _interlockMotor: {fileID: 5210768195172812719}
+  _interlockMast: {fileID: 2871494232518386074}
+  _travelHeightTolerance: 0.05
+  _movingSpeedThreshold: 0.01
   _analogSmoothingTime: 0.08
 --- !u!114 &5210768195172812719
 MonoBehaviour:
@@ -142,6 +146,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _body: {fileID: 3273737744600335219}
   _settings: {fileID: 11400000, guid: 185ec762c7b64b7a80da1d21db8fbce4, type: 2}
+  _mast: {fileID: 2871494232518386074}
+  _travelHeightTolerance: 0.05
   _localForwardAxis: {x: 0, y: 0, z: 1}
   _fixedFrontAxleReference: {fileID: 0}
   _steeredRearAxleReference: {fileID: 5077208130004456298}
@@ -246,7 +252,6 @@ MonoBehaviour:
   _minimumInsertionDepth: 0.7
   _maximumLateralOffset: 0.15
   _maximumYawError: 12
-  _unsafePickupLiftImpulse: 0.35
   _breakForce: 100000
   _breakTorque: 100000
   _releaseAtMinimumHeightTolerance: 0.03
@@ -651,6 +656,8 @@ MonoBehaviour:
   _loadHandler: {fileID: 8991475523401287712}
   _vehicleRoot: {fileID: 550797599305683205}
   _settings: {fileID: 11400000, guid: 185ec762c7b64b7a80da1d21db8fbce4, type: 2}
+  _vehicleMotor: {fileID: 5210768195172812719}
+  _movingSpeedThreshold: 0.01
   _targetHeightNormalized: 0
   _obstructionLayers:
     serializedVersion: 2
@@ -1524,6 +1531,8 @@ MonoBehaviour:
   _groundClearance: 0.03
   _verticalContactDotThreshold: 0.7
   _palletSideEdgeTolerance: 0.01
+  _alignmentWarningPrefab: {fileID: 1308665566548500572, guid: 4b9b7c3c39fbca14b9241b90de3960ca, type: 3}
+  _warningHoldSeconds: 2.5
 --- !u!1 &4643567231942210315
 GameObject:
   m_ObjectHideFlags: 0

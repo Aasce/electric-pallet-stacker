@@ -18,11 +18,9 @@ namespace ElectricPalletStackers.UI
         [Header("UI Flow")]
         [SerializeField] private UIInputRouter _inputRouter;
         [SerializeField] private UISelectLanguagePanel _selectLanguagePanel;
-        [SerializeField] private UICalibrationPanel _calibrationInfoPanel;
         [SerializeField] private CalibrationInputPanel _calibrationPanel;
         [SerializeField] private VehicleViewCalibrationSystem _calibrationSystem;
         [SerializeField] private UIWelcomePanel _welcomePanel;
-        [SerializeField] private UIGuidePanel _guidePanel;
         [SerializeField] private UIPpePanel _ppePanel;
         [SerializeField] private PpeEquipmentPhase _ppeEquipmentPhase;
         [SerializeField] private UIChecklistPanel _checklistPanel;
@@ -30,11 +28,6 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private UICompletedPanel _completedPanel;
         [SerializeField] private UIFailedPanel _failedPanel;
         [SerializeField] private UIResetGamePanel _resetGamePanel;
-
-        [Header("Flow Timing")]
-        [SerializeField, Min(0f)] private float _welcomeNavigationDelay = 2f;
-
-        private float _navigationInputUnlockedAt = float.NegativeInfinity;
 
         public UIFlowState CurrentState { get; private set; } = UIFlowState.CalibrateVehicleView;
         public bool IsInputCaptured => CurrentState != UIFlowState.Hidden;
@@ -72,40 +65,42 @@ namespace ElectricPalletStackers.UI
 
             _localizationManager.Initialize();
             if (_selectLanguagePanel != null)
+            {
                 _selectLanguagePanel.FocusChanged += HandleLanguageFocusChanged;
+                _selectLanguagePanel.Confirmed += HandleLanguageConfirmed;
+            }
             if (_ppeEquipmentPhase != null)
                 _ppeEquipmentPhase.Equipped += HandlePpeEquipped;
-            _vehicleChecklist.Completed += HandleVehicleChecklistCompleted;
+            if (_vehicleChecklist != null)
+                _vehicleChecklist.Completed += HandleVehicleChecklistCompleted;
             if (_calibrationPanel != null)
             {
                 _calibrationPanel.AlignRequested += HandleAlignRequested;
                 _calibrationPanel.OffsetAdjustmentRequested += HandleOffsetAdjustmentRequested;
+                _calibrationPanel.ContinueRequested += HandleCalibrationContinueRequested;
             }
-            _failedPanel.ActionConfirmed += HandleFailureActionConfirmed;
+            if (_welcomePanel != null)
+                _welcomePanel.ContinueRequested += HandleWelcomeContinueRequested;
+            if (_completedPanel != null)
+                _completedPanel.ContinueRequested += HandleCompletedContinueRequested;
+            if (_failedPanel != null)
+                _failedPanel.ActionConfirmed += HandleFailureActionConfirmed;
             if (_resetGamePanel != null)
                 _resetGamePanel.ActionConfirmed += HandleResetGameActionConfirmed;
 
             _selectLanguagePanel?.HideImmediate();
-            _calibrationInfoPanel?.HideImmediate();
             _calibrationPanel?.HideImmediate();
             _welcomePanel?.HideImmediate();
-            _guidePanel?.HideImmediate();
             _ppePanel?.HideImmediate();
             _checklistPanel?.HideImmediate();
             _ppeEquipmentPhase?.EndPhase();
-            _vehicleChecklist.EndPhase();
+            _vehicleChecklist?.EndPhase();
             _completedPanel?.HideImmediate();
-            _failedPanel.HideImmediate();
+            _failedPanel?.HideImmediate();
             _resetGamePanel?.HideImmediate();
 
             CurrentState = UIFlowState.CalibrateVehicleView;
-            _inputRouter?.ResetForPanel();
-            if (CurrentState == UIFlowState.CalibrateVehicleView)
-            {
-                _calibrationInfoPanel?.Show();
-                _calibrationPanel?.Show();
-            }
-            else _selectLanguagePanel?.Show();
+            _calibrationPanel?.Show();
             if (_selectLanguagePanel != null)
                 FocusedLanguage = _selectLanguagePanel.FocusedLanguage;
         }
@@ -113,104 +108,40 @@ namespace ElectricPalletStackers.UI
         private void OnEnable()
         {
             if (_inputRouter == null) return;
-            _inputRouter.NavigateNext += HandleNavigateNext;
-            _inputRouter.NavigatePrevious += HandleNavigatePrevious;
-            _inputRouter.Confirm += HandleConfirm;
             _inputRouter.EmergencyStopHeld += HandleEmergencyStopHeld;
         }
 
         private void OnDisable()
         {
             if (_inputRouter == null) return;
-            _inputRouter.NavigateNext -= HandleNavigateNext;
-            _inputRouter.NavigatePrevious -= HandleNavigatePrevious;
-            _inputRouter.Confirm -= HandleConfirm;
             _inputRouter.EmergencyStopHeld -= HandleEmergencyStopHeld;
         }
 
         private void OnDestroy()
         {
             if (_selectLanguagePanel != null)
+            {
                 _selectLanguagePanel.FocusChanged -= HandleLanguageFocusChanged;
+                _selectLanguagePanel.Confirmed -= HandleLanguageConfirmed;
+            }
             if (_ppeEquipmentPhase != null)
                 _ppeEquipmentPhase.Equipped -= HandlePpeEquipped;
-            _vehicleChecklist.Completed -= HandleVehicleChecklistCompleted;
+            if (_vehicleChecklist != null)
+                _vehicleChecklist.Completed -= HandleVehicleChecklistCompleted;
             if (_calibrationPanel != null)
             {
                 _calibrationPanel.AlignRequested -= HandleAlignRequested;
                 _calibrationPanel.OffsetAdjustmentRequested -= HandleOffsetAdjustmentRequested;
+                _calibrationPanel.ContinueRequested -= HandleCalibrationContinueRequested;
             }
-            _failedPanel.ActionConfirmed -= HandleFailureActionConfirmed;
+            if (_welcomePanel != null)
+                _welcomePanel.ContinueRequested -= HandleWelcomeContinueRequested;
+            if (_completedPanel != null)
+                _completedPanel.ContinueRequested -= HandleCompletedContinueRequested;
+            if (_failedPanel != null)
+                _failedPanel.ActionConfirmed -= HandleFailureActionConfirmed;
             if (_resetGamePanel != null)
                 _resetGamePanel.ActionConfirmed -= HandleResetGameActionConfirmed;
-        }
-
-        private void HandleNavigateNext()
-        {
-            if (!CanProcessNavigationInput()) return;
-
-            if (CurrentState == UIFlowState.SelectLanguage)
-                _selectLanguagePanel.NavigateNext();
-            else if (CurrentState == UIFlowState.Failed)
-                _failedPanel.NavigateNext();
-            else if (CurrentState == UIFlowState.ResetGame)
-                _resetGamePanel.NavigateNext();
-        }
-
-        private void HandleNavigatePrevious()
-        {
-            if (!CanProcessNavigationInput()) return;
-
-            if (CurrentState == UIFlowState.SelectLanguage)
-                _selectLanguagePanel.NavigatePrevious();
-            else if (CurrentState == UIFlowState.Failed)
-                _failedPanel.NavigatePrevious();
-            else if (CurrentState == UIFlowState.ResetGame)
-                _resetGamePanel.NavigatePrevious();
-        }
-
-        private void HandleConfirm()
-        {
-            if (!CanProcessNavigationInput()) return;
-
-            ConfirmCurrentPanel();
-        }
-
-        private bool CanProcessNavigationInput()
-        {
-            return CurrentState != UIFlowState.Welcome ||
-                   Time.unscaledTime >= _navigationInputUnlockedAt;
-        }
-
-        public void ConfirmCurrentPanel()
-        {
-            switch (CurrentState)
-            {
-                case UIFlowState.CalibrateVehicleView:
-                    TransitionTo(UIFlowState.SelectLanguage);
-                    break;
-                case UIFlowState.SelectLanguage:
-                    SelectedLanguage = FocusedLanguage;
-                    LanguageConfirmed?.Invoke(SelectedLanguage);
-                    TransitionTo(UIFlowState.Welcome);
-                    break;
-                case UIFlowState.Welcome:
-                    TransitionTo(UIFlowState.Guide);
-                    break;
-                case UIFlowState.Guide:
-                    TransitionTo(UIFlowState.PpeEquipment);
-                    break;
-                case UIFlowState.Completed:
-                    ResetRequested?.Invoke();
-                    TransitionTo(UIFlowState.Welcome);
-                    break;
-                case UIFlowState.Failed:
-                    _failedPanel.ConfirmSelection();
-                    break;
-                case UIFlowState.ResetGame:
-                    _resetGamePanel.ConfirmSelection();
-                    break;
-            }
         }
 
         public void ShowCompleted()
@@ -233,6 +164,37 @@ namespace ElectricPalletStackers.UI
             FocusedLanguage = language;
             _localizationManager?.SetLanguage(language);
             LanguagePreviewChanged?.Invoke(language);
+        }
+
+        private void HandleLanguageConfirmed(LanguageCode language)
+        {
+            if (CurrentState != UIFlowState.SelectLanguage) return;
+
+            FocusedLanguage = language;
+            SelectedLanguage = language;
+            _localizationManager?.SetLanguage(language);
+            LanguageConfirmed?.Invoke(language);
+            TransitionTo(UIFlowState.Welcome);
+        }
+
+        private void HandleCalibrationContinueRequested()
+        {
+            if (CurrentState == UIFlowState.CalibrateVehicleView)
+                TransitionTo(UIFlowState.SelectLanguage);
+        }
+
+        private void HandleWelcomeContinueRequested()
+        {
+            if (CurrentState == UIFlowState.Welcome)
+                TransitionTo(UIFlowState.PpeEquipment);
+        }
+
+        private void HandleCompletedContinueRequested()
+        {
+            if (CurrentState != UIFlowState.Completed) return;
+
+            ResetRequested?.Invoke();
+            TransitionTo(UIFlowState.Welcome);
         }
 
         private void HandlePpeEquipped()
@@ -260,28 +222,21 @@ namespace ElectricPalletStackers.UI
             bool capturedBefore = IsInputCaptured;
 
             _selectLanguagePanel?.Hide();
-            _calibrationInfoPanel?.Hide();
             _calibrationPanel?.Hide();
             _welcomePanel?.Hide();
-            _guidePanel?.Hide();
             _ppePanel?.Hide();
             _checklistPanel?.Hide();
             _ppeEquipmentPhase?.EndPhase();
-            _vehicleChecklist.EndPhase();
+            _vehicleChecklist?.EndPhase();
             _completedPanel?.Hide();
             _failedPanel?.Hide();
             _resetGamePanel?.Hide();
 
             CurrentState = nextState;
-            _navigationInputUnlockedAt = nextState == UIFlowState.Welcome
-                ? Time.unscaledTime + _welcomeNavigationDelay
-                : float.NegativeInfinity;
-            _inputRouter?.ResetForPanel();
 
             switch (nextState)
             {
                 case UIFlowState.CalibrateVehicleView:
-                    _calibrationInfoPanel?.Show();
                     _calibrationPanel?.Show();
                     break;
                 case UIFlowState.SelectLanguage:
@@ -289,9 +244,6 @@ namespace ElectricPalletStackers.UI
                     break;
                 case UIFlowState.Welcome:
                     _welcomePanel?.Show();
-                    break;
-                case UIFlowState.Guide:
-                    _guidePanel?.Show();
                     break;
                 case UIFlowState.PpeEquipment:
                     _ppePanel?.Show();

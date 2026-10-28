@@ -36,26 +36,6 @@ namespace ElectricPalletStackers.UI
             RemoveButtonListeners();
         }
 
-        public void NavigateNext()
-        {
-            Select(SelectedAction switch
-            {
-                ResetGameAction.Restart => ResetGameAction.Continue,
-                ResetGameAction.Continue => ResetGameAction.ResetPhase,
-                _ => ResetGameAction.Restart
-            });
-        }
-
-        public void NavigatePrevious()
-        {
-            Select(SelectedAction switch
-            {
-                ResetGameAction.Restart => ResetGameAction.ResetPhase,
-                ResetGameAction.Continue => ResetGameAction.Restart,
-                _ => ResetGameAction.Continue
-            });
-        }
-
         public void ConfirmSelection()
         {
             ActionConfirmed?.Invoke(SelectedAction);

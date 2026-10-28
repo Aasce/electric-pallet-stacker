@@ -32,7 +32,6 @@ namespace ElectricPalletStackers.Gameplay
             if (_loadHandler != null)
             {
                 _loadHandler.LoadJointBroken += HandleLoadJointBroken;
-                _loadHandler.UnsafePickupAttempted += HandleUnsafePickupAttempted;
             }
         }
 
@@ -41,7 +40,6 @@ namespace ElectricPalletStackers.Gameplay
             if (_loadHandler != null)
             {
                 _loadHandler.LoadJointBroken -= HandleLoadJointBroken;
-                _loadHandler.UnsafePickupAttempted -= HandleUnsafePickupAttempted;
             }
             _roundActive = false;
         }
@@ -94,14 +92,6 @@ namespace ElectricPalletStackers.Gameplay
         {
             if (!_roundActive || brokenLoad != _load) return;
             ReportFailure(GameFailureReason.LoadDropped, "load joint broke unexpectedly");
-        }
-
-        private void HandleUnsafePickupAttempted(PalletStackerLoad attemptedLoad)
-        {
-            if (!_roundActive || attemptedLoad != _load) return;
-            ReportFailure(
-                GameFailureReason.LoadDropped,
-                "forks were raised before they were fully inserted and centered");
         }
 
         private bool IsHeldLoad()
