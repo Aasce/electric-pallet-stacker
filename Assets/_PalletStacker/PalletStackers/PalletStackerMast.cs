@@ -134,6 +134,40 @@ namespace ElectricPalletStackers.PalletStackers
                 return true;
             }
 
+            return isRaising && IsHeldLoadMotionBlocked(localHeightDelta);
+        }
+
+        private bool IsHeldLoadMotionBlocked(float localHeightDelta)
+        {
+            PalletStackerLoad heldLoad = _loadHandler != null
+                ? _loadHandler.HeldLoad
+                : null;
+            if (heldLoad == null ||
+                !TryGetHeldLoadObstructionBox(
+                    heldLoad,
+                    localHeightDelta,
+                    out Vector3 center,
+                    out Vector3 halfExtents))
+                return false;
+
+            int count = Physics.OverlapBoxNonAlloc(
+                center,
+                halfExtents,
+                _obstructionResults,
+                Quaternion.identity,
+                _obstructionLayers,
+                QueryTriggerInteraction.Ignore);
+
+            for (int index = 0; index < count; index++)
+            {
+                Collider obstacle = _obstructionResults[index];
+                _obstructionResults[index] = null;
+
+                if (obstacle == null || IsVehicleCollider(obstacle)) continue;
+                if (heldLoad.OwnsCollider(obstacle)) continue;
+                return true;
+            }
+
             return false;
         }
 
@@ -178,6 +212,53 @@ namespace ElectricPalletStackers.PalletStackers
                 guardDepth * 0.5f,
                 forkHalfExtents.z + _obstructionHorizontalPadding);
             orientation = forks.rotation;
+            return true;
+        }
+
+        private bool TryGetHeldLoadObstructionBox(
+            PalletStackerLoad heldLoad,
+            float localHeightDelta,
+            out Vector3 center,
+            out Vector3 halfExtents)
+        {
+            center = default;
+            halfExtents = default;
+            if (heldLoad == null) return false;
+
+            Collider[] colliders = heldLoad.CollisionRoot.GetComponentsInChildren<Collider>(false);
+            Bounds bounds = default;
+            bool hasBounds = false;
+            for (int index = 0; index < colliders.Length; index++)
+            {
+                Collider candidate = colliders[index];
+                if (candidate == null || !candidate.enabled || candidate.isTrigger) continue;
+
+                if (!hasBounds)
+                {
+                    bounds = candidate.bounds;
+                    hasBounds = true;
+                }
+                else
+                {
+                    bounds.Encapsulate(candidate.bounds);
+                }
+            }
+
+            if (!hasBounds) return false;
+
+            Vector3 worldMovement = forks.parent != null
+                ? forks.parent.TransformVector(Vector3.up * localHeightDelta)
+                : forks.TransformVector(Vector3.up * localHeightDelta);
+            float movementDistance = worldMovement.magnitude;
+            if (movementDistance <= Mathf.Epsilon) return false;
+
+            Vector3 movementDirection = worldMovement / movementDistance;
+            float guardDepth = movementDistance + _obstructionSkin;
+            center = bounds.center + movementDirection * (bounds.extents.y + guardDepth * 0.5f);
+            halfExtents = new Vector3(
+                bounds.extents.x + _obstructionHorizontalPadding,
+                guardDepth * 0.5f,
+                bounds.extents.z + _obstructionHorizontalPadding);
             return true;
         }
 

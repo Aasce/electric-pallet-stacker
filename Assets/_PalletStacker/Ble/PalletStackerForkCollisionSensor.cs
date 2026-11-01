@@ -1,4 +1,3 @@
-using ElectricPalletStackers.Localization;
 using ElectricPalletStackers.PalletStackers;
 using ElectricPalletStackers.UI;
 using UnityEngine;
@@ -27,14 +26,7 @@ namespace ElectricPalletStackers.Ble
         [SerializeField, Min(0f)] private float _palletSideEdgeTolerance = 0.01f;
 
         [Header("Alignment warning")]
-        [Tooltip("Uses the regular Cross Safety instruction panel prefab directly; no prefab variant is required.")]
-        [SerializeField] private GameObject _alignmentWarningPrefab;
-        [SerializeField, Min(0.1f)] private float _warningHoldSeconds = 2.5f;
-
-        private GameObject _alignmentWarningInstance;
-        private LocalizationManager _localizationManager;
-        private LocalizedText _warningText;
-        private float _lastWarningTime = float.NegativeInfinity;
+        [SerializeField] private NotificationPanelPresenter _notifications;
 
         private void OnEnable()
         {
@@ -46,24 +38,6 @@ namespace ElectricPalletStackers.Ble
         {
             if (_loadHandler != null)
                 _loadHandler.UnsafePickupAttempted -= HandleUnsafePickupAttempted;
-            HideAlignmentWarning();
-        }
-
-        private void OnDestroy()
-        {
-            if (_localizationManager != null && _warningText != null)
-                _localizationManager.Unregister(_warningText);
-            if (_alignmentWarningInstance != null) Destroy(_alignmentWarningInstance);
-        }
-
-        private void LateUpdate()
-        {
-            if (_alignmentWarningInstance == null ||
-                !_alignmentWarningInstance.activeSelf ||
-                Time.unscaledTime - _lastWarningTime <= _warningHoldSeconds)
-                return;
-
-            HideAlignmentWarning();
         }
 
         private void OnTriggerEnter(Collider other)
@@ -90,8 +64,9 @@ namespace ElectricPalletStackers.Ble
 
                 _loadHandler?.SuppressVehicleForces(load);
                 if (_loadHandler != null && _loadHandler.HeldLoad == load) return;
+                if (load.Body != null && load.Body.linearVelocity.y < -0.1f) return;
 
-                if (load.IsForkHazardCollider(other) || IsPalletSideContact(other, load))
+                if (IsPalletSideContact(other, load))
                     ShowAlignmentWarning();
                 return;
             }
@@ -188,67 +163,16 @@ namespace ElectricPalletStackers.Ble
         private void HandleUnsafePickupAttempted(PalletStackerLoad load)
         {
             if (load == null) return;
+            if (_loadHandler != null && _loadHandler.HeldLoad == load) return;
+            if (load.Body != null && load.Body.linearVelocity.y < -0.1f) return;
             _loadHandler?.SuppressVehicleForces(load);
             ShowAlignmentWarning();
         }
 
         private void ShowAlignmentWarning()
         {
-            EnsureAlignmentWarning();
-            if (_alignmentWarningInstance == null) return;
-
-            Camera viewCamera = Camera.main;
-            if (viewCamera != null)
-            {
-                Canvas canvas = _alignmentWarningInstance.GetComponent<Canvas>();
-                if (canvas != null) canvas.worldCamera = viewCamera;
-
-                TargetFollower follower = _alignmentWarningInstance.GetComponent<TargetFollower>();
-                follower?.SetTarget(viewCamera.transform);
-            }
-
-            _lastWarningTime = Time.unscaledTime;
-            if (!_alignmentWarningInstance.activeSelf)
-                _alignmentWarningInstance.SetActive(true);
-        }
-
-        private void HideAlignmentWarning()
-        {
-            if (_alignmentWarningInstance != null && _alignmentWarningInstance.activeSelf)
-                _alignmentWarningInstance.SetActive(false);
-        }
-
-        private void EnsureAlignmentWarning()
-        {
-            if (_alignmentWarningInstance != null || _alignmentWarningPrefab == null) return;
-
-            _alignmentWarningInstance = Instantiate(_alignmentWarningPrefab);
-            _alignmentWarningInstance.name = "Fork Alignment Warning Panel";
-
-            Camera viewCamera = Camera.main;
-            Canvas canvas = _alignmentWarningInstance.GetComponent<Canvas>();
-            if (canvas != null)
-            {
-                canvas.worldCamera = viewCamera;
-                canvas.overrideSorting = true;
-                canvas.sortingOrder = short.MaxValue - 5;
-            }
-
-            TargetFollower follower = _alignmentWarningInstance.GetComponent<TargetFollower>();
-            if (follower != null && viewCamera != null)
-                follower.SetTarget(viewCamera.transform);
-
-            _warningText = _alignmentWarningInstance.GetComponentInChildren<LocalizedText>(true);
-            _localizationManager = FindFirstObjectByType<LocalizationManager>();
-            if (_warningText != null)
-            {
-                _warningText.SetKey(
-                    LocalizationKeys.PalletHandling.AlignmentWarning,
-                    _localizationManager != null ? _localizationManager.Service : null);
-                _localizationManager?.Register(_warningText);
-            }
-
-            _alignmentWarningInstance.SetActive(false);
+            _notifications?.Show(
+                ElectricPalletStackers.Localization.LocalizationKeys.PalletHandling.AlignmentWarning);
         }
 
     }

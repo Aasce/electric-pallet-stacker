@@ -20,6 +20,7 @@ GameObject:
   - component: {fileID: 8991475523401287712}
   - component: {fileID: 910000000000000001}
   - component: {fileID: 930000000000000001}
+  - component: {fileID: 950000000000000001}
   m_Layer: 11
   m_Name: Pallet Stacker
   m_TagString: Untagged
@@ -129,6 +130,7 @@ MonoBehaviour:
   - {fileID: 6924479301191952720}
   _interlockMotor: {fileID: 5210768195172812719}
   _interlockMast: {fileID: 2871494232518386074}
+  _notifications: {fileID: 950000000000000001}
   _travelHeightTolerance: 0.25
   _movingSpeedThreshold: 0.01
   _analogSmoothingTime: 0.08
@@ -244,16 +246,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.PalletStackers.PalletStackerLoadHandler
   _mast: {fileID: 2871494232518386074}
   _vehicleBody: {fileID: 3273737744600335219}
+  _vehicleMotor: {fileID: 5210768195172812719}
   _detectionCenter: {x: 0.55, y: 0.3, z: 0}
   _detectionSize: {x: 1.15, y: 0.7, z: 0.9}
   _loadLayers:
     serializedVersion: 2
     m_Bits: 32768
-  _minimumInsertionDepth: 0.7
+  _minimumInsertionDepth: 0.8
   _maximumLateralOffset: 0.15
-  _maximumYawError: 12
-  _breakForce: 100000
-  _breakTorque: 100000
+  _maximumYawError: 6
+  _breakForce: 0
+  _breakTorque: 0
   _releaseAtMinimumHeightTolerance: 0.03
   _autoAttachWhenRaising: 1
   _autoReleaseOnExternalSupport: 1
@@ -1531,8 +1534,21 @@ MonoBehaviour:
   _groundClearance: 0.03
   _verticalContactDotThreshold: 0.7
   _palletSideEdgeTolerance: 0.01
-  _alignmentWarningPrefab: {fileID: 1308665566548500572, guid: 4b9b7c3c39fbca14b9241b90de3960ca, type: 3}
-  _warningHoldSeconds: 2.5
+  _notifications: {fileID: 950000000000000001}
+--- !u!114 &950000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 140053820047635898}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a6dcdbd8a4f4ef1bdce70746f7c9a51, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.UI.NotificationPanelPresenter
+  _notificationPrefab: {fileID: 1308665566548500572, guid: 4b9b7c3c39fbca14b9241b90de3960ca, type: 3}
+  _holdSeconds: 2.5
 --- !u!1 &4643567231942210315
 GameObject:
   m_ObjectHideFlags: 0

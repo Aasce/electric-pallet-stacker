@@ -51,20 +51,26 @@ namespace ElectricPalletStackers.Gameplay
             if (body == null) return;
 
             RigidbodyInterpolation interpolation = body.interpolation;
+            bool wasKinematic = body.isKinematic;
             body.interpolation = RigidbodyInterpolation.None;
 
-            if (!body.isKinematic)
+            if (!wasKinematic)
             {
                 body.linearVelocity = Vector3.zero;
                 body.angularVelocity = Vector3.zero;
+                body.Sleep();
+                // Recreating the dynamic body clears cached contacts and joint impulses
+                // left by a collision before a round or checkpoint reset.
+                body.isKinematic = true;
             }
 
             body.position = position;
             body.rotation = rotation;
             body.transform.SetPositionAndRotation(position, rotation);
 
-            if (!body.isKinematic)
+            if (!wasKinematic)
             {
+                body.isKinematic = false;
                 body.linearVelocity = Vector3.zero;
                 body.angularVelocity = Vector3.zero;
                 if (sleep) body.Sleep();

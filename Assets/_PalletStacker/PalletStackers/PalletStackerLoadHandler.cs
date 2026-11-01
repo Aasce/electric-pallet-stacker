@@ -15,6 +15,7 @@ namespace ElectricPalletStackers.PalletStackers
         [Header("Dependencies")]
         [SerializeField] private PalletStackerMast _mast;
         [SerializeField] private Rigidbody _vehicleBody;
+        [SerializeField] private PalletStackerRigidbodyMotor _vehicleMotor;
 
         [Header("Detection box (fork-local space)")]
         [SerializeField] private Vector3 _detectionCenter = new(0.55f, 0.3f, 0f);
@@ -23,14 +24,16 @@ namespace ElectricPalletStackers.PalletStackers
 
         [Header("Pickup validation")]
         [Tooltip("Minimum distance the fork tips must pass beyond the pallet's near edge before it may attach.")]
-        [SerializeField, Min(0f)] private float _minimumInsertionDepth = 0.75f;
+        [SerializeField, Min(0f)] private float _minimumInsertionDepth = 0.8f;
         [Tooltip("Maximum sideways offset between the pallet center and the fork centerline.")]
         [SerializeField, Min(0f)] private float _maximumLateralOffset = 0.15f;
         [Tooltip("Maximum yaw error from either valid pallet entry axis.")]
-        [SerializeField, Range(0f, 45f)] private float _maximumYawError = 12f;
+        [SerializeField, Range(0f, 45f)] private float _maximumYawError = 6f;
         [Header("Holding")]
-        [SerializeField, Min(0f)] private float _breakForce = 100000f;
-        [SerializeField, Min(0f)] private float _breakTorque = 100000f;
+        [Tooltip("Joint break force. Set to 0 to keep an accepted pallet attached until it is deliberately released.")]
+        [SerializeField, Min(0f)] private float _breakForce;
+        [Tooltip("Joint break torque. Set to 0 to keep an accepted pallet attached until it is deliberately released.")]
+        [SerializeField, Min(0f)] private float _breakTorque;
         [SerializeField, Min(0f)] private float _releaseAtMinimumHeightTolerance = 0.03f;
         [SerializeField] private bool _autoAttachWhenRaising = true;
         [SerializeField] private bool _autoReleaseOnExternalSupport = true;
@@ -39,8 +42,6 @@ namespace ElectricPalletStackers.PalletStackers
         private PalletStackerLoad _heldLoad;
         private ConfigurableJoint _joint;
         private Vector3 _heldAnchorInForkSpace;
-        private Vector3 _heldBodyPositionInForkSpace;
-        private Quaternion _heldBodyRotationInForkSpace;
         private RigidbodyInterpolation _previousInterpolation;
         private CollisionDetectionMode _previousCollisionDetectionMode;
         private bool _hasPreviousBodySettings;
@@ -61,6 +62,9 @@ namespace ElectricPalletStackers.PalletStackers
 
         private void OnEnable()
         {
+            if (_vehicleMotor == null && _vehicleBody != null)
+                _vehicleMotor = _vehicleBody.GetComponent<PalletStackerRigidbodyMotor>();
+
             PalletStackerLoad.BecameAvailable += SuppressVehicleForces;
             CacheVehiclePhysicalColliders();
 
@@ -68,7 +72,10 @@ namespace ElectricPalletStackers.PalletStackers
                 FindObjectsInactive.Include,
                 FindObjectsSortMode.None);
             for (int index = 0; index < loads.Length; index++)
+            {
+                RemoveStaleLoadJoints(loads[index]);
                 SuppressVehicleForces(loads[index]);
+            }
         }
 
         private void OnDisable()
@@ -140,22 +147,15 @@ namespace ElectricPalletStackers.PalletStackers
         public void SuppressVehicleForces(PalletStackerLoad load)
         {
             if (load == null) return;
-            if (_vehiclePhysicalColliders == null || _vehiclePhysicalColliders.Length == 0)
-                CacheVehiclePhysicalColliders();
-
-            Collider[] loadColliders = load.CollisionRoot.GetComponentsInChildren<Collider>(true);
-            for (int vehicleIndex = 0; vehicleIndex < _vehiclePhysicalColliders.Length; vehicleIndex++)
+            if (_heldLoad == load && _joint != null)
             {
-                Collider vehicleCollider = _vehiclePhysicalColliders[vehicleIndex];
-                if (vehicleCollider == null || vehicleCollider.isTrigger) continue;
-
-                for (int loadIndex = 0; loadIndex < loadColliders.Length; loadIndex++)
-                {
-                    Collider loadCollider = loadColliders[loadIndex];
-                    if (loadCollider == null || loadCollider.isTrigger) continue;
-                    Physics.IgnoreCollision(vehicleCollider, loadCollider, true);
-                }
+                SetVehicleLoadCollisionsIgnored(load, true);
+                return;
             }
+
+            // An unheld pallet is a kinematic obstacle: it cannot receive force from
+            // the vehicle, but its colliders remain solid and stop the vehicle.
+            SetLoadAsVehicleObstacle(load);
         }
 
         public bool TryAttachNearestLoad()
@@ -195,15 +195,25 @@ namespace ElectricPalletStackers.PalletStackers
             if (HasLoad || load == null || load.Body == null) return false;
 
             Rigidbody loadBody = load.Body;
-            if (loadBody == _vehicleBody || loadBody.isKinematic) return false;
+            if (loadBody == _vehicleBody) return false;
 
-            SuppressVehicleForces(load);
+            // Destroy is deferred until the end of the frame. A restart, checkpoint
+            // restore, or play-mode session without scene reload can therefore leave
+            // an older joint connected to the vehicle even though HeldLoad is null.
+            // Neutralize every leftover joint before creating the one authoritative
+            // attachment for this pickup.
+            RemoveStaleLoadJoints(load);
+            SetVehicleLoadCollisionsIgnored(load, true);
+            loadBody.isKinematic = false;
+            // A reused scene pallet may still contain solver velocity from a ceiling
+            // impact in the previous round. Never attach that state to the vehicle.
+            loadBody.linearVelocity = Vector3.zero;
+            loadBody.angularVelocity = Vector3.zero;
+            loadBody.Sleep();
 
             _heldLoad = load;
             load.ResetSupportTracking();
             _heldAnchorInForkSpace = Forks.InverseTransformPoint(loadBody.worldCenterOfMass);
-            _heldBodyPositionInForkSpace = Forks.InverseTransformPoint(loadBody.position);
-            _heldBodyRotationInForkSpace = Quaternion.Inverse(Forks.rotation) * loadBody.rotation;
 
             _previousInterpolation = loadBody.interpolation;
             _previousCollisionDetectionMode = loadBody.collisionDetectionMode;
@@ -224,8 +234,8 @@ namespace ElectricPalletStackers.PalletStackers
             _joint.projectionMode = JointProjectionMode.PositionAndRotation;
             _joint.projectionDistance = 0.02f;
             _joint.projectionAngle = 2f;
-            _joint.breakForce = _breakForce;
-            _joint.breakTorque = _breakTorque;
+            _joint.breakForce = _breakForce > 0f ? _breakForce : float.PositiveInfinity;
+            _joint.breakTorque = _breakTorque > 0f ? _breakTorque : float.PositiveInfinity;
             _joint.enableCollision = false;
 
             loadBody.interpolation = RigidbodyInterpolation.Interpolate;
@@ -239,7 +249,11 @@ namespace ElectricPalletStackers.PalletStackers
 
         public void ReleaseLoad()
         {
-            if (_heldLoad == null && _joint == null) return;
+            if (_heldLoad == null && _joint == null)
+            {
+                RemoveAllStaleLoadJoints();
+                return;
+            }
 
             PalletStackerLoad releasedLoad = _heldLoad;
             Rigidbody releasedBody = releasedLoad != null ? releasedLoad.Body : null;
@@ -256,7 +270,9 @@ namespace ElectricPalletStackers.PalletStackers
                 _joint.angularZMotion = ConfigurableJointMotion.Free;
                 Destroy(_joint);
             }
+            RemoveStaleLoadJoints(releasedLoad);
             RestoreHeldBodySettings(releasedBody);
+            SetLoadAsVehicleObstacle(releasedLoad);
             ClearHeldLoad(false);
 
             if (releasedLoad != null) LoadReleased?.Invoke(releasedLoad);
@@ -288,7 +304,7 @@ namespace ElectricPalletStackers.PalletStackers
                 if (candidateCollider == null) continue;
 
                 PalletStackerLoad candidate = candidateCollider.GetComponentInParent<PalletStackerLoad>();
-                if (candidate == null || candidate.Body == null || candidate.Body == _vehicleBody || candidate.Body.isKinematic)
+                if (candidate == null || candidate.Body == null || candidate.Body == _vehicleBody)
                     continue;
                 if (!candidate.OwnsCollider(candidateCollider)) continue;
 
@@ -384,14 +400,6 @@ namespace ElectricPalletStackers.PalletStackers
 
             Vector3 anchorWorldPosition = Forks.TransformPoint(_heldAnchorInForkSpace);
             _joint.connectedAnchor = _vehicleBody.transform.InverseTransformPoint(anchorWorldPosition);
-
-            // The joint keeps the carried load physically connected to the vehicle,
-            // while MovePosition/MoveRotation make the fork-relative pose deterministic.
-            // Updating only connectedAnchor can leave a dynamic body behind when the
-            // fork is animated by its Transform instead of a Rigidbody.
-            Rigidbody loadBody = _heldLoad.Body;
-            loadBody.MovePosition(Forks.TransformPoint(_heldBodyPositionInForkSpace));
-            loadBody.MoveRotation(Forks.rotation * _heldBodyRotationInForkSpace);
         }
 
         private void TryAutoRelease()
@@ -418,6 +426,7 @@ namespace ElectricPalletStackers.PalletStackers
         {
             PalletStackerLoad brokenLoad = _heldLoad;
             RestoreHeldBodySettings(brokenLoad != null ? brokenLoad.Body : null);
+            SetLoadAsVehicleObstacle(brokenLoad);
             ClearHeldLoad(false);
 
             if (brokenLoad == null) return;
@@ -431,8 +440,6 @@ namespace ElectricPalletStackers.PalletStackers
             _joint = null;
             _heldLoad = null;
             _heldAnchorInForkSpace = default;
-            _heldBodyPositionInForkSpace = default;
-            _heldBodyRotationInForkSpace = Quaternion.identity;
             _hasPreviousBodySettings = false;
 
             if (notify && previousLoad != null) LoadReleased?.Invoke(previousLoad);
@@ -451,6 +458,121 @@ namespace ElectricPalletStackers.PalletStackers
             _vehiclePhysicalColliders = _vehicleBody != null
                 ? _vehicleBody.GetComponentsInChildren<Collider>(true)
                 : Array.Empty<Collider>();
+        }
+
+        private void RemoveAllStaleLoadJoints()
+        {
+            PalletStackerLoad[] loads = FindObjectsByType<PalletStackerLoad>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            for (int index = 0; index < loads.Length; index++)
+                RemoveStaleLoadJoints(loads[index]);
+        }
+
+        private void RemoveStaleLoadJoints(PalletStackerLoad load)
+        {
+            if (load == null) return;
+
+            ConfigurableJoint[] joints = load.GetComponents<ConfigurableJoint>();
+            for (int index = 0; index < joints.Length; index++)
+            {
+                ConfigurableJoint joint = joints[index];
+                if (joint == null) continue;
+
+                // Break the constraint synchronously. Destroy alone is deferred and
+                // would keep constraining the vehicle for the rest of this frame.
+                joint.connectedBody = null;
+                joint.xMotion = ConfigurableJointMotion.Free;
+                joint.yMotion = ConfigurableJointMotion.Free;
+                joint.zMotion = ConfigurableJointMotion.Free;
+                joint.angularXMotion = ConfigurableJointMotion.Free;
+                joint.angularYMotion = ConfigurableJointMotion.Free;
+                joint.angularZMotion = ConfigurableJointMotion.Free;
+                Destroy(joint);
+            }
+
+            if (_joint != null && _joint.gameObject == load.gameObject)
+                _joint = null;
+        }
+
+        private void SetLoadAsVehicleObstacle(PalletStackerLoad load)
+        {
+            if (load == null || load.Body == null) return;
+
+            Rigidbody body = load.Body;
+            if (!body.isKinematic)
+            {
+                body.linearVelocity = Vector3.zero;
+                body.angularVelocity = Vector3.zero;
+                body.isKinematic = true;
+            }
+
+            SetVehicleLoadCollisionsIgnored(load, false);
+        }
+
+        private void SetVehicleLoadCollisionsIgnored(PalletStackerLoad load, bool ignored)
+        {
+            if (load == null) return;
+            if (_vehiclePhysicalColliders == null || _vehiclePhysicalColliders.Length == 0)
+                CacheVehiclePhysicalColliders();
+
+            Collider[] loadColliders = load.CollisionRoot.GetComponentsInChildren<Collider>(true);
+            for (int vehicleIndex = 0; vehicleIndex < _vehiclePhysicalColliders.Length; vehicleIndex++)
+            {
+                Collider vehicleCollider = _vehiclePhysicalColliders[vehicleIndex];
+                if (vehicleCollider == null || vehicleCollider.isTrigger) continue;
+
+                for (int loadIndex = 0; loadIndex < loadColliders.Length; loadIndex++)
+                {
+                    Collider loadCollider = loadColliders[loadIndex];
+                    if (loadCollider == null || loadCollider.isTrigger) continue;
+                    Physics.IgnoreCollision(vehicleCollider, loadCollider, ignored);
+                }
+            }
+        }
+
+        private void OnCollisionEnter(Collision collision)
+        {
+            StopVehicleWhenDrivingIntoUnheldLoad(collision);
+        }
+
+        private void OnCollisionStay(Collision collision)
+        {
+            StopVehicleWhenDrivingIntoUnheldLoad(collision);
+        }
+
+        private void StopVehicleWhenDrivingIntoUnheldLoad(Collision collision)
+        {
+            if (collision == null || collision.collider == null || _vehicleMotor == null) return;
+
+            PalletStackerLoad load = collision.collider.GetComponentInParent<PalletStackerLoad>();
+            if (load == null || load == _heldLoad || !load.OwnsCollider(collision.collider)) return;
+
+            float requestedSpeed = Mathf.Abs(_vehicleMotor.TargetSpeed) > 0.0001f
+                ? _vehicleMotor.TargetSpeed
+                : _vehicleMotor.CurrentSpeed;
+            if (Mathf.Abs(requestedSpeed) <= 0.0001f) return;
+
+            Vector3 driveDirection = Vector3.ProjectOnPlane(
+                _vehicleMotor.WorldForward * Mathf.Sign(requestedSpeed),
+                Vector3.up).normalized;
+            if (driveDirection.sqrMagnitude <= Mathf.Epsilon) return;
+
+            // Contact normals point away from the pallet. Stop only while the
+            // requested motion presses farther into it; reversing away remains
+            // available so an incorrectly inserted fork can always be withdrawn.
+            int contactCount = collision.contactCount;
+            for (int index = 0; index < contactCount; index++)
+            {
+                Vector3 contactNormal = Vector3.ProjectOnPlane(
+                    collision.GetContact(index).normal,
+                    Vector3.up);
+                if (contactNormal.sqrMagnitude <= Mathf.Epsilon) continue;
+                if (Vector3.Dot(driveDirection, contactNormal.normalized) >= -0.05f) continue;
+
+                _vehicleMotor.StopImmediately();
+                return;
+            }
         }
 
         private void OnDrawGizmosSelected()

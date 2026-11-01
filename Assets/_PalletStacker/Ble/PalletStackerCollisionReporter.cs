@@ -104,8 +104,19 @@ namespace ElectricPalletStackers.Ble
 
         public void ReportCollision(GameFailureReason reason)
         {
+            ReportCollision(reason, true);
+        }
+
+        public void ReportCollisionSilently(GameFailureReason reason)
+        {
+            ReportCollision(reason, false);
+        }
+
+        private void ReportCollision(GameFailureReason reason, bool playCollisionAudio)
+        {
             // Local gameplay stops before BLE confirmation to avoid network latency in the safety path.
-            AudioManager.Instance?.Play(PalletStackerAudioKeys.CollisionAccident, transform);
+            if (playCollisionAudio)
+                AudioManager.Instance?.Play(PalletStackerAudioKeys.CollisionAccident, transform);
             CollisionDetected?.Invoke(reason);
             _onLocalCollisionDetected?.Invoke();
             _collisionSender?.SendCollision();

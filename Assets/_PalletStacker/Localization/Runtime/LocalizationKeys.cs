@@ -68,6 +68,7 @@ namespace ElectricPalletStackers.Localization
         public static class PalletHandling
         {
             public const string AlignmentWarning = "palletHandling.alignmentWarning";
+            public const string LiftWhileMoving = "palletHandling.liftWhileMoving";
         }
 
         public static class Completed

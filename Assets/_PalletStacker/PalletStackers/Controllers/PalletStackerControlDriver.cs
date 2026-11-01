@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using ElectricPalletStackers.Ble;
 using ElectricPalletStackers.Gameplay;
+using ElectricPalletStackers.Localization;
+using ElectricPalletStackers.UI;
 using UnityEngine;
 
 namespace ElectricPalletStackers.PalletStackers
@@ -19,7 +21,8 @@ namespace ElectricPalletStackers.PalletStackers
         [Header("Operational safety interlocks")]
         [SerializeField] private PalletStackerRigidbodyMotor _interlockMotor;
         [SerializeField] private PalletStackerMast _interlockMast;
-        [Tooltip("The final delivery phase allows travel and lift to operate together at any fork height.")]
+        [SerializeField] private NotificationPanelPresenter _notifications;
+        [Tooltip("The final delivery phase allows travel at any fork height, but travel and lift remain mutually exclusive.")]
         [SerializeField] private TrainingExperienceController _trainingExperience;
         [Tooltip("Travel is force-stopped when the forks are more than this distance above their minimum height.")]
         [SerializeField, Min(0f)] private float _travelHeightTolerance = 0.25f;
@@ -48,7 +51,7 @@ namespace ElectricPalletStackers.PalletStackers
         private float _smoothingElapsed;
         private bool _previouslyMoving;
         private bool _previouslyAboveTravelHeight;
-        private bool _previouslyAllowedCombinedOperation;
+        private bool _previouslyBypassedTravelHeightInterlock;
         private PalletStackerDriveCommand _targetCommand = PalletStackerDriveCommand.CreateFailSafe();
 
         public PalletStackerControlState CurrentState { get; private set; }
@@ -94,7 +97,7 @@ namespace ElectricPalletStackers.PalletStackers
         {
             Unsubscribe();
             _hasSmoothedCommand = false;
-            SetOperationalInterlocksBypassed(false);
+            SetTravelHeightInterlockBypassed(false);
             StopAllOutputs();
         }
 
@@ -303,17 +306,28 @@ namespace ElectricPalletStackers.PalletStackers
         private PalletStackerDriveCommand ApplyOperationalInterlocks(
             PalletStackerDriveCommand command)
         {
-            bool allowCombinedOperation = IsCombinedOperationAllowed();
-            SetOperationalInterlocksBypassed(allowCombinedOperation);
-            if (allowCombinedOperation) return command;
+            bool bypassTravelHeightInterlock = IsTravelHeightInterlockBypassed();
+            SetTravelHeightInterlockBypassed(bypassTravelHeightInterlock);
 
             bool forksAboveTravelHeight = AreForksAboveTravelHeight();
-            if (forksAboveTravelHeight) command = command.WithTravelSafetyStop();
+            bool travelRequested = Mathf.Abs(command.TravelNormalized) > 0.0001f;
+            if (!bypassTravelHeightInterlock && forksAboveTravelHeight)
+            {
+                if (travelRequested)
+                    _notifications?.Show(LocalizationKeys.PalletHandling.AlignmentWarning);
+                command = command.WithTravelSafetyStop();
+            }
 
-            bool travelRequested = !forksAboveTravelHeight &&
-                                   Mathf.Abs(command.TravelNormalized) > 0.0001f;
-            if (IsVehicleMoving() || travelRequested)
+            bool travelCanOperate = travelRequested &&
+                                    (bypassTravelHeightInterlock || !forksAboveTravelHeight);
+            bool liftBlockedByMovement = IsVehicleMoving() ||
+                                         travelCanOperate;
+            if (liftBlockedByMovement)
+            {
+                if (command.Lift != PalletStackerLiftState.Neutral)
+                    _notifications?.Show(LocalizationKeys.PalletHandling.LiftWhileMoving);
                 command = command.WithLift(PalletStackerLiftState.Neutral);
+            }
 
             return command;
         }
@@ -322,16 +336,16 @@ namespace ElectricPalletStackers.PalletStackers
         {
             bool moving = IsVehicleMoving();
             bool forksAboveTravelHeight = AreForksAboveTravelHeight();
-            bool allowCombinedOperation = IsCombinedOperationAllowed();
-            SetOperationalInterlocksBypassed(allowCombinedOperation);
+            bool bypassTravelHeightInterlock = IsTravelHeightInterlockBypassed();
+            SetTravelHeightInterlockBypassed(bypassTravelHeightInterlock);
             if (moving == _previouslyMoving &&
                 forksAboveTravelHeight == _previouslyAboveTravelHeight &&
-                allowCombinedOperation == _previouslyAllowedCombinedOperation)
+                bypassTravelHeightInterlock == _previouslyBypassedTravelHeightInterlock)
                 return;
 
             _previouslyMoving = moving;
             _previouslyAboveTravelHeight = forksAboveTravelHeight;
-            _previouslyAllowedCombinedOperation = allowCombinedOperation;
+            _previouslyBypassedTravelHeightInterlock = bypassTravelHeightInterlock;
             ReapplyCurrentState();
         }
 
@@ -339,20 +353,20 @@ namespace ElectricPalletStackers.PalletStackers
         {
             _previouslyMoving = IsVehicleMoving();
             _previouslyAboveTravelHeight = AreForksAboveTravelHeight();
-            _previouslyAllowedCombinedOperation = IsCombinedOperationAllowed();
-            SetOperationalInterlocksBypassed(_previouslyAllowedCombinedOperation);
+            _previouslyBypassedTravelHeightInterlock = IsTravelHeightInterlockBypassed();
+            SetTravelHeightInterlockBypassed(_previouslyBypassedTravelHeightInterlock);
         }
 
-        private bool IsCombinedOperationAllowed()
+        private bool IsTravelHeightInterlockBypassed()
         {
             return _trainingExperience != null &&
                    _trainingExperience.CurrentStage == TrainingExperienceStage.DeliverPallet;
         }
 
-        private void SetOperationalInterlocksBypassed(bool bypassed)
+        private void SetTravelHeightInterlockBypassed(bool bypassed)
         {
             _interlockMotor?.SetForkHeightTravelInterlockBypassed(bypassed);
-            _interlockMast?.SetMovementLiftInterlockBypassed(bypassed);
+            _interlockMast?.SetMovementLiftInterlockBypassed(false);
         }
 
         private bool IsVehicleMoving()

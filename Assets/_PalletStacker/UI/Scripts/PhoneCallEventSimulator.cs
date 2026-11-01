@@ -258,7 +258,8 @@ namespace ElectricPalletStackers.UI
             _movementCutscenePlaying = false;
             HideMovementCutscene();
             if (_collisionReporter != null)
-                _collisionReporter.ReportCollision(GameFailureReason.PhoneDistractionCollision);
+                _collisionReporter.ReportCollisionSilently(
+                    GameFailureReason.PhoneDistractionCollision);
             else
                 Debug.LogError(
                     "Phone distraction cutscene requires a collision reporter to finish the failure.",

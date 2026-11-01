@@ -52,6 +52,11 @@ namespace ElectricPalletStackers.Gameplay
 
         private void OnEnable()
         {
+            // With Enter Play Mode scene reload disabled, Unity restores serialized
+            // references but the runtime interface caches can survive empty from the
+            // previous session. Rebuild them every time this component becomes active
+            // so a second play/restart still resets every participant.
+            CacheComposition();
             SubscribeSources();
         }
 
@@ -70,6 +75,7 @@ namespace ElectricPalletStackers.Gameplay
         {
             if (CurrentState == GameState.Playing) return;
 
+            CacheComposition();
             CancelPendingHumanScream();
             LastFailureReason = GameFailureReason.Unknown;
             for (int index = 0; index < _roundParticipants.Count; index++)
@@ -114,6 +120,10 @@ namespace ElectricPalletStackers.Gameplay
 
         public void ResetToWaitingState()
         {
+            // Reset can be requested after an editor/domain lifecycle transition where
+            // only serialized references survived. Rebuild before iterating so an empty
+            // runtime cache can never silently skip the vehicle and pallet reset.
+            CacheComposition();
             CancelPendingHumanScream();
             if (CurrentState == GameState.Playing)
             {
@@ -191,8 +201,7 @@ namespace ElectricPalletStackers.Gameplay
         private void ScheduleHumanScream(GameFailureReason reason)
         {
             if (reason != GameFailureReason.OperatorCollision &&
-                reason != GameFailureReason.PedestrianCollision &&
-                reason != GameFailureReason.PhoneDistractionCollision) return;
+                reason != GameFailureReason.PedestrianCollision) return;
 
             CancelPendingHumanScream();
             _humanScreamRoutine = StartCoroutine(PlayHumanScreamAfterDelay());

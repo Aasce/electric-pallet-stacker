@@ -1,5 +1,4 @@
 using System;
-using ElectricPalletStackers.Audio;
 using ElectricPalletStackers.Localization;
 using ElectricPalletStackers.PalletStackers;
 using TMPro;
@@ -412,8 +411,6 @@ namespace ElectricPalletStackers.Gameplay
                 _footAccidentVideoPlayer.time = 0d;
                 _footAccidentVideoPlayer.Play();
             }
-
-            AudioManager.Instance?.Play(PalletStackerAudioKeys.HumanScream);
 
             Debug.LogWarning(
                 "[Cross Safety] Unsafe-entry delay elapsed or the player stopped early. " +
