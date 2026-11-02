@@ -6,10 +6,8 @@ namespace ElectricPalletStackers.UI
 {
     /// <summary>Thin view/input adapter. It emits commands and owns no calibration behavior.</summary>
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(WorldSpacePanelGrab))]
     public sealed class CalibrationInputPanel : UIPanel
     {
-        [SerializeField] private WorldSpacePanelGrab _panelGrab;
         [SerializeField] private Button _upButton;
         [SerializeField] private Button _downButton;
         [SerializeField] private Button _leftButton;
@@ -32,12 +30,10 @@ namespace ElectricPalletStackers.UI
         {
             BindButtons();
             base.Show();
-            _panelGrab?.SetEnabled(true);
         }
 
         public override void Hide()
         {
-            _panelGrab?.SetEnabled(false);
             base.Hide();
         }
 

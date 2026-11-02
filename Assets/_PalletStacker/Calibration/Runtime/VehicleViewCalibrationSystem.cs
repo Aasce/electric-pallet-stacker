@@ -12,7 +12,6 @@ namespace ElectricPalletStackers.Calibration
         [SerializeField] private Transform _headset;
         [SerializeField] private Transform _vehicleForward;
         [SerializeField] private Transform _calibrationPanel;
-        [SerializeField] private WorldSpacePanelGrab _calibrationPanelGrab;
         [Header("Vehicle Alignment")]
         [SerializeField] private bool _alignOnStart = true;
         [SerializeField] private Vector3 _headsetPositionRelativeToVehicle = new(0f, 0f, -1f);
@@ -52,14 +51,6 @@ namespace ElectricPalletStackers.Calibration
             // Follow headset yaw only so the panel faces the user while remaining
             // upright and independent from headset pitch/roll.
             _calibrationPanel.rotation = GetHeadsetYawRotation();
-
-            // Keep the panel movable while held and retain the new relative position
-            // after release.
-            if (_calibrationPanelGrab != null && _calibrationPanelGrab.IsGrabbed)
-            {
-                _panelHeadsetOffset = _headset.InverseTransformPoint(_calibrationPanel.position);
-                return;
-            }
 
             _calibrationPanel.position = _headset.TransformPoint(_panelHeadsetOffset);
         }
