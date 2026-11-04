@@ -131,7 +131,8 @@ MonoBehaviour:
   _interlockMotor: {fileID: 5210768195172812719}
   _interlockMast: {fileID: 2871494232518386074}
   _notifications: {fileID: 950000000000000001}
-  _travelHeightTolerance: 0.25
+  _trainingExperience: {fileID: 0}
+  _travelHeightTolerance: 0.35
   _movingSpeedThreshold: 0.01
   _analogSmoothingTime: 0.08
 --- !u!114 &5210768195172812719
@@ -292,6 +293,20 @@ MonoBehaviour:
   - {fileID: 780000000000000001}
   _loadHandler: {fileID: 8991475523401287712}
   _collisionReporter: {fileID: 6482732429717059144}
+--- !u!114 &950000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 140053820047635898}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a6dcdbd8a4f4ef1bdce70746f7c9a51, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.UI.NotificationPanelPresenter
+  _notificationPrefab: {fileID: 1308665566548500572, guid: 4b9b7c3c39fbca14b9241b90de3960ca, type: 3}
+  _holdSeconds: 2.5
 --- !u!1 &286574953562256251
 GameObject:
   m_ObjectHideFlags: 0
@@ -1535,20 +1550,6 @@ MonoBehaviour:
   _verticalContactDotThreshold: 0.7
   _palletSideEdgeTolerance: 0.01
   _notifications: {fileID: 950000000000000001}
---- !u!114 &950000000000000001
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 140053820047635898}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2a6dcdbd8a4f4ef1bdce70746f7c9a51, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.UI.NotificationPanelPresenter
-  _notificationPrefab: {fileID: 1308665566548500572, guid: 4b9b7c3c39fbca14b9241b90de3960ca, type: 3}
-  _holdSeconds: 2.5
 --- !u!1 &4643567231942210315
 GameObject:
   m_ObjectHideFlags: 0
