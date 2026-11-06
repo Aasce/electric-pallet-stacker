@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Spaxtek.Ble.Core;
 using Spaxtek.Ble.Unity;
 using UnityEngine;
@@ -38,7 +39,7 @@ namespace ElectricPalletStackers.Ble
         [SerializeField] private bool _logLifecycle = true;
 
         private CancellationTokenSource _lifetimeCancellation;
-        private TaskCompletionSource<BleAdvertisement> _advertisementCompletion;
+        private UniTaskCompletionSource<BleAdvertisement> _advertisementCompletion;
         private bool _operationInProgress;
 
         public bool IsReady { get; private set; }
@@ -172,16 +173,15 @@ namespace ElectricPalletStackers.Ble
 
         private async Task<BleAdvertisement> FindDeviceAsync(CancellationToken cancellationToken)
         {
-            TaskCompletionSource<BleAdvertisement> advertisementCompletion =
-                new TaskCompletionSource<BleAdvertisement>(
-                TaskCreationOptions.RunContinuationsAsynchronously);
+            UniTaskCompletionSource<BleAdvertisement> advertisementCompletion =
+                new UniTaskCompletionSource<BleAdvertisement>();
             _advertisementCompletion = advertisementCompletion;
             float elapsedScanSeconds = 0f;
             bool warningLogged = false;
 
             try
             {
-                while (true)
+                // while (true)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     float retrySeconds = warningLogged
@@ -195,17 +195,20 @@ namespace ElectricPalletStackers.Ble
                         new BleScanFilter(_deviceName),
                         cancellationToken);
 
-                    Task retryDelay = Task.Delay(
+                    return await advertisementCompletion.Task;
+                    UniTask retryDelay =  UniTask.Delay(
                         TimeSpan.FromSeconds(retrySeconds),
-                        cancellationToken);
-                    Task completed = await Task.WhenAny(advertisementCompletion.Task, retryDelay);
-                    if (completed == advertisementCompletion.Task)
+                        cancellationToken: cancellationToken);
+                    var result = await UniTask.WhenAny(new []{advertisementCompletion.Task, retryDelay});
+                    if (result == 0)
+                    {
                         return await advertisementCompletion.Task;
+                    }
 
                     cancellationToken.ThrowIfCancellationRequested();
                     await _bleManager.StopScanAsync(CancellationToken.None);
 
-                    if (advertisementCompletion.Task.IsCompleted)
+                    if (advertisementCompletion.Task.Status == UniTaskStatus.Succeeded)
                         return await advertisementCompletion.Task;
 
                     elapsedScanSeconds += retrySeconds;
@@ -296,6 +299,8 @@ namespace ElectricPalletStackers.Ble
 
         private async void StartClientAndLogAsync()
         {
+            // IsReady = true;
+            // return;
             try
             {
                 await ConnectAndSubscribeAsync();
