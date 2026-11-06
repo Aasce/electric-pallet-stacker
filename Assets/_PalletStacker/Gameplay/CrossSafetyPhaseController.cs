@@ -89,6 +89,7 @@ namespace ElectricPalletStackers.Gameplay
         public event Action<GameFailureReason> FailureRequested;
         public event Action ApproachInstructionPresented;
         public event Action SafetyInstructionPresented;
+        public event Action DirectionConfirmed;
         public event Action DangerPresented;
 
         private void Awake()
@@ -248,6 +249,7 @@ namespace ElectricPalletStackers.Gameplay
         {
             if (_state != PhaseState.ConfirmingDirections || confirmedTarget == null) return;
 
+            DirectionConfirmed?.Invoke();
             AdvanceDirectionPrompt(confirmedTarget);
 
             for (int index = 0; index < _directionTargets.Length; index++)

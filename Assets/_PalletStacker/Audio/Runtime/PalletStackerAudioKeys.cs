@@ -14,6 +14,7 @@ namespace ElectricPalletStackers.Audio
         public const string HumanWalking = "human.walking";
         public const string EquipProtection = "interaction.equip.protection";
         public const string PenCheck = "interaction.pen.check";
+        public const string SafetyCheck = "interaction.safety.check";
         public const string Completed = "ui.completed";
     }
 }

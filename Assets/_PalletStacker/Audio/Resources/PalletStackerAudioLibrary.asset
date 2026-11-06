@@ -193,6 +193,21 @@ MonoBehaviour:
       _spread: 0
       _spatialize: 0
       _priority: 96
+  - _key: interaction.safety.check
+    _config:
+      _clip: {fileID: 8300000, guid: 940e5786e844a184e83f4f37381c6f55, type: 3}
+      _output: {fileID: 0}
+      _volume: 0.9
+      _pitchRange: {x: 1, y: 1}
+      _loop: 0
+      _spatialBlend: 0
+      _minDistance: 1
+      _maxDistance: 25
+      _rolloffMode: 0
+      _dopplerLevel: 0
+      _spread: 0
+      _spatialize: 0
+      _priority: 96
   - _key: ui.completed
     _config:
       _clip: {fileID: 8300000, guid: 88ddf21506e474d43827b86eddc5fe47, type: 3}

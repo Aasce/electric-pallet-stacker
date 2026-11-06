@@ -113667,6 +113667,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2082541043}
   - component: {fileID: 2082541044}
+  - component: {fileID: 2082541045}
   - component: {fileID: 2082541046}
   m_Layer: 0
   m_Name: Cross
@@ -113736,6 +113737,19 @@ MonoBehaviour:
   _footAccidentVideoPlayer: {fileID: 1906070553}
   _unsafeCutsceneDelay: 1.75
   _missingVideoFallbackDuration: 3
+--- !u!114 &2082541045
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2082541042}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6e36e20d652438fb89304fe219582d0, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Audio.CrossSafetyAudioPresenter
+  _crossSafety: {fileID: 2082541044}
 --- !u!65 &2082541046
 BoxCollider:
   m_ObjectHideFlags: 0
