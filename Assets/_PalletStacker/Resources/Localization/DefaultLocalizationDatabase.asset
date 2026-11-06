@@ -30,6 +30,10 @@ MonoBehaviour:
     _vietnamese: "\u0110i\u1EC1u ch\u1EC9nh c\xE1c n\xFAt \u0111\u1EBFn khi g\xF3c
       nh\xECn c\u1EE7a b\u1EA1n kh\u1EDBp v\u1EDBi xe."
     _japanese: "\u8996\u70B9\u304C\u8ECA\u4E21\u306B\u5408\u3046\u3088\u3046\u306B\u64CD\u4F5C\u30DC\u30BF\u30F3\u3067\u8ABF\u6574\u3057\u3066\u304F\u3060\u3055\u3044\u3002"
+  - _key: calibration.resetSteering
+    _english: Reset steering
+    _vietnamese: "\u0110\u1EB7t l\u1EA1i g\xF3c l\xE1i"
+    _japanese: "\u64CD\u8235\u89D2\u3092\u30EA\u30BB\u30C3\u30C8"
   - _key: language.english
     _english: English
     _vietnamese: "Ti\u1EBFng Anh"

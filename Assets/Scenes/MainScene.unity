@@ -32070,11 +32070,12 @@ MonoBehaviour:
   _collisionSender: {fileID: 963828115}
   _connectOnEnable: 1
   _disconnectOnDisable: 1
-  _initialScanRetrySeconds: 2
-  _scanWarningAfterSeconds: 10
-  _persistentScanRetrySeconds: 5
   _deviceName: FORKLIFT_CTRL_ESP32
   _serviceUuid: 7b7e0001-7c6f-4f8b-9a5b-2f7c2a4d1000
+  _recenterMaximumAttempts: 2
+  _recenterResponseTimeoutMilliseconds: 1000
+  _recenterControlTimeoutMilliseconds: 1000
+  _recenterConfirmationToleranceDegrees: 2
   _logLifecycle: 1
 --- !u!114 &963828115
 MonoBehaviour:
@@ -100222,6 +100223,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.UI.UIController
   _localizationManager: {fileID: 1662881610}
   _failureMessageCatalog: {fileID: 11400000, guid: 8de5f1ef1bf448f8ac535e79d1e13b44, type: 2}
+  _bleClient: {fileID: 963828114}
   _inputRouter: {fileID: 1662881605}
   _selectLanguagePanel: {fileID: 1114851439}
   _calibrationPanel: {fileID: 5035545479161186816}

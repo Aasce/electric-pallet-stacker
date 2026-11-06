@@ -1,4 +1,6 @@
 using System;
+using Cysharp.Threading.Tasks;
+using ElectricPalletStackers.Ble;
 using ElectricPalletStackers.Calibration;
 using ElectricPalletStackers.Gameplay;
 using ElectricPalletStackers.Gameplay.Checklist;
@@ -14,6 +16,7 @@ namespace ElectricPalletStackers.UI
         [Header("Services")]
         [SerializeField] private LocalizationManager _localizationManager;
         [SerializeField] private GameFailureMessageCatalog _failureMessageCatalog;
+        [SerializeField] private PalletStackerBleClient _bleClient;
 
         [Header("UI Flow")]
         [SerializeField] private UIInputRouter _inputRouter;
@@ -80,8 +83,11 @@ namespace ElectricPalletStackers.UI
             {
                 _calibrationPanel.AlignRequested += HandleAlignRequested;
                 _calibrationPanel.OffsetAdjustmentRequested += HandleOffsetAdjustmentRequested;
+                _calibrationPanel.ResetSteeringRequested += HandleSteeringResetRequested;
                 _calibrationPanel.ContinueRequested += HandleCalibrationContinueRequested;
             }
+            if (_bleClient != null)
+                _bleClient.RecenterAvailabilityChanged += HandleRecenterAvailabilityChanged;
             if (_welcomePanel != null)
                 _welcomePanel.ContinueRequested += HandleWelcomeContinueRequested;
             if (_completedPanel != null)
@@ -118,6 +124,8 @@ namespace ElectricPalletStackers.UI
 
             if (CurrentState == UIFlowState.SelectLanguage && _selectLanguagePanel != null)
                 _languageSelectionBlackout?.ShowOnly(_selectLanguagePanel.transform);
+
+            RefreshCalibrationBleControls();
         }
 
         private void OnDisable()
@@ -144,8 +152,11 @@ namespace ElectricPalletStackers.UI
             {
                 _calibrationPanel.AlignRequested -= HandleAlignRequested;
                 _calibrationPanel.OffsetAdjustmentRequested -= HandleOffsetAdjustmentRequested;
+                _calibrationPanel.ResetSteeringRequested -= HandleSteeringResetRequested;
                 _calibrationPanel.ContinueRequested -= HandleCalibrationContinueRequested;
             }
+            if (_bleClient != null)
+                _bleClient.RecenterAvailabilityChanged -= HandleRecenterAvailabilityChanged;
             if (_welcomePanel != null)
                 _welcomePanel.ContinueRequested -= HandleWelcomeContinueRequested;
             if (_completedPanel != null)
@@ -229,6 +240,32 @@ namespace ElectricPalletStackers.UI
 
         private void HandleAlignRequested() => _calibrationSystem?.AlignToVehicle();
         private void HandleOffsetAdjustmentRequested(Vector3 direction) => _calibrationSystem?.AdjustOffset(direction);
+        private void HandleSteeringResetRequested()
+        {
+            if (_bleClient == null) return;
+            RecenterSteeringAndRefreshAsync().Forget();
+        }
+
+        private async UniTask RecenterSteeringAndRefreshAsync()
+        {
+            RefreshCalibrationBleControls();
+            await _bleClient.RecenterSteeringAsync();
+            RefreshCalibrationBleControls();
+        }
+
+        private void HandleRecenterAvailabilityChanged(bool canRecenter)
+        {
+            RefreshCalibrationBleControls();
+        }
+
+        private void RefreshCalibrationBleControls()
+        {
+            bool isCalibrationVisible = CurrentState == UIFlowState.CalibrateVehicleView;
+            bool resetInProgress = isCalibrationVisible && _bleClient != null && _bleClient.IsRecenterInProgress;
+            bool canReset = isCalibrationVisible && _bleClient != null && _bleClient.CanRecenter;
+            _calibrationPanel?.SetSteeringResetState(canReset, resetInProgress);
+        }
+
         private void TransitionTo(UIFlowState nextState)
         {
             bool capturedBefore = IsInputCaptured;
@@ -282,6 +319,7 @@ namespace ElectricPalletStackers.UI
                     break;
             }
 
+            RefreshCalibrationBleControls();
             PanelChanged?.Invoke(nextState);
             if (capturedBefore != IsInputCaptured)
                 InputCaptureChanged?.Invoke(IsInputCaptured);

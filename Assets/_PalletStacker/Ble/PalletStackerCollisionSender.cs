@@ -1,6 +1,6 @@
 using System;
 using System.Threading;
-using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Spaxtek.Ble.Core;
 using Spaxtek.Ble.Unity;
 using UnityEngine;
@@ -30,7 +30,8 @@ namespace ElectricPalletStackers.Ble
         private Guid? _ackId;
         private BleCharacteristicId? _collisionId;
         private CancellationTokenSource _lifetimeCancellation;
-        private TaskCompletionSource<bool> _pendingAck;
+        private CancellationTokenSource _connectionCancellation;
+        private UniTaskCompletionSource<bool> _pendingAck;
         private ushort? _pendingSequence;
         private ushort _nextSequence;
         private bool _sendInProgress;
@@ -53,16 +54,26 @@ namespace ElectricPalletStackers.Ble
         private void OnEnable()
         {
             _lifetimeCancellation = new CancellationTokenSource();
-            if (_bleManager != null) _bleManager.OnNotificationReceived += HandleNotificationReceived;
+            if (_bleManager != null)
+            {
+                _bleManager.OnNotificationReceived += HandleNotificationReceived;
+                _bleManager.OnConnectionStateChanged += HandleConnectionStateChanged;
+                if (_bleManager.HasConnection) EnsureConnectionLifetime();
+            }
         }
 
         private void OnDisable()
         {
-            if (_bleManager != null) _bleManager.OnNotificationReceived -= HandleNotificationReceived;
+            if (_bleManager != null)
+            {
+                _bleManager.OnNotificationReceived -= HandleNotificationReceived;
+                _bleManager.OnConnectionStateChanged -= HandleConnectionStateChanged;
+            }
 
             _lifetimeCancellation?.Cancel();
             _lifetimeCancellation?.Dispose();
             _lifetimeCancellation = null;
+            EndConnectionLifetime();
             _pendingAck?.TrySetCanceled();
             _pendingAck = null;
             _pendingSequence = null;
@@ -75,12 +86,20 @@ namespace ElectricPalletStackers.Ble
 
             bool wasEnabled = isActiveAndEnabled;
             if (wasEnabled && _bleManager != null)
+            {
                 _bleManager.OnNotificationReceived -= HandleNotificationReceived;
+                _bleManager.OnConnectionStateChanged -= HandleConnectionStateChanged;
+            }
 
+            EndConnectionLifetime();
             _bleManager = bleManager;
 
             if (wasEnabled && _bleManager != null)
+            {
                 _bleManager.OnNotificationReceived += HandleNotificationReceived;
+                _bleManager.OnConnectionStateChanged += HandleConnectionStateChanged;
+                if (_bleManager.HasConnection) EnsureConnectionLifetime();
+            }
         }
 
         public void ConfigureCharacteristics(string serviceUuid, string collisionUuid, string ackUuid)
@@ -99,10 +118,10 @@ namespace ElectricPalletStackers.Ble
         [ContextMenu("Send Collision Event")]
         public void SendCollision()
         {
-            SendCollisionAndLogAsync();
+            SendCollisionAsync().Forget();
         }
 
-        public async Task<bool> SendCollisionAsync(CancellationToken cancellationToken = default)
+        public async UniTask<bool> SendCollisionAsync(CancellationToken cancellationToken = default)
         {
             if (_sendInProgress)
             {
@@ -122,23 +141,25 @@ namespace ElectricPalletStackers.Ble
             _nextSequence = unchecked((ushort)(_nextSequence + 1));
             _sendInProgress = true;
             _pendingSequence = sequence;
-            _pendingAck = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             byte[] packet = PalletStackerBleProtocol.EncodeSequencePacket(sequence);
 
             using CancellationTokenSource linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(
                 cancellationToken,
-                _lifetimeCancellation?.Token ?? CancellationToken.None);
+                _lifetimeCancellation?.Token ?? CancellationToken.None,
+                _connectionCancellation?.Token ?? CancellationToken.None);
 
             try
             {
                 for (int attempt = 1; attempt <= _maximumAttempts; attempt++)
                 {
                     linkedCancellation.Token.ThrowIfCancellationRequested();
+                    _pendingAck = new UniTaskCompletionSource<bool>();
                     CollisionAttempted?.Invoke(sequence, attempt);
                     if (_logPackets)
                         Debug.Log($"[BLE] COLLISION_EVENT TX seq={sequence} attempt={attempt}/{_maximumAttempts}", this);
 
-                    BleWriteResult writeResult = await _bleManager.WriteAsync(
+                    BleWriteResult writeResult = await PalletStackerBleWriteGate.WriteAsync(
+                        _bleManager,
                         _collisionId.Value,
                         packet,
                         _writeMode,
@@ -151,11 +172,15 @@ namespace ElectricPalletStackers.Ble
                         continue;
                     }
 
-                    Task timeout = Task.Delay(_ackTimeoutMilliseconds, linkedCancellation.Token);
-                    Task completed = await Task.WhenAny(_pendingAck.Task, timeout);
+                    (bool ackReceived, _) = await UniTask.WhenAny(
+                        _pendingAck.Task,
+                        UniTask.Delay(
+                            _ackTimeoutMilliseconds,
+                            DelayType.Realtime,
+                            cancellationToken: linkedCancellation.Token));
                     linkedCancellation.Token.ThrowIfCancellationRequested();
 
-                    if (completed == _pendingAck.Task && _pendingAck.Task.Status == TaskStatus.RanToCompletion)
+                    if (ackReceived)
                     {
                         if (_logPackets) Debug.Log($"[BLE] COLLISION ACK RX seq={sequence}", this);
                         CollisionConfirmed?.Invoke(sequence);
@@ -181,11 +206,6 @@ namespace ElectricPalletStackers.Ble
             }
         }
 
-        private async void SendCollisionAndLogAsync()
-        {
-            await SendCollisionAsync();
-        }
-
         private void HandleNotificationReceived(BleNotification notification)
         {
             if (!_serviceId.HasValue || !_ackId.HasValue) return;
@@ -209,6 +229,32 @@ namespace ElectricPalletStackers.Ble
             }
 
             _pendingAck?.TrySetResult(true);
+        }
+
+        private void HandleConnectionStateChanged(BleConnectionState state)
+        {
+            if (state == BleConnectionState.Connected)
+            {
+                EnsureConnectionLifetime();
+                return;
+            }
+
+            EndConnectionLifetime();
+            _pendingAck?.TrySetCanceled();
+        }
+
+        private void EnsureConnectionLifetime()
+        {
+            if (_connectionCancellation != null && !_connectionCancellation.IsCancellationRequested) return;
+            _connectionCancellation?.Dispose();
+            _connectionCancellation = new CancellationTokenSource();
+        }
+
+        private void EndConnectionLifetime()
+        {
+            _connectionCancellation?.Cancel();
+            _connectionCancellation?.Dispose();
+            _connectionCancellation = null;
         }
 
         private bool Fail(ushort sequence, string error, bool log = true)

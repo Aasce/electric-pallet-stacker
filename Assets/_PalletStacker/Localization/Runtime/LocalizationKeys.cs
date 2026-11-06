@@ -24,6 +24,7 @@ namespace ElectricPalletStackers.Localization
         {
             public const string Title = "calibration.title";
             public const string Description = "calibration.description";
+            public const string ResetSteering = "calibration.resetSteering";
         }
 
         public static class Welcome

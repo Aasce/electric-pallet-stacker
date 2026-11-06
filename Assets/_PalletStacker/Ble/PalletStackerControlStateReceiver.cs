@@ -1,6 +1,6 @@
 using System;
 using System.Threading;
-using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using Spaxtek.Ble.Core;
 using Spaxtek.Ble.Unity;
 using UnityEngine;
@@ -30,6 +30,7 @@ namespace ElectricPalletStackers.Ble
         private Guid? _controlStateId;
         private BleCharacteristicId? _ackId;
         private CancellationTokenSource _lifetimeCancellation;
+        private CancellationTokenSource _connectionCancellation;
         private ushort? _lastAppliedSequence;
 
         public PalletStackerControlState CurrentState => _currentState;
@@ -59,6 +60,7 @@ namespace ElectricPalletStackers.Ble
 
             _bleManager.OnNotificationReceived += HandleNotificationReceived;
             _bleManager.OnConnectionStateChanged += HandleConnectionStateChanged;
+            if (_bleManager.HasConnection) EnsureConnectionLifetime();
         }
 
         private void OnDisable()
@@ -72,6 +74,7 @@ namespace ElectricPalletStackers.Ble
             _lifetimeCancellation?.Cancel();
             _lifetimeCancellation?.Dispose();
             _lifetimeCancellation = null;
+            EndConnectionLifetime();
         }
 
         public void Configure(BleManager bleManager)
@@ -85,12 +88,14 @@ namespace ElectricPalletStackers.Ble
                 _bleManager.OnConnectionStateChanged -= HandleConnectionStateChanged;
             }
 
+            EndConnectionLifetime();
             _bleManager = bleManager;
 
             if (wasEnabled && _bleManager != null)
             {
                 _bleManager.OnNotificationReceived += HandleNotificationReceived;
                 _bleManager.OnConnectionStateChanged += HandleConnectionStateChanged;
+                if (_bleManager.HasConnection) EnsureConnectionLifetime();
             }
         }
 
@@ -181,7 +186,13 @@ namespace ElectricPalletStackers.Ble
 
         private void HandleConnectionStateChanged(BleConnectionState state)
         {
-            if (state == BleConnectionState.Connected) return;
+            if (state == BleConnectionState.Connected)
+            {
+                EnsureConnectionLifetime();
+                return;
+            }
+
+            EndConnectionLifetime();
             ResetSequence();
             SourceUnavailable?.Invoke();
         }
@@ -207,10 +218,10 @@ namespace ElectricPalletStackers.Ble
             if (duplicate) DuplicateReceived?.Invoke(sequence);
 
             // Every valid CONTROL_STATE is acknowledged, including retransmitted duplicates.
-            _ = SendControlAckAsync(sequence);
+            SendControlAckAsync(sequence).Forget();
         }
 
-        private async Task SendControlAckAsync(ushort sequence)
+        private async UniTask SendControlAckAsync(ushort sequence)
         {
             if (_bleManager == null || !_bleManager.HasConnection)
             {
@@ -226,13 +237,16 @@ namespace ElectricPalletStackers.Ble
 
             try
             {
-                CancellationToken cancellationToken = _lifetimeCancellation?.Token ?? CancellationToken.None;
+                using CancellationTokenSource linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(
+                    _lifetimeCancellation?.Token ?? CancellationToken.None,
+                    _connectionCancellation?.Token ?? CancellationToken.None);
                 byte[] packet = PalletStackerBleProtocol.EncodeSequencePacket(sequence);
-                BleWriteResult result = await _bleManager.WriteAsync(
+                BleWriteResult result = await PalletStackerBleWriteGate.WriteAsync(
+                    _bleManager,
                     _ackId.Value,
                     packet,
                     _ackWriteMode,
-                    cancellationToken);
+                    linkedCancellation.Token);
 
                 if (!result.Succeeded)
                 {
@@ -251,6 +265,20 @@ namespace ElectricPalletStackers.Ble
             {
                 ReportAckFailure(sequence, exception.Message);
             }
+        }
+
+        private void EnsureConnectionLifetime()
+        {
+            if (_connectionCancellation != null && !_connectionCancellation.IsCancellationRequested) return;
+            _connectionCancellation?.Dispose();
+            _connectionCancellation = new CancellationTokenSource();
+        }
+
+        private void EndConnectionLifetime()
+        {
+            _connectionCancellation?.Cancel();
+            _connectionCancellation?.Dispose();
+            _connectionCancellation = null;
         }
 
         private void RefreshCharacteristicIds()
