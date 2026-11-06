@@ -44,6 +44,7 @@ namespace ElectricPalletStackers.UI
         {
             _phoneCallPanel?.SetDirectInteractionEnabled(false);
             ConfigureCutscenePanel();
+            ConfigureCutsceneAudio();
             HideMovementCutscene();
             _phoneChoicePanel?.HideImmediate();
         }
@@ -290,6 +291,29 @@ namespace ElectricPalletStackers.UI
             if (canvas == null) return;
             canvas.overrideSorting = true;
             canvas.sortingOrder = short.MaxValue - 10;
+        }
+
+        private void ConfigureCutsceneAudio()
+        {
+            if (_movementCutsceneVideoPlayer == null ||
+                _movementCutsceneVideoPlayer.clip == null)
+                return;
+
+            AudioSource audioSource =
+                _movementCutsceneVideoPlayer.GetComponent<AudioSource>();
+            if (audioSource == null)
+            {
+                Debug.LogWarning(
+                    "Phone distraction cutscene requires an AudioSource for video audio.",
+                    _movementCutsceneVideoPlayer);
+                return;
+            }
+
+            _movementCutsceneVideoPlayer.audioOutputMode =
+                VideoAudioOutputMode.AudioSource;
+            _movementCutsceneVideoPlayer.controlledAudioTrackCount = 1;
+            _movementCutsceneVideoPlayer.EnableAudioTrack(0, true);
+            _movementCutsceneVideoPlayer.SetTargetAudioSource(0, audioSource);
         }
 
         private void HideMovementCutscene()

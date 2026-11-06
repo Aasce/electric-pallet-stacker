@@ -29,7 +29,7 @@ namespace ElectricPalletStackers.UI
         [SerializeField] private UIFailedPanel _failedPanel;
         [SerializeField] private UIResetGamePanel _resetGamePanel;
 
-        public UIFlowState CurrentState { get; private set; } = UIFlowState.CalibrateVehicleView;
+        public UIFlowState CurrentState { get; private set; } = UIFlowState.SelectLanguage;
         public bool IsInputCaptured => CurrentState != UIFlowState.Hidden;
         public LanguageCode FocusedLanguage { get; private set; } = LanguageCode.En;
         public LanguageCode SelectedLanguage { get; private set; } = LanguageCode.En;
@@ -46,6 +46,8 @@ namespace ElectricPalletStackers.UI
         public event Action RestartGameRequested;
         public event Action ContinueGameRequested;
         public event Action ResetPhaseRequested;
+
+        private LanguageSelectionBlackout _languageSelectionBlackout;
 
         private void Awake()
         {
@@ -64,6 +66,7 @@ namespace ElectricPalletStackers.UI
             }
 
             _localizationManager.Initialize();
+            _languageSelectionBlackout = new LanguageSelectionBlackout();
             if (_selectLanguagePanel != null)
             {
                 _selectLanguagePanel.FocusChanged += HandleLanguageFocusChanged;
@@ -99,26 +102,35 @@ namespace ElectricPalletStackers.UI
             _failedPanel?.HideImmediate();
             _resetGamePanel?.HideImmediate();
 
-            CurrentState = UIFlowState.CalibrateVehicleView;
-            _calibrationPanel?.Show();
+            CurrentState = UIFlowState.SelectLanguage;
             if (_selectLanguagePanel != null)
+            {
                 FocusedLanguage = _selectLanguagePanel.FocusedLanguage;
+                _selectLanguagePanel.Show();
+                _languageSelectionBlackout.ShowOnly(_selectLanguagePanel.transform);
+            }
         }
 
         private void OnEnable()
         {
-            if (_inputRouter == null) return;
-            _inputRouter.EmergencyStopHeld += HandleEmergencyStopHeld;
+            if (_inputRouter != null)
+                _inputRouter.EmergencyStopHeld += HandleEmergencyStopHeld;
+
+            if (CurrentState == UIFlowState.SelectLanguage && _selectLanguagePanel != null)
+                _languageSelectionBlackout?.ShowOnly(_selectLanguagePanel.transform);
         }
 
         private void OnDisable()
         {
-            if (_inputRouter == null) return;
-            _inputRouter.EmergencyStopHeld -= HandleEmergencyStopHeld;
+            if (_inputRouter != null)
+                _inputRouter.EmergencyStopHeld -= HandleEmergencyStopHeld;
+
+            _languageSelectionBlackout?.Restore();
         }
 
         private void OnDestroy()
         {
+            _languageSelectionBlackout?.Restore();
             if (_selectLanguagePanel != null)
             {
                 _selectLanguagePanel.FocusChanged -= HandleLanguageFocusChanged;
@@ -174,13 +186,13 @@ namespace ElectricPalletStackers.UI
             SelectedLanguage = language;
             _localizationManager?.SetLanguage(language);
             LanguageConfirmed?.Invoke(language);
-            TransitionTo(UIFlowState.Welcome);
+            TransitionTo(UIFlowState.CalibrateVehicleView);
         }
 
         private void HandleCalibrationContinueRequested()
         {
             if (CurrentState == UIFlowState.CalibrateVehicleView)
-                TransitionTo(UIFlowState.SelectLanguage);
+                TransitionTo(UIFlowState.Welcome);
         }
 
         private void HandleWelcomeContinueRequested()
@@ -194,7 +206,7 @@ namespace ElectricPalletStackers.UI
             if (CurrentState != UIFlowState.Completed) return;
 
             ResetRequested?.Invoke();
-            TransitionTo(UIFlowState.Welcome);
+            TransitionTo(UIFlowState.CalibrateVehicleView);
         }
 
         private void HandlePpeEquipped()
@@ -232,15 +244,21 @@ namespace ElectricPalletStackers.UI
             _failedPanel?.Hide();
             _resetGamePanel?.Hide();
 
+            if (nextState != UIFlowState.SelectLanguage)
+                _languageSelectionBlackout?.Restore();
+
             CurrentState = nextState;
 
             switch (nextState)
             {
                 case UIFlowState.CalibrateVehicleView:
+                    _calibrationSystem?.BeginCalibration();
                     _calibrationPanel?.Show();
                     break;
                 case UIFlowState.SelectLanguage:
                     _selectLanguagePanel?.Show();
+                    if (_selectLanguagePanel != null)
+                        _languageSelectionBlackout?.ShowOnly(_selectLanguagePanel.transform);
                     break;
                 case UIFlowState.Welcome:
                     _welcomePanel?.Show();
@@ -288,7 +306,7 @@ namespace ElectricPalletStackers.UI
             {
                 case ResetGameAction.Restart:
                     RestartGameRequested?.Invoke();
-                    TransitionTo(UIFlowState.CalibrateVehicleView);
+                    TransitionTo(UIFlowState.SelectLanguage);
                     break;
                 case ResetGameAction.ResetPhase:
                     ResetPhaseRequested?.Invoke();

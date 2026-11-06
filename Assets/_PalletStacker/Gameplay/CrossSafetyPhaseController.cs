@@ -98,6 +98,7 @@ namespace ElectricPalletStackers.Gameplay
             CacheFixedDirections();
             ConfigureTargets();
             ConfigurePresentationPanels();
+            ConfigureCutsceneAudio();
             HidePresentation();
         }
 
@@ -613,6 +614,29 @@ namespace ElectricPalletStackers.Gameplay
 
             panelCanvas.overrideSorting = true;
             panelCanvas.sortingOrder = short.MaxValue - 10;
+        }
+
+        private void ConfigureCutsceneAudio()
+        {
+            if (_footAccidentVideoPlayer == null ||
+                _footAccidentVideoPlayer.clip == null)
+                return;
+
+            AudioSource audioSource =
+                _footAccidentVideoPlayer.GetComponent<AudioSource>();
+            if (audioSource == null)
+            {
+                Debug.LogWarning(
+                    "[Cross Safety] Accident cutscene requires an AudioSource for video audio.",
+                    _footAccidentVideoPlayer);
+                return;
+            }
+
+            _footAccidentVideoPlayer.audioOutputMode =
+                VideoAudioOutputMode.AudioSource;
+            _footAccidentVideoPlayer.controlledAudioTrackCount = 1;
+            _footAccidentVideoPlayer.EnableAudioTrack(0, true);
+            _footAccidentVideoPlayer.SetTargetAudioSource(0, audioSource);
         }
 
         private void HidePresentation()

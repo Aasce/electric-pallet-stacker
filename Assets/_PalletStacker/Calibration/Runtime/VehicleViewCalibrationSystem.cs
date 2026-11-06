@@ -24,10 +24,17 @@ namespace ElectricPalletStackers.Calibration
 
         private void Awake()
         {
-            _needsInitialVehicleAlignment = _alignOnStart;
+            _needsInitialVehicleAlignment = false;
             if (_calibrationPanel == null) return;
             _needsInitialPanelPlacement = true;
             _calibrationPanel.SetParent(null, true);
+        }
+
+        /// <summary>Schedules the initial rig alignment when the calibration step is shown.</summary>
+        public void BeginCalibration()
+        {
+            _needsInitialVehicleAlignment = _alignOnStart;
+            if (_calibrationPanel != null) _needsInitialPanelPlacement = true;
         }
 
         private void LateUpdate()

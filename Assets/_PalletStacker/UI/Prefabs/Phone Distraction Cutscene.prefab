@@ -129,12 +129,13 @@ VideoPlayer:
   m_TimeUpdateMode: 2
   m_PlaybackSpeed: 1
   m_AudioOutputMode: 1
-  m_TargetAudioSources: []
+  m_TargetAudioSources:
+  - {fileID: 3704801535860781774}
   m_DirectAudioVolumes: []
   m_Url: 
   m_EnabledAudioTracks: 
   m_DirectAudioMutes: 
-  m_ControlledAudioTrackCount: 0
+  m_ControlledAudioTrackCount: 1
   m_PlayOnAwake: 0
   m_SkipOnDrop: 1
   m_Looping: 0
