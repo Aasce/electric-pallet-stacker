@@ -17,6 +17,13 @@
       },
       "hash": "30d22075093d1d35dfb0091c1c7550e9ad948577"
     },
+    "com.cysharp.unitask": {
+      "version": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "a77a1b4a89824fb6df293099de3060daf2a432c1"
+    },
     "com.spaxtek.ble": {
       "version": "https://github.com/Spaxtek2026/com.spaxtek.ble.git#v0.1.1",
       "depth": 0,
