@@ -11,7 +11,7 @@ Texture2D:
     serializedVersion: 2
     Hash: 00000000000000000000000000000000
   m_IsAlphaChannelOptional: 0
-  serializedVersion: 3
+  serializedVersion: 4
   m_Width: 8
   m_Height: 8
   m_CompleteImageSize: 64
@@ -268,9 +268,9 @@ MonoBehaviour:
   m_ShouldReimportFontFeatures: 0
   m_FallbackFontAssetTable:
   - {fileID: 11400000, guid: 5c2d7ed0f30c24346a7432e14ab66077, type: 2}
-  - {fileID: 11400000, guid: 5e8196fa61e363b4faa2f91519e1e163, type: 2}
   - {fileID: 11400000, guid: 11a8c0f7f3b32e64ea3a94f6863b3aa1, type: 2}
   - {fileID: 11400000, guid: d21d76be9d09c5442a22a5f5a68b3459, type: 2}
+  - {fileID: 11400000, guid: 18620e786f50fe949a337a104b98759d, type: 2}
   m_FontWeightTable:
   - regularTypeface: {fileID: 0}
     italicTypeface: {fileID: 0}
