@@ -15,26 +15,30 @@ namespace ElectricPalletStackers.Ble
         typeof(PalletStackerCollisionSender))]
     public sealed class PalletStackerBleClient : MonoBehaviour
     {
-        [Header("Components")]
-        [SerializeField] private BleManager _bleManager;
+        [Header("Components")] [SerializeField]
+        private BleManager _bleManager;
+
         [SerializeField] private PalletStackerControlStateReceiver _stateReceiver;
         [SerializeField] private PalletStackerCollisionSender _collisionSender;
 
-        [Header("Connection")]
-        [SerializeField] private bool _connectOnEnable = true;
+        [Header("Connection")] [SerializeField]
+        private bool _connectOnEnable = true;
+
         [SerializeField] private bool _disconnectOnDisable = true;
         [SerializeField] private string _deviceName = PalletStackerBleProtocol.DeviceName;
         [SerializeField] private string _serviceUuid = PalletStackerBleProtocol.ServiceUuidText;
 
         [Header("Steering recenter")]
         [Tooltip("Retry count for a lost RECENTER_RSP. Every retry reuses the same request_id.")]
-        [SerializeField, Min(1)] private int _recenterMaximumAttempts = 2;
+        [SerializeField, Min(1)]
+        private int _recenterMaximumAttempts = 2;
+
         [SerializeField, Min(100)] private int _recenterResponseTimeoutMilliseconds = 1000;
         [SerializeField, Min(100)] private int _recenterControlTimeoutMilliseconds = 1000;
         [SerializeField, Min(0)] private int _recenterConfirmationToleranceDegrees = 2;
 
-        [Header("Diagnostics")]
-        [SerializeField] private bool _logLifecycle = true;
+        [Header("Diagnostics")] [SerializeField]
+        private bool _logLifecycle = true;
 
         private CancellationTokenSource _lifetimeCancellation;
         private CancellationTokenSource _connectionCancellation;
@@ -51,6 +55,7 @@ namespace ElectricPalletStackers.Ble
 
         public bool IsReady { get; private set; }
         public bool IsRecenterInProgress => _recenterInProgress;
+
         public bool CanRecenter => IsReady && !_recenterInProgress &&
                                    _bleManager != null && _bleManager.HasConnection &&
                                    _recenterRequestId.HasValue && _recenterResponseId.HasValue;
@@ -152,7 +157,6 @@ namespace ElectricPalletStackers.Ble
                 IReadOnlyList<BleGattService> services = await _bleManager.DiscoverServicesAsync(
                     BleCacheMode.Uncached,
                     linkedCancellation.Token).AsUniTask();
-
                 BleGattService service = FindService(services, serviceUuid);
                 BleCharacteristicId controlId = RequireCharacteristic(
                     service,
@@ -187,6 +191,10 @@ namespace ElectricPalletStackers.Ble
                 SetReady(true);
                 if (_logLifecycle) Debug.Log("[BLE] Pallet stacker V20 client is ready.", this);
                 Ready?.Invoke();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e.Message);
             }
             finally
             {
@@ -240,6 +248,7 @@ namespace ElectricPalletStackers.Ble
                                 $"{writeResult.ErrorCode}: {writeResult.Detail}",
                                 this);
                         }
+
                         continue;
                     }
 
@@ -257,12 +266,14 @@ namespace ElectricPalletStackers.Ble
                     if (!hasResponse)
                     {
                         if (_logLifecycle)
-                            Debug.LogWarning($"[BLE] RECENTER_RSP timeout for id={requestId}; retrying the same id.", this);
+                            Debug.LogWarning($"[BLE] RECENTER_RSP timeout for id={requestId}; retrying the same id.",
+                                this);
                         continue;
                     }
 
                     if (!responseAccepted)
-                        return FailRecenter(requestId, "ESP32 rejected recenter because steering IMU data is invalid or stale.");
+                        return FailRecenter(requestId,
+                            "ESP32 rejected recenter because steering IMU data is invalid or stale.");
 
                     accepted = true;
                     break;
@@ -280,7 +291,8 @@ namespace ElectricPalletStackers.Ble
                 linkedCancellation.Token.ThrowIfCancellationRequested();
 
                 if (!controlConfirmed)
-                    return FailRecenter(requestId, "ESP32 accepted recenter, but no fresh near-zero CONTROL packet was received.");
+                    return FailRecenter(requestId,
+                        "ESP32 accepted recenter, but no fresh near-zero CONTROL packet was received.");
 
                 if (_logLifecycle)
                     Debug.Log($"[BLE] Steering recenter id={requestId} confirmed by a fresh CONTROL packet.", this);
@@ -308,8 +320,8 @@ namespace ElectricPalletStackers.Ble
         {
             UniTaskCompletionSource<BleAdvertisement> completion = new UniTaskCompletionSource<BleAdvertisement>();
             _advertisementCompletion = completion;
-            using CancellationTokenRegistration registration = cancellationToken.Register(
-                () => completion.TrySetCanceled(cancellationToken));
+            using CancellationTokenRegistration registration =
+                cancellationToken.Register(() => completion.TrySetCanceled(cancellationToken));
 
             try
             {
@@ -317,6 +329,12 @@ namespace ElectricPalletStackers.Ble
                 if (_logLifecycle) Debug.Log($"[BLE] Scanning for {_deviceName}...", this);
                 await _bleManager.StartScanAsync(new BleScanFilter(_deviceName), cancellationToken).AsUniTask();
                 return await completion.Task;
+            }
+            catch (Exception e)
+            {
+                Debug .LogError(e.Message);
+                Debug .LogError(e.StackTrace);
+                return null;
             }
             finally
             {
@@ -329,14 +347,17 @@ namespace ElectricPalletStackers.Ble
                 }
                 catch (Exception exception)
                 {
-                    if (_logLifecycle) Debug.LogWarning($"[BLE] Could not stop scan cleanly: {exception.Message}", this);
+                    if (_logLifecycle)
+                    {
+                        Debug.LogWarning($"[BLE] Could not stop scan cleanly: {exception.Message}", this);
+                    }
                 }
             }
         }
 
         private async UniTask EnsureAdapterReadyAsync(CancellationToken cancellationToken)
         {
-            IBleAdapter adapter = _bleManager.Adapter;
+                IBleAdapter adapter = _bleManager.Adapter;
             for (int frame = 0; adapter == null && frame < 10; frame++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -345,7 +366,8 @@ namespace ElectricPalletStackers.Ble
             }
 
             if (adapter == null)
-                throw new InvalidOperationException("BLE adapter was not created after waiting for BleManager initialization.");
+                throw new InvalidOperationException(
+                    "BLE adapter was not created after waiting for BleManager initialization.");
 
             if (adapter.State == BleAdapterState.Uninitialized)
                 await _bleManager.InitializeAsync(cancellationToken).AsUniTask();
@@ -366,8 +388,8 @@ namespace ElectricPalletStackers.Ble
             }
 
             _bleManager.OnAdapterStateChanged += HandleState;
-            using CancellationTokenRegistration registration = cancellationToken.Register(
-                () => completion.TrySetCanceled(cancellationToken));
+            using CancellationTokenRegistration registration =
+                cancellationToken.Register(() => completion.TrySetCanceled(cancellationToken));
 
             try
             {
@@ -547,14 +569,16 @@ namespace ElectricPalletStackers.Ble
                 if (characteristic.Id.CharacteristicUuid != uuid) continue;
 
                 if ((characteristic.Properties & requiredProperties) != requiredProperties)
-                    throw new InvalidOperationException($"{label} does not expose required properties: {requiredProperties}.");
+                    throw new InvalidOperationException(
+                        $"{label} does not expose required properties: {requiredProperties}.");
                 return characteristic.Id;
             }
 
             throw new InvalidOperationException($"Required {label} characteristic was not found: {uuid:D}.");
         }
 
-        private static BleGattCharacteristic RequireWritableCharacteristic(BleGattService service, Guid uuid, string label)
+        private static BleGattCharacteristic RequireWritableCharacteristic(BleGattService service, Guid uuid,
+            string label)
         {
             for (int index = 0; index < service.Characteristics.Count; index++)
             {
@@ -579,7 +603,8 @@ namespace ElectricPalletStackers.Ble
                 if ((characteristic.Properties & BleCharacteristicProperties.Notify) == 0 ||
                     (characteristic.Properties & BleCharacteristicProperties.Write) == 0)
                 {
-                    throw new InvalidOperationException("ACK characteristic must support Notify and writes with response.");
+                    throw new InvalidOperationException(
+                        "ACK characteristic must support Notify and writes with response.");
                 }
 
                 return characteristic;

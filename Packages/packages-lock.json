@@ -25,11 +25,11 @@
       "hash": "a77a1b4a89824fb6df293099de3060daf2a432c1"
     },
     "com.spaxtek.ble": {
-      "version": "https://github.com/Spaxtek2026/com.spaxtek.ble.git#v0.1.1",
+      "version": "https://github.com/Spaxtek2026/com.spaxtek.ble.git#v0.1.4",
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "8d5920c9c166b05df789fb1da0c1a1354afce930"
+      "hash": "a589a7c2a1e1183b1433e545ee55fdd479781f62"
     },
     "com.unity.burst": {
       "version": "1.8.27",
@@ -331,6 +331,13 @@
         "com.unity.xr.legacyinputhelpers": "2.1.2"
       },
       "url": "https://packages.unity.com"
+    },
+    "io.sentry.unity": {
+      "version": "https://github.com/getsentry/unity.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "f906f8b2e775b91858df2dc31085364a98cda3cf"
     },
     "com.unity.modules.accessibility": {
       "version": "1.0.0",
