@@ -5,6 +5,7 @@ using ElectricPalletStackers.Calibration;
 using ElectricPalletStackers.Gameplay;
 using ElectricPalletStackers.Gameplay.Checklist;
 using ElectricPalletStackers.Localization;
+using ElectricPalletStackers.Presentation;
 using UnityEngine;
 
 namespace ElectricPalletStackers.UI
@@ -50,7 +51,11 @@ namespace ElectricPalletStackers.UI
         public event Action ContinueGameRequested;
         public event Action ResetPhaseRequested;
 
-        private LanguageSelectionBlackout _languageSelectionBlackout;
+        private Coroutine _checkpointRestoreRoutine;
+        private Coroutine _managerGameRestartRoutine;
+
+        public bool IsBlackoutTransitionInProgress =>
+            _checkpointRestoreRoutine != null || _managerGameRestartRoutine != null;
 
         private void Awake()
         {
@@ -69,7 +74,6 @@ namespace ElectricPalletStackers.UI
             }
 
             _localizationManager.Initialize();
-            _languageSelectionBlackout = new LanguageSelectionBlackout();
             if (_selectLanguagePanel != null)
             {
                 _selectLanguagePanel.FocusChanged += HandleLanguageFocusChanged;
@@ -113,7 +117,7 @@ namespace ElectricPalletStackers.UI
             {
                 FocusedLanguage = _selectLanguagePanel.FocusedLanguage;
                 _selectLanguagePanel.Show();
-                _languageSelectionBlackout.ShowOnly(_selectLanguagePanel.transform);
+                BlackoutSystem.Instance?.SetWorldVisibleOnly(_selectLanguagePanel.transform);
             }
         }
 
@@ -123,7 +127,7 @@ namespace ElectricPalletStackers.UI
                 _inputRouter.EmergencyStopHeld += HandleEmergencyStopHeld;
 
             if (CurrentState == UIFlowState.SelectLanguage && _selectLanguagePanel != null)
-                _languageSelectionBlackout?.ShowOnly(_selectLanguagePanel.transform);
+                BlackoutSystem.Instance?.SetWorldVisibleOnly(_selectLanguagePanel.transform);
 
             RefreshCalibrationBleControls();
         }
@@ -133,12 +137,26 @@ namespace ElectricPalletStackers.UI
             if (_inputRouter != null)
                 _inputRouter.EmergencyStopHeld -= HandleEmergencyStopHeld;
 
-            _languageSelectionBlackout?.Restore();
+            bool cancelManagerBlackout = _checkpointRestoreRoutine != null ||
+                                         _managerGameRestartRoutine != null;
+            if (_checkpointRestoreRoutine != null)
+            {
+                StopCoroutine(_checkpointRestoreRoutine);
+                _checkpointRestoreRoutine = null;
+            }
+            if (_managerGameRestartRoutine != null)
+            {
+                StopCoroutine(_managerGameRestartRoutine);
+                _managerGameRestartRoutine = null;
+            }
+            BlackoutSystem.Instance?.RestoreWorld();
+            if (cancelManagerBlackout)
+                BlackoutSystem.Instance?.ResetFade();
         }
 
         private void OnDestroy()
         {
-            _languageSelectionBlackout?.Restore();
+            BlackoutSystem.Instance?.RestoreWorld();
             if (_selectLanguagePanel != null)
             {
                 _selectLanguagePanel.FocusChanged -= HandleLanguageFocusChanged;
@@ -180,6 +198,87 @@ namespace ElectricPalletStackers.UI
                 _localizationManager.CurrentLanguage,
                 _localizationManager.Service);
             TransitionTo(UIFlowState.Failed);
+        }
+
+        public void ChangeLanguageFromManager(LanguageCode language)
+        {
+            FocusedLanguage = language;
+            SelectedLanguage = language;
+            _selectLanguagePanel?.RememberLanguage(language);
+            _localizationManager?.SetLanguage(language);
+            LanguagePreviewChanged?.Invoke(language);
+        }
+
+        public void RequestGameRestartFromManager()
+        {
+            if (IsBlackoutTransitionInProgress) return;
+            _managerGameRestartRoutine = StartCoroutine(RestartGameWithBlackout());
+        }
+
+        private System.Collections.IEnumerator RestartGameWithBlackout()
+        {
+            BlackoutSystem blackout = BlackoutSystem.Instance;
+            if (blackout != null) yield return blackout.FadeToBlack();
+            RestartGameRequested?.Invoke();
+            TransitionTo(UIFlowState.SelectLanguage);
+            yield return new WaitForEndOfFrame();
+            if (blackout != null) yield return blackout.FadeFromBlack();
+            _managerGameRestartRoutine = null;
+        }
+
+        public void RequestPhaseResetWithBlackout()
+        {
+            StartCheckpointRestoreWithBlackout(continueFromCheckpoint: false);
+        }
+
+        private void RequestCheckpointContinueWithBlackout()
+        {
+            StartCheckpointRestoreWithBlackout(continueFromCheckpoint: true);
+        }
+
+        private void StartCheckpointRestoreWithBlackout(bool continueFromCheckpoint)
+        {
+            if (IsBlackoutTransitionInProgress ||
+                (CurrentState != UIFlowState.Hidden &&
+                 CurrentState != UIFlowState.Failed &&
+                 CurrentState != UIFlowState.ResetGame)) return;
+
+            _checkpointRestoreRoutine = StartCoroutine(
+                RestoreCheckpointWithBlackout(continueFromCheckpoint));
+        }
+
+        private System.Collections.IEnumerator RestoreCheckpointWithBlackout(bool continueFromCheckpoint)
+        {
+            BlackoutSystem blackout = BlackoutSystem.Instance;
+            if (blackout != null) yield return blackout.FadeToBlack();
+            blackout?.HideWorld();
+
+            // Keep the fully black frame up while the checkpoint restores its poses.
+            yield return new WaitForEndOfFrame();
+            try
+            {
+                if (continueFromCheckpoint)
+                    ContinueRequested?.Invoke();
+                else
+                    ResetPhaseRequested?.Invoke();
+
+                if (CurrentState != UIFlowState.Hidden)
+                {
+                    if (CurrentState == UIFlowState.Failed)
+                        _failedPanel?.HideImmediate();
+                    TransitionTo(UIFlowState.Hidden);
+                }
+                yield return new WaitForEndOfFrame();
+            }
+            finally
+            {
+                blackout?.RestoreWorld();
+            }
+
+            // Render the restored scene behind the black overlay before revealing it.
+            yield return new WaitForEndOfFrame();
+            if (blackout != null) yield return blackout.FadeFromBlack();
+            _checkpointRestoreRoutine = null;
         }
 
         private void HandleLanguageFocusChanged(LanguageCode language)
@@ -282,7 +381,7 @@ namespace ElectricPalletStackers.UI
             _resetGamePanel?.Hide();
 
             if (nextState != UIFlowState.SelectLanguage)
-                _languageSelectionBlackout?.Restore();
+                BlackoutSystem.Instance?.RestoreWorld();
 
             CurrentState = nextState;
 
@@ -295,7 +394,7 @@ namespace ElectricPalletStackers.UI
                 case UIFlowState.SelectLanguage:
                     _selectLanguagePanel?.Show();
                     if (_selectLanguagePanel != null)
-                        _languageSelectionBlackout?.ShowOnly(_selectLanguagePanel.transform);
+                        BlackoutSystem.Instance?.SetWorldVisibleOnly(_selectLanguagePanel.transform);
                     break;
                 case UIFlowState.Welcome:
                     _welcomePanel?.Show();
@@ -329,8 +428,7 @@ namespace ElectricPalletStackers.UI
         {
             if (action == FailedPanelAction.ContinueFromCheckpoint)
             {
-                ContinueRequested?.Invoke();
-                TransitionTo(UIFlowState.Hidden);
+                RequestCheckpointContinueWithBlackout();
                 return;
             }
 
@@ -343,12 +441,10 @@ namespace ElectricPalletStackers.UI
             switch (action)
             {
                 case ResetGameAction.Restart:
-                    RestartGameRequested?.Invoke();
-                    TransitionTo(UIFlowState.SelectLanguage);
+                    RequestGameRestartFromManager();
                     break;
                 case ResetGameAction.ResetPhase:
-                    ResetPhaseRequested?.Invoke();
-                    TransitionTo(UIFlowState.Hidden);
+                    RequestPhaseResetWithBlackout();
                     break;
                 default:
                     ContinueGameRequested?.Invoke();

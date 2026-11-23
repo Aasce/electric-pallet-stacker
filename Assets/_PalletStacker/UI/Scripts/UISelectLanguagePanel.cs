@@ -38,6 +38,15 @@ namespace ElectricPalletStackers.UI
             FocusLanguage(_hasFocusedLanguage ? FocusedLanguage : LanguageCode.En);
         }
 
+        public void RememberLanguage(LanguageCode language)
+        {
+            _hasFocusedLanguage = true;
+            FocusedLanguage = language;
+            _englishButton?.SetFocused(language == LanguageCode.En);
+            _vietnameseButton?.SetFocused(language == LanguageCode.Vi);
+            _japaneseButton?.SetFocused(language == LanguageCode.Ja);
+        }
+
         private void FocusLanguage(LanguageCode language)
         {
             UICustomButton button = GetButton(language);

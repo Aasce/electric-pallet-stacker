@@ -2,6 +2,13 @@ namespace ElectricPalletStackers.Localization
 {
     public static class LocalizationKeys
     {
+        public static class Manager
+        {
+            public const string Title = "manager.title";
+            public const string ResetState = "manager.resetState";
+            public const string ResetGame = "manager.resetGame";
+        }
+
         public static class Common
         {
             public const string Confirm = "common.confirm";

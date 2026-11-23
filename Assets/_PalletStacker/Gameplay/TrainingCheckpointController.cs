@@ -166,9 +166,21 @@ namespace ElectricPalletStackers.Gameplay
 
         public bool ResetCurrentPhase()
         {
-            if (_appManager == null || _appManager.CurrentState != GameState.Playing)
-                return false;
-            if (!_hasCheckpoint || !_appManager.SuspendRoundForRestore()) return false;
+            if (_appManager == null || !_hasCheckpoint) return false;
+
+            switch (_appManager.CurrentState)
+            {
+                case GameState.Playing:
+                    if (!_appManager.SuspendRoundForRestore()) return false;
+                    break;
+                case GameState.Lost:
+                    // A manager can reset the phase directly from the failure screen.
+                    // The round is already suspended, so restore and resume through
+                    // the same checkpoint path used by Continue From Checkpoint.
+                    break;
+                default:
+                    return false;
+            }
 
             if (!RestoreLatest()) return false;
             _appManager.ResumeRound();
