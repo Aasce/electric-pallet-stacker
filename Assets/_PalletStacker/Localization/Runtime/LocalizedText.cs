@@ -44,6 +44,7 @@ namespace ElectricPalletStackers.Localization
 
         private void CacheDefaultFont()
         {
+            if (_target == null) _target = GetComponent<TMP_Text>();
             if (_defaultFont == null && _target != null) _defaultFont = _target.font;
         }
     }

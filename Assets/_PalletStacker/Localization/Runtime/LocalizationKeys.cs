@@ -79,6 +79,11 @@ namespace ElectricPalletStackers.Localization
             public const string LiftWhileMoving = "palletHandling.liftWhileMoving";
         }
 
+        public static class Destination
+        {
+            public const string PlaceHere = "destination.placeHere";
+        }
+
         public static class Completed
         {
             public const string Title = "completed.title";

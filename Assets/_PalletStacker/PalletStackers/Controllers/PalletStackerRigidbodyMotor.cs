@@ -12,7 +12,7 @@ namespace ElectricPalletStackers.PalletStackers
         [SerializeField] private PalletStackerVehicleSettings _settings;
         [SerializeField] private PalletStackerMast _mast;
         [Tooltip("Hard travel stop when the forks are farther than this above minimum height.")]
-        [SerializeField, Min(0f)] private float _travelHeightTolerance = 0.25f;
+        [SerializeField, Min(0f)] private float _travelHeightTolerance = 0.5f;
 
         [Header("Vehicle geometry")]
         [Tooltip("Fallback local-space forward axis used when the axle references cannot define a direction.")]

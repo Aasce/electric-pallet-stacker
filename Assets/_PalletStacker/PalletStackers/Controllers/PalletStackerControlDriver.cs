@@ -25,7 +25,7 @@ namespace ElectricPalletStackers.PalletStackers
         [Tooltip("The final delivery phase allows travel at any fork height, but travel and lift remain mutually exclusive.")]
         [SerializeField] private TrainingExperienceController _trainingExperience;
         [Tooltip("Travel is force-stopped when the forks are more than this distance above their minimum height.")]
-        [SerializeField, Min(0f)] private float _travelHeightTolerance = 0.25f;
+        [SerializeField, Min(0f)] private float _travelHeightTolerance = 0.5f;
         [Tooltip("Actual vehicle speed above this value blocks lift motion.")]
         [SerializeField, Min(0f)] private float _movingSpeedThreshold = 0.01f;
 

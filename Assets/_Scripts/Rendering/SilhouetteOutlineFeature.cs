@@ -20,6 +20,9 @@ namespace PalletStackerRendering
             [ColorUsage(true, true)]
             public Color outlineColor = new Color(0f, 3f, 8f, 1f);
 
+            [ColorUsage(true, true)]
+            public Color pickupReadyOutlineColor = new Color(0f, 3f, 0f, 1f);
+
             [Min(0.5f)]
             [Tooltip("Outline thickness in screen pixels. This value has no upper limit.")]
             public float thickness = 4f;
@@ -37,6 +40,18 @@ namespace PalletStackerRendering
         private Material maskMaterial;
         private Material compositeMaterial;
         private SilhouetteOutlinePass outlinePass;
+        private static bool palletPickupReady;
+
+        public static void SetPalletPickupReady(bool ready)
+        {
+            palletPickupReady = ready;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetRuntimeState()
+        {
+            palletPickupReady = false;
+        }
 
         public override void Create()
         {
@@ -190,7 +205,9 @@ namespace PalletStackerRendering
                 TextureHandle destination)
             {
                 MaterialPropertyBlock properties = new MaterialPropertyBlock();
-                properties.SetColor(OutlineColorId, settings.outlineColor);
+                properties.SetColor(
+                    OutlineColorId,
+                    palletPickupReady ? settings.pickupReadyOutlineColor : settings.outlineColor);
                 properties.SetFloat(OutlineThicknessId, Mathf.Max(0.5f, settings.thickness));
 
                 RenderGraphUtils.BlitMaterialParameters parameters = new RenderGraphUtils.BlitMaterialParameters(

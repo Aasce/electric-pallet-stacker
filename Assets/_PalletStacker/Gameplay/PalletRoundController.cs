@@ -58,13 +58,13 @@ namespace ElectricPalletStackers.Gameplay
                 return;
             }
 
-            _activeDestination.SetPreviewVisible(true);
+            _activeDestination.SetPreviewVisible(true, pallet);
             if (_armDestinationImmediately) ArmDestination();
         }
 
         public void ResumeRound()
         {
-            _activeDestination?.SetPreviewVisible(true);
+            _activeDestination?.SetPreviewVisible(true, ActivePallet);
         }
 
         public void ArmDestination()

@@ -108572,45 +108572,21 @@ PrefabInstance:
       value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 8100000000000000002, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000002, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8100000000000000003, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
-      propertyPath: m_Size.x
-      value: 1.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 8100000000000000003, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
-      propertyPath: m_Size.y
-      value: 1.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 8100000000000000003, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
-      propertyPath: m_Size.z
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8100000000000000003, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
-      propertyPath: m_Enabled
+    - target: {fileID: 8100000000000000002, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8100000000000000003, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
-      propertyPath: m_Center.y
-      value: 0.75
       objectReference: {fileID: 0}
     - target: {fileID: 8100000000000000003, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
       propertyPath: m_Material
       value: 
       objectReference: {fileID: 1505073381}
-    - target: {fileID: 8100000000000000011, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
-      propertyPath: m_Layer
-      value: 8
-      objectReference: {fileID: 0}
-    - target: {fileID: 8100000000000000012, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 1.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 8100000000000000012, guid: f4a1ac0c4d974ddf83e90a0ac65ccaa1, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 2
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

@@ -21,4 +21,4 @@ MonoBehaviour:
   _maximumSteeringAngleDegrees: 35
   _minimumForkHeight: 0.2
   _maximumForkHeight: 2.5
-  _forkLiftSpeed: 0.7
+  _forkLiftSpeed: 0.88

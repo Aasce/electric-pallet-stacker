@@ -21,6 +21,10 @@ MonoBehaviour:
     _english: Continue
     _vietnamese: "Ti\u1EBFp t\u1EE5c"
     _japanese: "\u7D9A\u884C"
+  - _key: destination.placeHere
+    _english: Place pallet here
+    _vietnamese: "\u0110\u1EB7t h\u00E0ng \u1EDF \u0111\u00E2y"
+    _japanese: "\u3053\u3053\u306B\u8377\u7269\u3092\u7F6E\u304F"
   - _key: calibration.title
     _english: Vehicle Calibration
     _vietnamese: "C\u0103n ch\u1EC9nh xe"

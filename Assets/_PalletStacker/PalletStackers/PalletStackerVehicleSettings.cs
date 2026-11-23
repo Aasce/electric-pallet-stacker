@@ -16,7 +16,7 @@ namespace ElectricPalletStackers.PalletStackers
         public const float DefaultSlowModeTravelMultiplier = 0.4f;
         public const float DefaultMinimumForkHeight = 0.3f;
         public const float DefaultMaximumForkHeight = 2f;
-        public const float DefaultForkLiftSpeed = 1f;
+        public const float DefaultForkLiftSpeed = 1.25f;
 
         [Header("Travel")]
         [Tooltip("Maximum forward travel speed in metres per second.")]

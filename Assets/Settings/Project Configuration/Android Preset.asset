@@ -75,5 +75,6 @@ MonoBehaviour:
       serializedVersion: 2
       m_Bits: 512
     outlineColor: {r: 0, g: 3, b: 8, a: 1}
+    pickupReadyOutlineColor: {r: 0, g: 3, b: 0, a: 1}
     thickness: 4
     injectionPoint: 500

@@ -14,6 +14,7 @@ namespace ElectricPalletStackers.Gameplay
         [Tooltip("The forks count as low when their height is no more than this distance above the mast's minimum height.")]
         [SerializeField, Min(0f)] private float _lowForkHeightOffset = 1f;
         [SerializeField] private PalletDestinationView _view;
+        [SerializeField] private PalletDestinationPrompt _prompt;
 
         private readonly HashSet<Collider> _overlappingTargetColliders = new();
         private PalletStackerLoad _targetPallet;
@@ -87,11 +88,25 @@ namespace ElectricPalletStackers.Gameplay
 
             if (_trigger != null) _trigger.enabled = targetPallet != null;
             _view?.SetVisible(targetPallet != null);
+            _prompt?.SetTargetPallet(targetPallet);
+            _prompt?.SetVisible(targetPallet != null);
         }
 
         public void SetPreviewVisible(bool visible)
         {
             _view?.SetVisible(visible);
+            if (_prompt != null)
+            {
+                if (_targetPallet != null) _prompt.SetTargetPallet(_targetPallet);
+                _prompt.SetVisible(visible);
+            }
+        }
+
+        public void SetPreviewVisible(bool visible, PalletStackerLoad targetPallet)
+        {
+            _targetPallet = targetPallet;
+            _prompt?.SetTargetPallet(targetPallet);
+            SetPreviewVisible(visible);
         }
 
         public bool ContainsPallet(PalletStackerLoad pallet)
@@ -112,6 +127,8 @@ namespace ElectricPalletStackers.Gameplay
         {
             if (_trigger != null) _trigger.enabled = false;
             _view?.SetVisible(false);
+            _prompt?.SetVisible(false);
+            _prompt?.SetTargetPallet(null);
 
             _targetPallet = null;
             _loadHandler = null;

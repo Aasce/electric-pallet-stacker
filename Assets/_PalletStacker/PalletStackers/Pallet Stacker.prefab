@@ -132,7 +132,7 @@ MonoBehaviour:
   _interlockMast: {fileID: 2871494232518386074}
   _notifications: {fileID: 950000000000000001}
   _trainingExperience: {fileID: 0}
-  _travelHeightTolerance: 0.35
+  _travelHeightTolerance: 0.5
   _movingSpeedThreshold: 0.01
   _analogSmoothingTime: 0.08
 --- !u!114 &5210768195172812719
@@ -150,7 +150,7 @@ MonoBehaviour:
   _body: {fileID: 3273737744600335219}
   _settings: {fileID: 11400000, guid: 185ec762c7b64b7a80da1d21db8fbce4, type: 2}
   _mast: {fileID: 2871494232518386074}
-  _travelHeightTolerance: 0.25
+  _travelHeightTolerance: 0.5
   _localForwardAxis: {x: 0, y: 0, z: 1}
   _fixedFrontAxleReference: {fileID: 0}
   _steeredRearAxleReference: {fileID: 5077208130004456298}
@@ -253,9 +253,9 @@ MonoBehaviour:
   _loadLayers:
     serializedVersion: 2
     m_Bits: 32768
-  _minimumInsertionDepth: 0.8
-  _maximumLateralOffset: 0.15
-  _maximumYawError: 6
+  _minimumInsertionDepth: 0.6
+  _maximumLateralOffset: 0.19
+  _maximumYawError: 10
   _breakForce: 0
   _breakTorque: 0
   _releaseAtMinimumHeightTolerance: 0.03

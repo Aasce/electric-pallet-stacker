@@ -1,4 +1,5 @@
 using System;
+using PalletStackerRendering;
 using UnityEngine;
 
 namespace ElectricPalletStackers.PalletStackers
@@ -24,11 +25,11 @@ namespace ElectricPalletStackers.PalletStackers
 
         [Header("Pickup validation")]
         [Tooltip("Minimum distance the fork tips must pass beyond the pallet's near edge before it may attach.")]
-        [SerializeField, Min(0f)] private float _minimumInsertionDepth = 0.8f;
+        [SerializeField, Min(0f)] private float _minimumInsertionDepth = 0.6f;
         [Tooltip("Maximum sideways offset between the pallet center and the fork centerline.")]
-        [SerializeField, Min(0f)] private float _maximumLateralOffset = 0.15f;
+        [SerializeField, Min(0f)] private float _maximumLateralOffset = 0.19f;
         [Tooltip("Maximum yaw error from either valid pallet entry axis.")]
-        [SerializeField, Range(0f, 45f)] private float _maximumYawError = 6f;
+        [SerializeField, Range(0f, 45f)] private float _maximumYawError = 10f;
         [Header("Holding")]
         [Tooltip("Joint break force. Set to 0 to keep an accepted pallet attached until it is deliberately released.")]
         [SerializeField, Min(0f)] private float _breakForce;
@@ -81,23 +82,44 @@ namespace ElectricPalletStackers.PalletStackers
         private void OnDisable()
         {
             PalletStackerLoad.BecameAvailable -= SuppressVehicleForces;
+            SilhouetteOutlineFeature.SetPalletPickupReady(false);
             ReleaseLoad();
         }
 
         private void FixedUpdate()
         {
-            if (_mast == null || _vehicleBody == null || Forks == null) return;
+            if (_mast == null || _vehicleBody == null || Forks == null)
+            {
+                SilhouetteOutlineFeature.SetPalletPickupReady(false);
+                return;
+            }
 
             if (_heldLoad != null && _joint == null)
                 HandleBrokenJoint();
 
             if (HasLoad)
             {
+                SilhouetteOutlineFeature.SetPalletPickupReady(false);
                 _unsafePickupReported = false;
                 FollowForkAnchor();
                 TryAutoRelease();
                 return;
             }
+
+            PalletStackerLoad nearestLoad = FindNearestLoad();
+            if (nearestLoad == null)
+            {
+                SilhouetteOutlineFeature.SetPalletPickupReady(false);
+                _unsafePickupReported = false;
+                return;
+            }
+
+            bool pickupPoseValid = IsPickupPoseValid(
+                    nearestLoad,
+                    out float insertionDepth,
+                    out float lateralOffset,
+                    out float yawError);
+            SilhouetteOutlineFeature.SetPalletPickupReady(pickupPoseValid);
 
             if (!_autoAttachWhenRaising || !IsRaising())
             {
@@ -105,21 +127,10 @@ namespace ElectricPalletStackers.PalletStackers
                 return;
             }
 
-            PalletStackerLoad nearestLoad = FindNearestLoad();
-            if (nearestLoad == null)
+            if (pickupPoseValid)
             {
                 _unsafePickupReported = false;
-                return;
-            }
-
-            if (IsPickupPoseValid(
-                    nearestLoad,
-                    out float insertionDepth,
-                    out float lateralOffset,
-                    out float yawError))
-            {
-                _unsafePickupReported = false;
-                AttachLoad(nearestLoad);
+                AttachLoad(nearestLoad, snapToCurrentForkPose: true);
                 return;
             }
 
@@ -165,7 +176,7 @@ namespace ElectricPalletStackers.PalletStackers
             PalletStackerLoad nearestLoad = FindNearestLoad();
             return nearestLoad != null &&
                    IsPickupPoseValid(nearestLoad, out _, out _, out _) &&
-                   AttachLoad(nearestLoad);
+                   AttachLoad(nearestLoad, snapToCurrentForkPose: true);
         }
 
         /// <summary>
@@ -192,6 +203,11 @@ namespace ElectricPalletStackers.PalletStackers
 
         public bool AttachLoad(PalletStackerLoad load)
         {
+            return AttachLoad(load, snapToCurrentForkPose: false);
+        }
+
+        private bool AttachLoad(PalletStackerLoad load, bool snapToCurrentForkPose)
+        {
             if (HasLoad || load == null || load.Body == null) return false;
 
             Rigidbody loadBody = load.Body;
@@ -210,6 +226,9 @@ namespace ElectricPalletStackers.PalletStackers
             loadBody.linearVelocity = Vector3.zero;
             loadBody.angularVelocity = Vector3.zero;
             loadBody.Sleep();
+
+            if (snapToCurrentForkPose)
+                SnapLoadToCurrentForkPose(load);
 
             _heldLoad = load;
             load.ResetSupportTracking();
@@ -243,8 +262,56 @@ namespace ElectricPalletStackers.PalletStackers
             loadBody.WakeUp();
 
             load.SetHighlighted(false);
+            SilhouetteOutlineFeature.SetPalletPickupReady(false);
             LoadAttached?.Invoke(load);
             return true;
+        }
+
+        /// <summary>
+        /// Corrects small lateral and yaw alignment errors after pickup validation.
+        /// Insertion depth and height stay at their current fork-relative values so
+        /// the pallet does not jump toward a fixed point deeper between the forks.
+        /// </summary>
+        private void SnapLoadToCurrentForkPose(PalletStackerLoad load)
+        {
+            if (load == null || load.Body == null || Forks == null ||
+                !TryGetForkSpaceBounds(load, out Bounds currentBounds))
+                return;
+
+            Rigidbody loadBody = load.Body;
+            Vector3 currentBoundsCenterInForkSpace = currentBounds.center;
+            currentBoundsCenterInForkSpace.z = _detectionCenter.z;
+            Vector3 snappedBoundsCenter = Forks.TransformPoint(currentBoundsCenterInForkSpace);
+
+            Vector3 centerOfMassBeforeRotation = loadBody.worldCenterOfMass;
+
+            Vector3 forkDirection = Vector3.ProjectOnPlane(Forks.right, Vector3.up).normalized;
+            Vector3 palletRight = Vector3.ProjectOnPlane(loadBody.transform.right, Vector3.up).normalized;
+            Vector3 palletForward = Vector3.ProjectOnPlane(loadBody.transform.forward, Vector3.up).normalized;
+            if (forkDirection.sqrMagnitude > Mathf.Epsilon &&
+                (palletRight.sqrMagnitude > Mathf.Epsilon || palletForward.sqrMagnitude > Mathf.Epsilon))
+            {
+                Vector3 palletAxis = palletRight.sqrMagnitude > Mathf.Epsilon ? palletRight : palletForward;
+                if (palletForward.sqrMagnitude > Mathf.Epsilon &&
+                    Mathf.Abs(Vector3.Dot(forkDirection, palletForward)) >
+                    Mathf.Abs(Vector3.Dot(forkDirection, palletAxis)))
+                    palletAxis = palletForward;
+
+                if (Vector3.Dot(palletAxis, forkDirection) < 0f)
+                    palletAxis = -palletAxis;
+
+                float yawCorrection = Vector3.SignedAngle(palletAxis, forkDirection, Vector3.up);
+                loadBody.rotation = Quaternion.AngleAxis(yawCorrection, Vector3.up) * loadBody.rotation;
+                loadBody.position += centerOfMassBeforeRotation - loadBody.worldCenterOfMass;
+            }
+
+            // Preserve the measured insertion depth and height, then center the
+            // pallet bounds laterally instead of snapping to a fixed fork position.
+            if (TryGetForkSpaceBounds(load, out Bounds rotatedBounds))
+            {
+                Vector3 currentBoundsCenter = Forks.TransformPoint(rotatedBounds.center);
+                loadBody.position += snappedBoundsCenter - currentBoundsCenter;
+            }
         }
 
         public void ReleaseLoad()
