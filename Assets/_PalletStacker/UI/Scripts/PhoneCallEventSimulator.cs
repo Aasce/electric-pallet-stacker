@@ -4,6 +4,7 @@ using ElectricPalletStackers.Gameplay;
 using ElectricPalletStackers.PalletStackers;
 using ElectricPalletStackers.Presentation;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Video;
 
 namespace ElectricPalletStackers.UI
@@ -25,7 +26,6 @@ namespace ElectricPalletStackers.UI
 
         [Header("Move while answering cutscene")]
         [SerializeField] private GameObject _movementCutscenePanel;
-        [SerializeField] private VideoPlayer _movementCutsceneVideoPlayer;
         private CutsceneVideoSource _movementCutsceneVideoSource;
         [SerializeField, Min(0.1f)] private float _missingVideoFallbackDuration = 3f;
 
@@ -46,10 +46,14 @@ namespace ElectricPalletStackers.UI
         {
             _phoneCallPanel?.SetDirectInteractionEnabled(false);
             ConfigureCutscenePanel();
-            _movementCutsceneVideoSource = _movementCutsceneVideoPlayer != null
-                ? _movementCutsceneVideoPlayer.GetComponent<CutsceneVideoSource>()
-                : null;
             HideMovementCutscene();
+            RawImage videoDisplay = _movementCutscenePanel != null
+                ? _movementCutscenePanel.GetComponentInChildren<RawImage>(true)
+                : null;
+            _movementCutsceneVideoSource = CutsceneVideoManager.RegisterSource(
+                "Phone Distraction",
+                "phone_distraction.mp4",
+                videoDisplay);
             _phoneChoicePanel?.HideImmediate();
         }
 
@@ -65,10 +69,13 @@ namespace ElectricPalletStackers.UI
                 _phoneChoicePanel.StopAndListenSelected += HandleStopAndListenSelected;
                 _phoneChoicePanel.MoveWhileListeningSelected += HandleMoveWhileListeningSelected;
             }
-            if (_movementCutsceneVideoPlayer != null)
+            VideoPlayer videoPlayer = _movementCutsceneVideoSource != null
+                ? _movementCutsceneVideoSource.Player
+                : null;
+            if (videoPlayer != null)
             {
-                _movementCutsceneVideoPlayer.loopPointReached += HandleMovementCutsceneFinished;
-                _movementCutsceneVideoPlayer.errorReceived += HandleMovementCutsceneError;
+                videoPlayer.loopPointReached += HandleMovementCutsceneFinished;
+                videoPlayer.errorReceived += HandleMovementCutsceneError;
             }
             if (_appManager != null)
             {
@@ -89,10 +96,13 @@ namespace ElectricPalletStackers.UI
                 _phoneChoicePanel.StopAndListenSelected -= HandleStopAndListenSelected;
                 _phoneChoicePanel.MoveWhileListeningSelected -= HandleMoveWhileListeningSelected;
             }
-            if (_movementCutsceneVideoPlayer != null)
+            VideoPlayer videoPlayer = _movementCutsceneVideoSource != null
+                ? _movementCutsceneVideoSource.Player
+                : null;
+            if (videoPlayer != null)
             {
-                _movementCutsceneVideoPlayer.loopPointReached -= HandleMovementCutsceneFinished;
-                _movementCutsceneVideoPlayer.errorReceived -= HandleMovementCutsceneError;
+                videoPlayer.loopPointReached -= HandleMovementCutsceneFinished;
+                videoPlayer.errorReceived -= HandleMovementCutsceneError;
             }
             if (_appManager != null)
             {
@@ -107,9 +117,6 @@ namespace ElectricPalletStackers.UI
             if (!_movementCutscenePlaying) return;
             if (_movementCutsceneVideoSource != null &&
                 !_movementCutsceneVideoSource.HasFailed) return;
-            if (_movementCutsceneVideoSource == null &&
-                _movementCutsceneVideoPlayer != null &&
-                _movementCutsceneVideoPlayer.clip != null) return;
 
             _cutsceneElapsed += Time.unscaledDeltaTime;
             if (_cutsceneElapsed >= _missingVideoFallbackDuration)
@@ -243,22 +250,19 @@ namespace ElectricPalletStackers.UI
             {
                 _movementCutsceneVideoSource.Play();
             }
-            else if (_movementCutsceneVideoPlayer != null &&
-                     _movementCutsceneVideoPlayer.clip != null)
-            {
-                _movementCutsceneVideoPlayer.time = 0d;
-                _movementCutsceneVideoPlayer.Play();
-            }
         }
 
         private void HandleMovementCutsceneFinished(VideoPlayer source)
         {
-            if (source == _movementCutsceneVideoPlayer) FinishMovementCutscene();
+            if (_movementCutsceneVideoSource != null &&
+                source == _movementCutsceneVideoSource.Player)
+                FinishMovementCutscene();
         }
 
         private void HandleMovementCutsceneError(VideoPlayer source, string message)
         {
-            if (source != _movementCutsceneVideoPlayer) return;
+            if (_movementCutsceneVideoSource == null ||
+                source != _movementCutsceneVideoSource.Player) return;
             Debug.LogWarning($"Phone distraction cutscene failed: {message}", this);
             FinishMovementCutscene();
         }
@@ -308,8 +312,6 @@ namespace ElectricPalletStackers.UI
         {
             if (_movementCutsceneVideoSource != null)
                 _movementCutsceneVideoSource.Stop();
-            else if (_movementCutsceneVideoPlayer != null)
-                _movementCutsceneVideoPlayer.Stop();
             if (_movementCutscenePanel != null)
                 _movementCutscenePanel.SetActive(false);
         }

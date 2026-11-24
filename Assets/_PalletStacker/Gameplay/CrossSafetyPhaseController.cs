@@ -5,6 +5,7 @@ using ElectricPalletStackers.Presentation;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
+using UnityEngine.UI;
 using UnityEngine.Video;
 
 namespace ElectricPalletStackers.Gameplay
@@ -69,7 +70,6 @@ namespace ElectricPalletStackers.Gameplay
         [Header("Unsafe crossing presentation")]
         [SerializeField] private GameObject _dangerPanel;
         [SerializeField] private GameObject _footAccidentCutscenePanel;
-        [SerializeField] private VideoPlayer _footAccidentVideoPlayer;
         private CutsceneVideoSource _footAccidentVideoSource;
         [Tooltip("Maximum time after an unsafe entry before the cutscene starts, regardless of the pedestrian's route progress.")]
         [SerializeField, Min(0f)] private float _unsafeCutsceneDelay = 2f;
@@ -101,10 +101,14 @@ namespace ElectricPalletStackers.Gameplay
             CacheFixedDirections();
             ConfigureTargets();
             ConfigurePresentationPanels();
-            _footAccidentVideoSource = _footAccidentVideoPlayer != null
-                ? _footAccidentVideoPlayer.GetComponent<CutsceneVideoSource>()
-                : null;
             HidePresentation();
+            RawImage videoDisplay = _footAccidentCutscenePanel != null
+                ? _footAccidentCutscenePanel.GetComponentInChildren<RawImage>(true)
+                : null;
+            _footAccidentVideoSource = CutsceneVideoManager.RegisterSource(
+                "Cross Safety Foot Accident",
+                "cross_safety_foot_accident.mp4",
+                videoDisplay);
         }
 
         private void OnEnable()
@@ -116,10 +120,13 @@ namespace ElectricPalletStackers.Gameplay
             }
             if (_trainingExperience != null)
                 _trainingExperience.StageChanged += HandleStageChanged;
-            if (_footAccidentVideoPlayer != null)
+            VideoPlayer videoPlayer = _footAccidentVideoSource != null
+                ? _footAccidentVideoSource.Player
+                : null;
+            if (videoPlayer != null)
             {
-                _footAccidentVideoPlayer.loopPointReached += HandleFootAccidentVideoFinished;
-                _footAccidentVideoPlayer.errorReceived += HandleFootAccidentVideoError;
+                videoPlayer.loopPointReached += HandleFootAccidentVideoFinished;
+                videoPlayer.errorReceived += HandleFootAccidentVideoError;
             }
         }
 
@@ -132,10 +139,13 @@ namespace ElectricPalletStackers.Gameplay
             }
             if (_trainingExperience != null)
                 _trainingExperience.StageChanged -= HandleStageChanged;
-            if (_footAccidentVideoPlayer != null)
+            VideoPlayer videoPlayer = _footAccidentVideoSource != null
+                ? _footAccidentVideoSource.Player
+                : null;
+            if (videoPlayer != null)
             {
-                _footAccidentVideoPlayer.loopPointReached -= HandleFootAccidentVideoFinished;
-                _footAccidentVideoPlayer.errorReceived -= HandleFootAccidentVideoError;
+                videoPlayer.loopPointReached -= HandleFootAccidentVideoFinished;
+                videoPlayer.errorReceived -= HandleFootAccidentVideoError;
             }
             HidePresentation();
         }
@@ -417,11 +427,6 @@ namespace ElectricPalletStackers.Gameplay
             {
                 _footAccidentVideoSource.Play();
             }
-            else if (_footAccidentVideoPlayer != null && _footAccidentVideoPlayer.clip != null)
-            {
-                _footAccidentVideoPlayer.time = 0d;
-                _footAccidentVideoPlayer.Play();
-            }
 
             Debug.LogWarning(
                 "[Cross Safety] Unsafe-entry delay elapsed or the player stopped early. " +
@@ -432,9 +437,6 @@ namespace ElectricPalletStackers.Gameplay
         private void UpdateFootAccidentCutscene()
         {
             if (_footAccidentVideoSource != null && !_footAccidentVideoSource.HasFailed) return;
-            if (_footAccidentVideoSource == null &&
-                _footAccidentVideoPlayer != null &&
-                _footAccidentVideoPlayer.clip != null) return;
 
             _cutsceneElapsed += Time.deltaTime;
             if (_cutsceneElapsed >= _missingVideoFallbackDuration)
@@ -443,12 +445,15 @@ namespace ElectricPalletStackers.Gameplay
 
         private void HandleFootAccidentVideoFinished(VideoPlayer source)
         {
-            if (source == _footAccidentVideoPlayer) FinishFootAccidentCutscene();
+            if (_footAccidentVideoSource != null &&
+                source == _footAccidentVideoSource.Player)
+                FinishFootAccidentCutscene();
         }
 
         private void HandleFootAccidentVideoError(VideoPlayer source, string message)
         {
-            if (source != _footAccidentVideoPlayer) return;
+            if (_footAccidentVideoSource == null ||
+                source != _footAccidentVideoSource.Player) return;
             Debug.LogWarning($"[Cross Safety] Cutscene video failed: {message}", this);
             FinishFootAccidentCutscene();
         }
@@ -459,8 +464,6 @@ namespace ElectricPalletStackers.Gameplay
 
             if (_footAccidentVideoSource != null)
                 _footAccidentVideoSource.Stop();
-            else if (_footAccidentVideoPlayer != null)
-                _footAccidentVideoPlayer.Stop();
             if (_footAccidentCutscenePanel != null)
                 _footAccidentCutscenePanel.SetActive(false);
 
@@ -638,8 +641,6 @@ namespace ElectricPalletStackers.Gameplay
             if (_dangerPanel != null) _dangerPanel.SetActive(false);
             if (_footAccidentVideoSource != null)
                 _footAccidentVideoSource.Stop();
-            else if (_footAccidentVideoPlayer != null)
-                _footAccidentVideoPlayer.Stop();
             if (_footAccidentCutscenePanel != null)
                 _footAccidentCutscenePanel.SetActive(false);
             SetAllDirectionPromptsVisible(false);

@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.IO;
 using UnityEngine;
-using UnityEngine.Networking;
 using UnityEngine.Video;
 
 namespace ElectricPalletStackers.Presentation
@@ -13,8 +12,8 @@ namespace ElectricPalletStackers.Presentation
     {
         private const string CutsceneFolderName = "Cutscenes";
 
-        [SerializeField] private VideoPlayer _videoPlayer;
-        [SerializeField] private string _fileName;
+        private VideoPlayer _videoPlayer;
+        private string _fileName;
 
         private bool _initialized;
         private bool _loading;
@@ -24,6 +23,15 @@ namespace ElectricPalletStackers.Presentation
 
         public bool IsPrepared => _prepared && _videoPlayer != null && _videoPlayer.isPrepared;
         public bool HasFailed => _failed;
+        public VideoPlayer Player
+        {
+            get
+            {
+                Initialize();
+                return _videoPlayer;
+            }
+        }
+        public RenderTexture TargetTexture => Player != null ? Player.targetTexture : null;
 
         private void OnDestroy()
         {
@@ -42,7 +50,8 @@ namespace ElectricPalletStackers.Presentation
         public void Prepare()
         {
             Initialize();
-            if (_loading || _prepared) return;
+            if (_loading || IsPrepared) return;
+            _prepared = false;
             if (string.IsNullOrWhiteSpace(_fileName))
             {
                 Fail("Cutscene video file name is empty.");
@@ -51,6 +60,12 @@ namespace ElectricPalletStackers.Presentation
             _failed = false;
             _loading = true;
             StartCoroutine(ResolveAndPrepareVideo());
+        }
+
+        public void ConfigureAndPrepare(string fileName)
+        {
+            _fileName = fileName;
+            Prepare();
         }
 
         public void Play()
@@ -69,7 +84,8 @@ namespace ElectricPalletStackers.Presentation
         public void Stop()
         {
             _playWhenPrepared = false;
-            if (_videoPlayer != null) _videoPlayer.Stop();
+            if (_videoPlayer != null && _videoPlayer.isPlaying)
+                _videoPlayer.Stop();
         }
 
         private void Initialize()
@@ -88,64 +104,36 @@ namespace ElectricPalletStackers.Presentation
 
         private IEnumerator ResolveAndPrepareVideo()
         {
+            // Start preparation after scene activation, outside the initial Awake work.
+            yield return null;
+
             string overridePath = Path.Combine(
                 Application.persistentDataPath,
                 CutsceneFolderName,
                 _fileName);
 
-            if (File.Exists(overridePath))
-            {
-                PrepareFromFile(overridePath);
-                yield break;
-            }
-
             string streamingAssetsPath = Path.Combine(
                 Application.streamingAssetsPath,
                 CutsceneFolderName,
                 _fileName);
+            string videoPath = File.Exists(overridePath)
+                ? overridePath
+                : streamingAssetsPath;
 
-#if UNITY_ANDROID && !UNITY_EDITOR
-            string cacheDirectory = Path.GetDirectoryName(overridePath);
+            if (!File.Exists(videoPath))
+            {
+                Fail($"Cutscene file was not found: {videoPath}");
+                yield break;
+            }
+
             try
             {
-                if (!string.IsNullOrEmpty(cacheDirectory)) Directory.CreateDirectory(cacheDirectory);
+                PrepareFromFile(videoPath);
             }
             catch (Exception exception)
             {
-                Fail($"Could not create cutscene storage folder: {exception.Message}");
-                yield break;
+                Fail($"Could not prepare cutscene video '{_fileName}': {exception.Message}");
             }
-
-            using (UnityWebRequest request = UnityWebRequest.Get(streamingAssetsPath))
-            {
-                yield return request.SendWebRequest();
-                if (request.result != UnityWebRequest.Result.Success)
-                {
-                    Fail($"Could not load StreamingAssets video '{_fileName}': {request.error}");
-                    yield break;
-                }
-
-                try
-                {
-                    File.WriteAllBytes(overridePath, request.downloadHandler.data);
-                }
-                catch (Exception exception)
-                {
-                    Fail($"Could not cache video '{_fileName}' to persistent storage: {exception.Message}");
-                    yield break;
-                }
-            }
-
-            PrepareFromFile(overridePath);
-#else
-            if (!File.Exists(streamingAssetsPath))
-            {
-                Fail($"Cutscene file was not found: {streamingAssetsPath}");
-                yield break;
-            }
-
-            PrepareFromFile(streamingAssetsPath);
-#endif
         }
 
         private void PrepareFromFile(string path)
