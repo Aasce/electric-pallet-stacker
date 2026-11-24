@@ -13,6 +13,8 @@ namespace ElectricPalletStackers.PalletStackers
     [DisallowMultipleComponent]
     public sealed class PalletStackerLoadHandler : MonoBehaviour
     {
+        private const float SnapAlignmentCorrection = 0.5f;
+
         [Header("Dependencies")]
         [SerializeField] private PalletStackerMast _mast;
         [SerializeField] private Rigidbody _vehicleBody;
@@ -25,7 +27,7 @@ namespace ElectricPalletStackers.PalletStackers
 
         [Header("Pickup validation")]
         [Tooltip("Minimum distance the fork tips must pass beyond the pallet's near edge before it may attach.")]
-        [SerializeField, Min(0f)] private float _minimumInsertionDepth = 0.6f;
+        [SerializeField, Min(0f)] private float _minimumInsertionDepth = 0.84f;
         [Tooltip("Maximum sideways offset between the pallet center and the fork centerline.")]
         [SerializeField, Min(0f)] private float _maximumLateralOffset = 0.19f;
         [Tooltip("Maximum yaw error from either valid pallet entry axis.")]
@@ -268,7 +270,7 @@ namespace ElectricPalletStackers.PalletStackers
         }
 
         /// <summary>
-        /// Corrects small lateral and yaw alignment errors after pickup validation.
+        /// Corrects half of the lateral and yaw alignment errors after pickup validation.
         /// Insertion depth and height stay at their current fork-relative values so
         /// the pallet does not jump toward a fixed point deeper between the forks.
         /// </summary>
@@ -280,7 +282,10 @@ namespace ElectricPalletStackers.PalletStackers
 
             Rigidbody loadBody = load.Body;
             Vector3 currentBoundsCenterInForkSpace = currentBounds.center;
-            currentBoundsCenterInForkSpace.z = _detectionCenter.z;
+            currentBoundsCenterInForkSpace.z = Mathf.Lerp(
+                currentBoundsCenterInForkSpace.z,
+                _detectionCenter.z,
+                SnapAlignmentCorrection);
             Vector3 snappedBoundsCenter = Forks.TransformPoint(currentBoundsCenterInForkSpace);
 
             Vector3 centerOfMassBeforeRotation = loadBody.worldCenterOfMass;
@@ -301,7 +306,9 @@ namespace ElectricPalletStackers.PalletStackers
                     palletAxis = -palletAxis;
 
                 float yawCorrection = Vector3.SignedAngle(palletAxis, forkDirection, Vector3.up);
-                loadBody.rotation = Quaternion.AngleAxis(yawCorrection, Vector3.up) * loadBody.rotation;
+                loadBody.rotation = Quaternion.AngleAxis(
+                    yawCorrection * SnapAlignmentCorrection,
+                    Vector3.up) * loadBody.rotation;
                 loadBody.position += centerOfMassBeforeRotation - loadBody.worldCenterOfMass;
             }
 
