@@ -1,6 +1,7 @@
 using System;
 using ElectricPalletStackers.Localization;
 using ElectricPalletStackers.PalletStackers;
+using ElectricPalletStackers.Presentation;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -69,6 +70,7 @@ namespace ElectricPalletStackers.Gameplay
         [SerializeField] private GameObject _dangerPanel;
         [SerializeField] private GameObject _footAccidentCutscenePanel;
         [SerializeField] private VideoPlayer _footAccidentVideoPlayer;
+        private CutsceneVideoSource _footAccidentVideoSource;
         [Tooltip("Maximum time after an unsafe entry before the cutscene starts, regardless of the pedestrian's route progress.")]
         [SerializeField, Min(0f)] private float _unsafeCutsceneDelay = 2f;
         [SerializeField, Min(0.1f)] private float _missingVideoFallbackDuration = 3f;
@@ -99,7 +101,9 @@ namespace ElectricPalletStackers.Gameplay
             CacheFixedDirections();
             ConfigureTargets();
             ConfigurePresentationPanels();
-            ConfigureCutsceneAudio();
+            _footAccidentVideoSource = _footAccidentVideoPlayer != null
+                ? _footAccidentVideoPlayer.GetComponent<CutsceneVideoSource>()
+                : null;
             HidePresentation();
         }
 
@@ -409,7 +413,11 @@ namespace ElectricPalletStackers.Gameplay
 
             if (_footAccidentCutscenePanel != null)
                 _footAccidentCutscenePanel.SetActive(true);
-            if (_footAccidentVideoPlayer != null && _footAccidentVideoPlayer.clip != null)
+            if (_footAccidentVideoSource != null)
+            {
+                _footAccidentVideoSource.Play();
+            }
+            else if (_footAccidentVideoPlayer != null && _footAccidentVideoPlayer.clip != null)
             {
                 _footAccidentVideoPlayer.time = 0d;
                 _footAccidentVideoPlayer.Play();
@@ -423,7 +431,10 @@ namespace ElectricPalletStackers.Gameplay
 
         private void UpdateFootAccidentCutscene()
         {
-            if (_footAccidentVideoPlayer != null && _footAccidentVideoPlayer.clip != null) return;
+            if (_footAccidentVideoSource != null && !_footAccidentVideoSource.HasFailed) return;
+            if (_footAccidentVideoSource == null &&
+                _footAccidentVideoPlayer != null &&
+                _footAccidentVideoPlayer.clip != null) return;
 
             _cutsceneElapsed += Time.deltaTime;
             if (_cutsceneElapsed >= _missingVideoFallbackDuration)
@@ -446,7 +457,10 @@ namespace ElectricPalletStackers.Gameplay
         {
             if (_state != PhaseState.FootAccidentCutscene) return;
 
-            if (_footAccidentVideoPlayer != null) _footAccidentVideoPlayer.Stop();
+            if (_footAccidentVideoSource != null)
+                _footAccidentVideoSource.Stop();
+            else if (_footAccidentVideoPlayer != null)
+                _footAccidentVideoPlayer.Stop();
             if (_footAccidentCutscenePanel != null)
                 _footAccidentCutscenePanel.SetActive(false);
 
@@ -618,34 +632,14 @@ namespace ElectricPalletStackers.Gameplay
             panelCanvas.sortingOrder = short.MaxValue - 10;
         }
 
-        private void ConfigureCutsceneAudio()
-        {
-            if (_footAccidentVideoPlayer == null ||
-                _footAccidentVideoPlayer.clip == null)
-                return;
-
-            AudioSource audioSource =
-                _footAccidentVideoPlayer.GetComponent<AudioSource>();
-            if (audioSource == null)
-            {
-                Debug.LogWarning(
-                    "[Cross Safety] Accident cutscene requires an AudioSource for video audio.",
-                    _footAccidentVideoPlayer);
-                return;
-            }
-
-            _footAccidentVideoPlayer.audioOutputMode =
-                VideoAudioOutputMode.AudioSource;
-            _footAccidentVideoPlayer.controlledAudioTrackCount = 1;
-            _footAccidentVideoPlayer.EnableAudioTrack(0, true);
-            _footAccidentVideoPlayer.SetTargetAudioSource(0, audioSource);
-        }
-
         private void HidePresentation()
         {
             if (_instructionPanel != null) _instructionPanel.SetActive(false);
             if (_dangerPanel != null) _dangerPanel.SetActive(false);
-            if (_footAccidentVideoPlayer != null) _footAccidentVideoPlayer.Stop();
+            if (_footAccidentVideoSource != null)
+                _footAccidentVideoSource.Stop();
+            else if (_footAccidentVideoPlayer != null)
+                _footAccidentVideoPlayer.Stop();
             if (_footAccidentCutscenePanel != null)
                 _footAccidentCutscenePanel.SetActive(false);
             SetAllDirectionPromptsVisible(false);

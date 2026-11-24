@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 9207442732904455551}
   - component: {fileID: 3559848224970674844}
   - component: {fileID: 3199453054365430173}
+  - component: {fileID: 4829107741302251173}
   - component: {fileID: 3704801535860781774}
   m_Layer: 13
   m_Name: Cross Safety Foot Accident Cutscene
@@ -115,7 +116,7 @@ VideoPlayer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1308665566548500572}
   m_Enabled: 1
-  m_VideoClip: {fileID: 32900000, guid: 6e7a674afeb8afe4290db0c631dff803, type: 3}
+  m_VideoClip: {fileID: 0}
   m_TargetCameraAlpha: 1
   m_TargetCamera3DLayout: 0
   m_TargetCamera: {fileID: 0}
@@ -142,6 +143,20 @@ VideoPlayer:
   m_WaitForFirstFrame: 1
   m_FrameReadyEventEnabled: 0
   m_VideoShaders: []
+--- !u!114 &4829107741302251173
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1308665566548500572}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7b4a811d2a14638b2b77abca0fc1d75, type: 3}
+  m_Name: ""
+  m_EditorClassIdentifier: Assembly-CSharp::ElectricPalletStackers.Presentation.CutsceneVideoSource
+  _videoPlayer: {fileID: 3199453054365430173}
+  _fileName: cross_safety_foot_accident.mp4
 --- !u!82 &3704801535860781774
 AudioSource:
   m_ObjectHideFlags: 0

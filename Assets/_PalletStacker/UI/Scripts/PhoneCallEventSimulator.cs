@@ -2,6 +2,7 @@ using System.Collections;
 using ElectricPalletStackers.Ble;
 using ElectricPalletStackers.Gameplay;
 using ElectricPalletStackers.PalletStackers;
+using ElectricPalletStackers.Presentation;
 using UnityEngine;
 using UnityEngine.Video;
 
@@ -25,6 +26,7 @@ namespace ElectricPalletStackers.UI
         [Header("Move while answering cutscene")]
         [SerializeField] private GameObject _movementCutscenePanel;
         [SerializeField] private VideoPlayer _movementCutsceneVideoPlayer;
+        private CutsceneVideoSource _movementCutsceneVideoSource;
         [SerializeField, Min(0.1f)] private float _missingVideoFallbackDuration = 3f;
 
         private Coroutine _endedDisplayRoutine;
@@ -44,7 +46,9 @@ namespace ElectricPalletStackers.UI
         {
             _phoneCallPanel?.SetDirectInteractionEnabled(false);
             ConfigureCutscenePanel();
-            ConfigureCutsceneAudio();
+            _movementCutsceneVideoSource = _movementCutsceneVideoPlayer != null
+                ? _movementCutsceneVideoPlayer.GetComponent<CutsceneVideoSource>()
+                : null;
             HideMovementCutscene();
             _phoneChoicePanel?.HideImmediate();
         }
@@ -100,9 +104,12 @@ namespace ElectricPalletStackers.UI
 
         private void Update()
         {
-            if (!_movementCutscenePlaying ||
-                (_movementCutsceneVideoPlayer != null &&
-                 _movementCutsceneVideoPlayer.clip != null)) return;
+            if (!_movementCutscenePlaying) return;
+            if (_movementCutsceneVideoSource != null &&
+                !_movementCutsceneVideoSource.HasFailed) return;
+            if (_movementCutsceneVideoSource == null &&
+                _movementCutsceneVideoPlayer != null &&
+                _movementCutsceneVideoPlayer.clip != null) return;
 
             _cutsceneElapsed += Time.unscaledDeltaTime;
             if (_cutsceneElapsed >= _missingVideoFallbackDuration)
@@ -232,8 +239,12 @@ namespace ElectricPalletStackers.UI
             if (_movementCutscenePanel != null)
                 _movementCutscenePanel.SetActive(true);
 
-            if (_movementCutsceneVideoPlayer != null &&
-                _movementCutsceneVideoPlayer.clip != null)
+            if (_movementCutsceneVideoSource != null)
+            {
+                _movementCutsceneVideoSource.Play();
+            }
+            else if (_movementCutsceneVideoPlayer != null &&
+                     _movementCutsceneVideoPlayer.clip != null)
             {
                 _movementCutsceneVideoPlayer.time = 0d;
                 _movementCutsceneVideoPlayer.Play();
@@ -293,32 +304,11 @@ namespace ElectricPalletStackers.UI
             canvas.sortingOrder = short.MaxValue - 10;
         }
 
-        private void ConfigureCutsceneAudio()
-        {
-            if (_movementCutsceneVideoPlayer == null ||
-                _movementCutsceneVideoPlayer.clip == null)
-                return;
-
-            AudioSource audioSource =
-                _movementCutsceneVideoPlayer.GetComponent<AudioSource>();
-            if (audioSource == null)
-            {
-                Debug.LogWarning(
-                    "Phone distraction cutscene requires an AudioSource for video audio.",
-                    _movementCutsceneVideoPlayer);
-                return;
-            }
-
-            _movementCutsceneVideoPlayer.audioOutputMode =
-                VideoAudioOutputMode.AudioSource;
-            _movementCutsceneVideoPlayer.controlledAudioTrackCount = 1;
-            _movementCutsceneVideoPlayer.EnableAudioTrack(0, true);
-            _movementCutsceneVideoPlayer.SetTargetAudioSource(0, audioSource);
-        }
-
         private void HideMovementCutscene()
         {
-            if (_movementCutsceneVideoPlayer != null)
+            if (_movementCutsceneVideoSource != null)
+                _movementCutsceneVideoSource.Stop();
+            else if (_movementCutsceneVideoPlayer != null)
                 _movementCutsceneVideoPlayer.Stop();
             if (_movementCutscenePanel != null)
                 _movementCutscenePanel.SetActive(false);
