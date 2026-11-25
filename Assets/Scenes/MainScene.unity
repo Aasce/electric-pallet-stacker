@@ -101196,8 +101196,8 @@ MonoBehaviour:
   _vehicleForward: {fileID: 2147000001}
   _calibrationPanel: {fileID: 5035545479161186817}
   _alignOnStart: 1
-  _headsetPositionRelativeToVehicle: {x: 0, y: 0, z: -1}
-  _cameraHeightAboveGround: 2
+  _headsetPositionRelativeToVehicle: {x: 0, y: 0, z: -0.8}
+  _cameraHeightAboveGround: 1.9
   _panelHeadsetOffset: {x: -0.06, y: -0.03, z: 0.55}
   _positionStep: 0.015
 --- !u!114 &1662881612
